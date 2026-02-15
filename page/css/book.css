@@ -60,7 +60,7 @@
 
 .book-cover {
     width: 100%;
-    max-width: 400px;
+    max-width: 320px;
     border-radius: 12px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -79,7 +79,7 @@
 }
 
 .book-title {
-    font-size: 2.5rem;
+    font-size: 2rem;
     font-weight: 700;
     color: #2c3e50;
     line-height: 1.2;
@@ -99,7 +99,7 @@
 
 /* Price */
 .book-price {
-    font-size: 2.5rem;
+    font-size: 2rem;
     font-weight: 700;
     color: #27ae60;
     margin: 0.5rem 0;
@@ -288,7 +288,227 @@
 
 @media (max-width: 576px) {
     .related-grid {
-        grid-template-columns: 1fr;
+        display: flex;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        gap: 1rem;
+        padding-bottom: 1rem;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: thin;
+        scrollbar-color: #bdc3c7 #ecf0f1;
+    }
+    
+    .related-grid::-webkit-scrollbar {
+        height: 6px;
+    }
+    
+    .related-grid::-webkit-scrollbar-track {
+        background: #ecf0f1;
+        border-radius: 3px;
+    }
+    
+    .related-grid::-webkit-scrollbar-thumb {
+        background: #bdc3c7;
+        border-radius: 3px;
+    }
+    
+    .related-card {
+        flex: 0 0 auto;
+        width: 160px;
+        min-width: 160px;
+    }
+    
+    .related-card-image {
+        height: 120px;
+    }
+    
+    .related-card-body {
+        padding: 0.75rem;
+    }
+    
+    .related-card-title {
+        font-size: 0.85rem;
+    }
+    
+    .related-card-author {
+        font-size: 0.75rem;
+    }
+    
+    .related-card-price {
+        font-size: 0.9rem;
+    }
+}
+
+/* Mobile Book Details - Smaller Text */
+@media (max-width: 576px) {
+    .book-details-container {
+        padding: 1rem 0.75rem;
+    }
+    
+    .book-breadcrumb {
+        font-size: 0.75rem;
+        margin-bottom: 1rem;
+    }
+
+    .book-cover {
+        max-width: 150px;
+    }
+    
+    .book-title {
+        font-size: 0.95rem;
+    }
+    
+    .book-author {
+        font-size: 0.7rem;
+    }
+    
+    .book-price {
+        font-size: 0.95rem;
+    }
+    
+    .book-price .original-price {
+        font-size: 1rem;
+    }
+    
+    .book-stock {
+        font-size: 0.65rem;
+    }
+    
+    .book-isbn {
+        font-size: 0.8rem;
+    }
+    
+    .book-actions {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    
+    .book-actions .btn-add-cart,
+    .book-actions .btn-wishlist {
+        width: 100%;
+        justify-content: center;
+        padding: 0.75rem;
+        font-size: 0.9rem;
+    }
+    
+    .book-details-card {
+        padding: 1rem;
+    }
+    
+    .book-details-title {
+        font-size: 0.75rem;
+    }
+    
+    .book-details-table {
+        font-size: 0.65rem;
+    }
+    
+    .book-description {
+        padding: 1rem;
+        margin-top: 2rem;
+    }
+    
+    .book-description h2 {
+        font-size: 1.25rem;
+    }
+    
+    .book-description p {
+        font-size: 0.9rem;
+        line-height: 1.6;
+    }
+    
+    .related-books {
+        margin-top: 2rem;
+    }
+    
+    .related-books h2 {
+        font-size: 1.25rem;
+        margin-bottom: 1rem;
+    }
+    
+    /* Keep related books horizontal on mobile (force overrides) */
+    .related-books .horizontal-scroll {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        gap: 12px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 5px 0 20px !important;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .related-books .book-card {
+        flex: 0 0 auto !important;
+        width: 150px !important;
+        min-width: 150px !important;
+        max-width: 150px !important;
+        display: block !important;
+    }
+
+    .related-books .book-cover {
+        height: 200px !important;
+    }
+
+    .related-books .book-info {
+        padding: 10px !important;
+        gap: 0.35rem !important;
+    }
+
+    .related-books .related-book-title {
+        font-size: 0.75rem !important;
+        margin-bottom: 3px !important;
+    }
+
+    .related-books .related-book-author {
+        font-size: 0.65rem !important;
+        margin-bottom: 4px !important;
+    }
+
+    .related-books .related-book-price {
+        font-size: 0.8rem !important;
+    }
+
+    .related-books .btn-quick {
+        padding: 7px 16px !important;
+        border-radius: 16px !important;
+        font-size: 0.8rem !important;
+        margin: 0 !important;
+        display: inline-block !important;
+        position: relative !important;
+    }
+
+    /* Mobile: show the View button centered (no hover on touch devices) */
+    .related-books .book-overlay {
+        opacity: 1 !important;
+        background: rgba(0, 0, 0, 0.35) !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+    }
+}
+
+/* Tablet adjustments */
+@media (max-width: 768px) {
+    .book-grid {
+        gap: 1.5rem;
+    }
+    
+    .book-title {
+        font-size: 1.75rem;
+    }
+    
+    .book-author {
+        font-size: 1rem;
     }
 }
 
@@ -338,5 +558,136 @@
 .related-card-price {
     font-size: 1.125rem;
     font-weight: 700;
+    color: #27ae60;
+}
+
+/* Related Books Horizontal Scroll - Scoped to avoid conflicts */
+.related-books .horizontal-scroll {
+    display: flex;
+    gap: 20px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 10px 0 30px;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: #3498db #ecf0f1;
+}
+
+.related-books .horizontal-scroll::-webkit-scrollbar {
+    height: 8px;
+}
+
+.related-books .horizontal-scroll::-webkit-scrollbar-track {
+    background: #ecf0f1;
+    border-radius: 4px;
+}
+
+.related-books .horizontal-scroll::-webkit-scrollbar-thumb {
+    background: #3498db;
+    border-radius: 4px;
+}
+
+.related-books .horizontal-scroll::-webkit-scrollbar-thumb:hover {
+    background: #2980b9;
+}
+
+/* Related books card styling scoped within related-books */
+.related-books .book-card {
+    flex: 0 0 auto;
+    width: 200px;
+    background: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+}
+
+.related-books .book-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.related-books .book-cover {
+    position: relative;
+    width: 100%;
+    height: 280px;
+    overflow: hidden;
+}
+
+.related-books .book-cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.related-books .book-card:hover .book-cover img {
+    transform: scale(1.05);
+}
+
+.related-books .book-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.6);
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+.related-books .book-card:hover .book-overlay {
+    opacity: 1;
+}
+
+.related-books .btn-quick {
+    background: #3498db;
+    color: #fff;
+    padding: 10px 25px;
+    border-radius: 20px;
+    text-decoration: none;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    margin: 0 !important;
+    display: inline-block !important;
+    position: relative !important;
+}
+
+.related-books .btn-quick:hover {
+    background: #2980b9;
+    transform: scale(1.05);
+}
+
+.related-books .book-info {
+    padding: 15px;
+}
+
+.related-books .related-book-title {
+    font-size: 1rem;
+    color: #2c3e50;
+    margin-bottom: 5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.related-books .related-book-author {
+    font-size: 0.85rem;
+    color: #7f8c8d;
+    margin-bottom: 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.related-books .related-book-price {
+    font-size: 1.1rem;
+    font-weight: bold;
     color: #27ae60;
 }

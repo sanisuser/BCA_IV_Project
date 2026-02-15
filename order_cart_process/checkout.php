@@ -144,12 +144,17 @@ if (count($cart_items) === 0) {
                             </div>
                         </label>
                         
-                        <label class="payment-option">
-                            <input type="radio" name="payment_method" value="card">
+                        <label class="payment-option" style="opacity: 0.6; cursor: not-allowed;">
+                            <input type="radio" name="payment_method" value="card" disabled>
                             <div class="payment-icon"><i class="fas fa-credit-card"></i></div>
                             <div class="payment-details">
                                 <div class="payment-name">Credit/Debit Card</div>
-                                <div class="payment-desc">Pay securely with your card</div>
+                                <div class="payment-desc" style="color: #dc3545;">
+                                    <i class="fas fa-info-circle"></i> Coming Soon - Not available yet
+                                </div>
+                                <div class="payment-notice" style="font-size: 0.8rem; color: #6c757d; margin-top: 4px;">
+                                    This payment system is under development. Tune in for future updates!
+                                </div>
                             </div>
                         </label>
                     </div>

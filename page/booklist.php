@@ -13,8 +13,7 @@ require_once __DIR__ . '/../includes/db.php';
 // Get search/filter parameters
 $search = isset($_GET['search']) ? clean_input($_GET['search']) : '';
 $genre = isset($_GET['genre']) ? clean_input($_GET['genre']) : '';
-// If search is provided but author is not, use search as author too
-$author = isset($_GET['author']) ? clean_input($_GET['author']) : ($search ?: '');
+
 $year_from = isset($_GET['year_from']) ? (int)$_GET['year_from'] : 0;
 $year_to = isset($_GET['year_to']) ? (int)$_GET['year_to'] : 0;
 $condition = isset($_GET['condition']) ? clean_input($_GET['condition']) : '';
@@ -30,17 +29,9 @@ $params = [];
 $types = '';
 
 if (!empty($search)) {
-    $where[] = "(title LIKE ? OR author LIKE ? OR description LIKE ?)";
+    $where[] = "title LIKE ?";
     $search_param = '%' . $search . '%';
     $params[] = $search_param;
-    $params[] = $search_param;
-    $params[] = $search_param;
-    $types .= 'sss';
-}
-
-if (!empty($author)) {
-    $where[] = "author LIKE ?";
-    $params[] = '%' . $author . '%';
     $types .= 's';
 }
 
@@ -124,10 +115,10 @@ while ($row = $genre_result->fetch_assoc()) {
     $genres[] = $row['genre'];
 }
 
-$authors = [];
-$author_result = $conn->query("SELECT DISTINCT author FROM books WHERE author IS NOT NULL AND author != '' ORDER BY author LIMIT 50");
-while ($row = $author_result->fetch_assoc()) {
-    $authors[] = $row['author'];
+$titles = [];
+$title_result = $conn->query("SELECT DISTINCT title FROM books WHERE title IS NOT NULL AND title != '' ORDER BY title LIMIT 50");
+while ($row = $title_result->fetch_assoc()) {
+    $titles[] = $row['title'];
 }
 
 $years = [];
@@ -159,13 +150,13 @@ $conditions = ['new', 'used'];
         
         <form method="GET" action="<?php echo SITE_URL; ?>/page/booklist.php" class="filter-form">
             
-            <!-- Author Filter -->
+            <!-- Book Name Filter -->
             <div class="filter-group">
-                <label>Author</label>
-                <input type="text" name="author" list="author-list" value="<?php echo htmlspecialchars($author); ?>" placeholder="Search author..." class="filter-search">
-                <datalist id="author-list">
-                    <?php foreach ($authors as $a): ?>
-                        <option value="<?php echo htmlspecialchars($a); ?>">
+                <label>Book Name</label>
+                <input type="text" name="search" list="title-list" value="<?php echo htmlspecialchars($search); ?>" placeholder="Search book name..." class="filter-search">
+                <datalist id="title-list">
+                    <?php foreach ($titles as $t): ?>
+                        <option value="<?php echo htmlspecialchars($t); ?>">
                     <?php endforeach; ?>
                 </datalist>
             </div>
@@ -290,7 +281,7 @@ $conditions = ['new', 'used'];
         <?php if ($total_pages > 1): ?>
             <div class="pagination">
                 <?php if ($page > 1): ?>
-                    <a href="<?php echo SITE_URL; ?>/page/booklist.php?page=<?php echo $page - 1; ?><?php echo !empty($author) ? '&author=' . urlencode($author) : ''; ?><?php echo $year_from > 0 ? '&year_from=' . $year_from : ''; ?><?php echo $year_to > 0 ? '&year_to=' . $year_to : ''; ?><?php echo !empty($genre) ? '&genre=' . urlencode($genre) : ''; ?><?php echo !empty($condition) ? '&condition=' . urlencode($condition) : ''; ?>" class="pagination-btn">
+                    <a href="<?php echo SITE_URL; ?>/page/booklist.php?page=<?php echo $page - 1; ?><?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?><?php echo $year_from > 0 ? '&year_from=' . $year_from : ''; ?><?php echo $year_to > 0 ? '&year_to=' . $year_to : ''; ?><?php echo !empty($genre) ? '&genre=' . urlencode($genre) : ''; ?><?php echo !empty($condition) ? '&condition=' . urlencode($condition) : ''; ?>" class="pagination-btn">
                         <i class="fas fa-chevron-left"></i>
                     </a>
                 <?php endif; ?>
@@ -299,12 +290,12 @@ $conditions = ['new', 'used'];
                     <?php if ($i == $page): ?>
                         <span class="pagination-btn active"><?php echo $i; ?></span>
                     <?php else: ?>
-                        <a href="<?php echo SITE_URL; ?>/page/booklist.php?page=<?php echo $i; ?><?php echo !empty($author) ? '&author=' . urlencode($author) : ''; ?><?php echo $year_from > 0 ? '&year_from=' . $year_from : ''; ?><?php echo $year_to > 0 ? '&year_to=' . $year_to : ''; ?><?php echo !empty($genre) ? '&genre=' . urlencode($genre) : ''; ?><?php echo !empty($condition) ? '&condition=' . urlencode($condition) : ''; ?>" class="pagination-btn"><?php echo $i; ?></a>
+                        <a href="<?php echo SITE_URL; ?>/page/booklist.php?page=<?php echo $i; ?><?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?><?php echo $year_from > 0 ? '&year_from=' . $year_from : ''; ?><?php echo $year_to > 0 ? '&year_to=' . $year_to : ''; ?><?php echo !empty($genre) ? '&genre=' . urlencode($genre) : ''; ?><?php echo !empty($condition) ? '&condition=' . urlencode($condition) : ''; ?>" class="pagination-btn"><?php echo $i; ?></a>
                     <?php endif; ?>
                 <?php endfor; ?>
                 
                 <?php if ($page < $total_pages): ?>
-                    <a href="<?php echo SITE_URL; ?>/page/booklist.php?page=<?php echo $page + 1; ?><?php echo !empty($author) ? '&author=' . urlencode($author) : ''; ?><?php echo $year_from > 0 ? '&year_from=' . $year_from : ''; ?><?php echo $year_to > 0 ? '&year_to=' . $year_to : ''; ?><?php echo !empty($genre) ? '&genre=' . urlencode($genre) : ''; ?><?php echo !empty($condition) ? '&condition=' . urlencode($condition) : ''; ?>" class="pagination-btn">
+                    <a href="<?php echo SITE_URL; ?>/page/booklist.php?page=<?php echo $page + 1; ?><?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?><?php echo $year_from > 0 ? '&year_from=' . $year_from : ''; ?><?php echo $year_to > 0 ? '&year_to=' . $year_to : ''; ?><?php echo !empty($genre) ? '&genre=' . urlencode($genre) : ''; ?><?php echo !empty($condition) ? '&condition=' . urlencode($condition) : ''; ?>" class="pagination-btn">
                         <i class="fas fa-chevron-right"></i>
                     </a>
                 <?php endif; ?>

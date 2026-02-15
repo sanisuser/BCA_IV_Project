@@ -159,24 +159,27 @@ if (!empty($genre)) {
     <?php if (count($related) > 0): ?>
     <div class="related-books">
         <h2>Related Books</h2>
-        <div class="related-grid">
+        <div class="horizontal-scroll related-horizontal" style="display:flex; flex-wrap:nowrap; overflow-x:auto; overflow-y:hidden; gap:12px; -webkit-overflow-scrolling:touch;">
             <?php foreach ($related as $related_book): ?>
                 <?php
-                $cover = SITE_URL . '/' . get_book_cover($related_book['cover_image']);
+                $cover = SITE_URL . '/' . get_book_cover($related_book['cover_image'] ?? '');
                 $title = htmlspecialchars($related_book['title']);
                 $author = htmlspecialchars($related_book['author'] ?? 'Unknown');
                 $price = format_price($related_book['price'] ?? 0);
                 $id = $related_book['book_id'];
                 ?>
-                <div class="related-card">
-                    <a href="<?php echo SITE_URL; ?>/page/book.php?id=<?php echo $id; ?>">
-                        <img src="<?php echo $cover; ?>" alt="<?php echo $title; ?>" class="related-card-image">
-                        <div class="related-card-body">
-                            <h3 class="related-card-title"><?php echo truncate($title, 30); ?></h3>
-                            <p class="related-card-author"><?php echo $author; ?></p>
-                            <div class="related-card-price"><?php echo $price; ?></div>
+                <div class="book-card">
+                    <div class="book-cover">
+                        <img src="<?php echo $cover; ?>" alt="<?php echo $title; ?>" onerror="this.src='<?php echo SITE_URL; ?>/assets/images/default-book.png'">
+                        <div class="book-overlay">
+                            <a href="<?php echo SITE_URL; ?>/page/book.php?id=<?php echo $id; ?>" class="btn-quick">View</a>
                         </div>
-                    </a>
+                    </div>
+                    <div class="book-info">
+                        <h3 class="related-book-title"><?php echo $title; ?></h3>
+                        <p class="related-book-author"><?php echo $author; ?></p>
+                        <div class="related-book-price"><?php echo $price; ?></div>
+                    </div>
                 </div>
             <?php endforeach; ?>
         </div>

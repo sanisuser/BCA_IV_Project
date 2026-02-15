@@ -45,6 +45,9 @@ if (is_logged_in()) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo isset($page_title) ? $page_title . ' - ' . SITE_NAME : SITE_NAME; ?></title>
     
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="<?php echo SITE_URL; ?>/assets/logo.png">
+    
     <!-- Main stylesheet -->
     <link rel="stylesheet" href="<?php echo SITE_URL; ?>/includes/css/header.css">
     

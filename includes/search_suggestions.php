@@ -16,23 +16,22 @@ if (strlen($query) < 2) {
 
 $search_term = '%' . $query . '%';
 
-// Search for books matching title or author
+// Search for books matching title
 $stmt = $conn->prepare('
     SELECT book_id, title, author, cover_image
     FROM books
-    WHERE title LIKE ? OR author LIKE ?
+    WHERE title LIKE ?
     ORDER BY 
         CASE 
             WHEN title LIKE ? THEN 1
-            WHEN author LIKE ? THEN 2
-            ELSE 3
+            ELSE 2
         END,
         title
     LIMIT 8
 ');
 
 $exact_term = $query . '%';
-$stmt->bind_param('ssss', $search_term, $search_term, $exact_term, $exact_term);
+$stmt->bind_param('ss', $search_term, $exact_term);
 $stmt->execute();
 $result = $stmt->get_result();
 
