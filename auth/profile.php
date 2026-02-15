@@ -30,6 +30,24 @@ if (!$user) {
     redirect(SITE_URL . '/index.php');
 }
 
+// Fetch user's order history (delivered orders only)
+$order_history = [];
+$stmt = $conn->prepare('
+    SELECT o.*, oi.book_id, oi.quantity, oi.price_at_time, b.title, b.author, b.cover_image, b.isbn
+    FROM orders o
+    JOIN order_items oi ON o.order_id = oi.order_id
+    JOIN books b ON oi.book_id = b.book_id
+    WHERE o.user_id = ? AND o.status = "delivered"
+    ORDER BY o.created_at DESC
+');
+$stmt->bind_param('i', $user_id);
+$stmt->execute();
+$result = $stmt->get_result();
+while ($row = $result->fetch_assoc()) {
+    $order_history[] = $row;
+}
+$stmt->close();
+
 // Handle adding address from profile location
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_address'])) {
     $address_type = clean_input($_POST['address_type'] ?? 'shipping');
@@ -271,6 +289,7 @@ require_once __DIR__ . '/../includes/header_navbar.php';
                                value="<?php echo htmlspecialchars($user['location'] ?? ''); ?>"
                                placeholder="Enter your city/country">
                     </div>
+                    </div>
                 </div>
 
                 <div class="form-section">
@@ -333,6 +352,96 @@ require_once __DIR__ . '/../includes/header_navbar.php';
                     <button type="button" class="btn btn-outline-primary" onclick="useProfileLocation()">
                         <i class="fas fa-map-marker-alt"></i> Use Profile Location
                     </button>
+                </div>
+
+                <!-- Order History Section -->
+                <div class="form-section">
+                    <h3 style="cursor: pointer; user-select: none;" onclick="toggleOrderHistory()">
+                        <i class="fas fa-shopping-bag" id="order-history-icon"></i> Order History
+                        <i class="fas fa-chevron-down" id="order-history-chevron" style="float: right; font-size: 0.9rem; transition: transform 0.3s ease;"></i>
+                    </h3>
+                    <div id="order-history-content" style="display: none;">
+                    <?php if (empty($order_history)): ?>
+                        <div style="text-align: center; padding: 2rem; color: #6c757d;">
+                            <i class="fas fa-shopping-bag" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+                            <p>You haven't received any orders yet.</p>
+                            <a href="<?php echo SITE_URL; ?>/page/booklist.php" class="btn btn-primary">Browse Books</a>
+                        </div>
+                    <?php else: ?>
+                        <div style="display: grid; gap: 1rem;">
+                            <?php 
+                            // Group items by order
+                            $orders_grouped = [];
+                            foreach ($order_history as $item) {
+                                $orders_grouped[$item['order_id']][] = $item;
+                            }
+                            
+                            foreach ($orders_grouped as $order_id => $items): 
+                                $order = $items[0];
+                            ?>
+                                <div style="border: 1px solid #e9ecef; border-radius: 8px; padding: 1rem; background: white;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid #e9ecef;">
+                                        <div>
+                                            <div style="font-weight: 600; color: #2c3e50;">Order #<?php echo (int)$order_id; ?></div>
+                                            <div style="font-size: 0.85rem; color: #6c757d;">
+                                                Delivered on <?php echo htmlspecialchars(date('M d, Y', strtotime($order['created_at']))); ?>
+                                            </div>
+                                        </div>
+                                        <div style="text-align: right;">
+                                            <div style="font-size: 0.85rem; color: #6c757d;">Total</div>
+                                            <div style="font-weight: 600; color: #2c3e50;">
+                                                <?php 
+                                                $order_total = 0;
+                                                foreach ($items as $item) {
+                                                    $order_total += (float)$item['price_at_time'] * (int)$item['quantity'];
+                                                }
+                                                echo 'Rs. ' . number_format($order_total, 2);
+                                                ?>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div style="display: grid; gap: 0.75rem;">
+                                        <?php foreach ($items as $item): ?>
+                                            <div style="display: flex; align-items: center; gap: 1rem; padding: 0.75rem; background: #f8f9fa; border-radius: 6px;">
+                                                <img src="<?php echo SITE_URL . '/' . ($item['cover_image'] ?? 'assets/images/default-book.png'); ?>" 
+                                                     alt="<?php echo htmlspecialchars($item['title']); ?>" 
+                                                     style="width: 50px; height: 70px; object-fit: cover; border-radius: 4px; border: 1px solid #e9ecef;"
+                                                     onerror="this.src='<?php echo SITE_URL; ?>/assets/images/default-book.png'">
+                                                
+                                                <div style="flex: 1;">
+                                                    <div style="font-weight: 600; color: #2c3e50; margin-bottom: 0.25rem;">
+                                                        <?php echo htmlspecialchars($item['title']); ?>
+                                                    </div>
+                                                    <div style="font-size: 0.85rem; color: #6c757d; margin-bottom: 0.25rem;">
+                                                        by <?php echo htmlspecialchars($item['author'] ?? 'Unknown'); ?>
+                                                    </div>
+                                                    <?php if (!empty($item['isbn'])): ?>
+                                                        <div style="font-size: 0.8rem; color: #6c757d;">
+                                                            ISBN: <?php echo htmlspecialchars($item['isbn']); ?>
+                                                        </div>
+                                                    <?php endif; ?>
+                                                </div>
+                                                
+                                                <div style="text-align: center;">
+                                                    <div style="font-size: 0.85rem; color: #6c757d;">Qty</div>
+                                                    <div style="font-weight: 600;"><?php echo (int)$item['quantity']; ?></div>
+                                                </div>
+                                                
+                                                <div style="text-align: right;">
+                                                    <div style="font-size: 0.85rem; color: #6c757d;">Price (at order time)</div>
+                                                    <div style="font-weight: 600; color: #2c3e50;">
+                                                        Rs. <?php echo number_format((float)$item['price_at_time'], 2); ?>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php endif; ?>
+                    </div>
                 </div>
 
                 <div class="form-section">
@@ -440,6 +549,19 @@ require_once __DIR__ . '/../includes/header_navbar.php';
                     }
                 });
             })();
+
+            function toggleOrderHistory() {
+                const content = document.getElementById('order-history-content');
+                const chevron = document.getElementById('order-history-chevron');
+                
+                if (content.style.display === 'none') {
+                    content.style.display = 'block';
+                    chevron.style.transform = 'rotate(180deg)';
+                } else {
+                    content.style.display = 'none';
+                    chevron.style.transform = 'rotate(0deg)';
+                }
+            }
             </script>
 
             <div class="profile-meta">

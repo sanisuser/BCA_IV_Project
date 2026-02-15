@@ -32,6 +32,14 @@ function getStatusClass($status) {
     };
 }
 
+// Helper function to show status label
+function getStatusLabel($status) {
+    return match($status) {
+        'shipped' => 'Dispatched',
+        default => ucfirst((string)$status),
+    };
+}
+
 // Get payment method icon
 function getPaymentIcon($method) {
     return match($method) {
@@ -90,7 +98,7 @@ function getPaymentIcon($method) {
                         <div class="order-date"><i class="far fa-calendar-alt"></i> <?php echo date('F d, Y \a\t h:i A', strtotime($order['created_at'])); ?></div>
                     </div>
                     <span class="order-status <?php echo getStatusClass($order['status']); ?>">
-                        <?php echo ucfirst($order['status']); ?>
+                        <?php echo htmlspecialchars(getStatusLabel($order['status'])); ?>
                     </span>
                 </div>
 
@@ -127,6 +135,15 @@ function getPaymentIcon($method) {
                         <span class="order-total-label">Total:</span>
                         <span class="order-total-value"><?php echo format_price($order['total_amount']); ?></span>
                     </div>
+                    <?php if (($order['status'] ?? '') === 'shipped'): ?>
+                        <div class="order-actions">
+                            <a href="<?php echo SITE_URL; ?>/order_cart_process/process/order_receive.php?order_id=<?php echo (int)$order['order_id']; ?>" 
+                               class="btn btn-primary btn-small"
+                               onclick="return confirm('Confirm you have received this order?');">
+                                <i class="fas fa-check"></i> Received
+                            </a>
+                        </div>
+                    <?php endif; ?>
                 </div>
             </div>
         <?php endforeach; ?>
