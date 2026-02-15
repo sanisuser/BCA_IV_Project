@@ -1,0 +1,105 @@
+/* Address Selection Styles */
+.address-selection {
+    margin-bottom: 1.5rem;
+}
+
+.address-option {
+    margin-bottom: 1rem;
+}
+
+.address-radio-label {
+    display: block;
+    cursor: pointer;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    padding: 0;
+    transition: all 0.3s ease;
+}
+
+.address-radio-label:hover {
+    border-color: #007bff;
+    box-shadow: 0 2px 8px rgba(0, 123, 255, 0.15);
+}
+
+.address-radio {
+    display: none;
+}
+
+.address-radio:checked + .address-card {
+    border-color: #007bff;
+    background-color: #f8f9ff;
+    box-shadow: 0 2px 8px rgba(0, 123, 255, 0.15);
+}
+
+.address-card {
+    padding: 1rem;
+    background: white;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+.address-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.address-type {
+    font-weight: 600;
+    color: #2c3e50;
+    text-transform: capitalize;
+}
+
+.default-badge {
+    background-color: #28a745;
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.address-details p {
+    margin: 0.25rem 0;
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+.address-details strong {
+    color: #2c3e50;
+}
+
+.custom-address-card {
+    border: 2px dashed #6c757d;
+    background-color: #f8f9fa;
+    text-align: center;
+    padding: 1.5rem;
+}
+
+.custom-address-card .address-details {
+    color: #6c757d;
+}
+
+.custom-address-section {
+    margin-top: 1rem;
+    padding: 1rem;
+    background-color: #f8f9fa;
+    border-radius: 6px;
+    border: 1px solid #e9ecef;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .address-card {
+        padding: 0.75rem;
+    }
+    
+    .address-details p {
+        font-size: 0.85rem;
+    }
+    
+    .custom-address-card {
+        padding: 1rem;
+    }
+}

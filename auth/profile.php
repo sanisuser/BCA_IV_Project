@@ -8,6 +8,7 @@
 require_once __DIR__ . '/../includes/functions.php';
 
 if (!is_logged_in()) {
+    require_once __DIR__ . '/../includes/header_navbar.php';
     redirect(SITE_URL . '/auth/login.php');
 }
 
@@ -27,6 +28,60 @@ $stmt->close();
 
 if (!$user) {
     redirect(SITE_URL . '/index.php');
+}
+
+// Handle adding address from profile location
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_address'])) {
+    $address_type = clean_input($_POST['address_type'] ?? 'shipping');
+    $full_name = clean_input($_POST['full_name'] ?? '');
+    $address_line1 = clean_input($_POST['address_line1'] ?? '');
+    $address_line2 = clean_input($_POST['address_line2'] ?? '');
+    $city = clean_input($_POST['city'] ?? '');
+    $state = clean_input($_POST['state'] ?? '');
+    $postal_code = clean_input($_POST['postal_code'] ?? '');
+    $country = clean_input($_POST['country'] ?? 'Nepal');
+    $phone = clean_input($_POST['phone'] ?? '');
+    $is_default = isset($_POST['is_default']) ? 1 : 0;
+    
+    if (!empty($full_name) && !empty($address_line1) && !empty($city)) {
+        $stmt = $conn->prepare("
+            INSERT INTO user_addresses 
+            (user_id, address_type, full_name, address_line1, address_line2, city, state, postal_code, country, phone, is_default, created_at, updated_at) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+        ");
+        $stmt->bind_param('ssssssssssi', 
+            $user_id, $address_type, $full_name, $address_line1, $address_line2, 
+            $city, $state, $postal_code, $country, $phone, $is_default
+        );
+        
+        if ($stmt->execute()) {
+            $success = 'Address added successfully from your profile location!';
+        } else {
+            $error = 'Failed to add address. Please try again.';
+        }
+        $stmt->close();
+    } else {
+        $error = 'Please fill in all required address fields.';
+    }
+}
+
+// Handle setting default address
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['set_default_address'])) {
+    $address_id = (int)$_POST['set_default_address'];
+    
+    // First, unset all default addresses for this user
+    $conn->prepare("UPDATE user_addresses SET is_default = 0 WHERE user_id = ?")->execute([$user_id]);
+    
+    // Then set the new default
+    $stmt = $conn->prepare("UPDATE user_addresses SET is_default = 1 WHERE address_id = ? AND user_id = ?");
+    $stmt->bind_param('ii', $address_id, $user_id);
+    
+    if ($stmt->execute()) {
+        $success = 'Default address updated successfully!';
+    } else {
+        $error = 'Failed to update default address.';
+    }
+    $stmt->close();
 }
 
 // Handle profile update
@@ -95,6 +150,7 @@ require_once __DIR__ . '/../includes/header_navbar.php';
 ?>
 
 <link rel="stylesheet" href="<?php echo SITE_URL; ?>/auth/css/profile.css">
+<link rel="stylesheet" href="<?php echo SITE_URL; ?>/auth/css/profile-address.css">
 
 <div class="profile-container">
     <div class="profile-header">
@@ -218,6 +274,68 @@ require_once __DIR__ . '/../includes/header_navbar.php';
                 </div>
 
                 <div class="form-section">
+                    <h3><i class="fas fa-map-marker-alt"></i> Shipping Addresses</h3>
+                    
+                    <?php
+                    // Fetch user addresses
+                    $addresses = [];
+                    $addr_stmt = $conn->prepare("SELECT * FROM user_addresses WHERE user_id = ? ORDER BY is_default DESC, created_at DESC");
+                    $addr_stmt->bind_param('i', $user_id);
+                    $addr_stmt->execute();
+                    $addr_result = $addr_stmt->get_result();
+                    while ($addr_row = $addr_result->fetch_assoc()) {
+                        $addresses[] = $addr_row;
+                    }
+                    $addr_stmt->close();
+                    ?>
+                    
+                    <?php if (count($addresses) > 0): ?>
+                        <div class="addresses-list">
+                            <?php foreach ($addresses as $addr): ?>
+                                <div class="address-card <?php echo $addr['is_default'] ? 'default-address' : ''; ?>">
+                                    <div class="address-header">
+                                        <span class="address-type"><?php echo ucfirst($addr['address_type']); ?></span>
+                                        <?php if ($addr['is_default']): ?>
+                                            <span class="default-badge">Default</span>
+                                        <?php endif; ?>
+                                    </div>
+                                    <div class="address-details">
+                                        <p><strong><?php echo htmlspecialchars($addr['full_name']); ?></strong></p>
+                                        <p><?php echo nl2br(htmlspecialchars($addr['address_line1'])); ?></p>
+                                        <?php if (!empty($addr['address_line2'])): ?>
+                                            <p><?php echo nl2br(htmlspecialchars($addr['address_line2'])); ?></p>
+                                        <?php endif; ?>
+                                        <p><?php echo htmlspecialchars($addr['city']); ?>, <?php echo htmlspecialchars($addr['state'] ?? ''); ?> <?php echo htmlspecialchars($addr['postal_code']); ?></p>
+                                        <p><?php echo htmlspecialchars($addr['country']); ?></p>
+                                        <?php if (!empty($addr['phone'])): ?>
+                                            <p><i class="fas fa-phone"></i> <?php echo htmlspecialchars($addr['phone']); ?></p>
+                                        <?php endif; ?>
+                                    </div>
+                                    <div class="address-actions">
+                                        <button type="button" class="btn btn-small btn-secondary" onclick="editAddress(<?php echo $addr['address_id']; ?>)">
+                                            <i class="fas fa-edit"></i> Edit
+                                        </button>
+                                        <?php if (!$addr['is_default']): ?>
+                                            <button type="button" class="btn btn-small btn-primary" onclick="setDefaultAddress(<?php echo $addr['address_id']; ?>)">
+                                                <i class="fas fa-star"></i> Set Default
+                                            </button>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php endif; ?>
+                    
+                    <button type="button" class="btn btn-secondary" onclick="showAddAddressForm()">
+                        <i class="fas fa-plus"></i> Add New Address
+                    </button>
+                    
+                    <button type="button" class="btn btn-outline-primary" onclick="useProfileLocation()">
+                        <i class="fas fa-map-marker-alt"></i> Use Profile Location
+                    </button>
+                </div>
+
+                <div class="form-section">
                     <h3><i class="fas fa-align-left"></i> About Me</h3>
                     <div class="form-group">
                         <label for="bio">Bio</label>
@@ -237,6 +355,70 @@ require_once __DIR__ . '/../includes/header_navbar.php';
             </form>
 
             <script>
+            function useProfileLocation() {
+                const location = '<?php echo htmlspecialchars($user['location'] ?? ''); ?>';
+                if (!location) {
+                    alert('Please set your location in the profile information section first.');
+                    return;
+                }
+                
+                // Create a form to submit the address
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '';
+                
+                // Add address fields
+                const fields = {
+                    'add_address': '1',
+                    'address_type': 'shipping',
+                    'full_name': '<?php echo htmlspecialchars($user['full_name'] ?? $user['username']); ?>',
+                    'address_line1': location,
+                    'city': location,
+                    'postal_code': '',
+                    'country': 'Nepal',
+                    'phone': '<?php echo htmlspecialchars($user['phone'] ?? ''); ?>',
+                    'is_default': '0'
+                };
+                
+                for (const [name, value] of Object.entries(fields)) {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = name;
+                    input.value = value;
+                    form.appendChild(input);
+                }
+                
+                document.body.appendChild(form);
+                form.submit();
+            }
+            
+            function showAddAddressForm() {
+                // You can implement this to show a modal or redirect to address add page
+                alert('Address form functionality can be implemented here.');
+            }
+            
+            function editAddress(addressId) {
+                // You can implement this to show edit modal or redirect to edit page
+                alert('Edit address functionality for address ID: ' + addressId);
+            }
+            
+            function setDefaultAddress(addressId) {
+                if (confirm('Set this address as your default shipping address?')) {
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = '';
+                    
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'set_default_address';
+                    input.value = addressId;
+                    form.appendChild(input);
+                    
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+            }
+            
             (function() {
                 const input = document.getElementById('profile_image');
                 const preview = document.getElementById('profile-preview');

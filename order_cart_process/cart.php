@@ -122,7 +122,7 @@ $stmt->close();
                 </div>
                 <div class="summary-row">
                     <span>Tax</span>
-                    <span>Included</span>
+                    <span>Excluded</span>
                 </div>
                 
                 <hr class="summary-divider">

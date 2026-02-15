@@ -13,11 +13,50 @@ if ($action !== 'place') {
     redirect(SITE_URL . '/order_cart_process/cart.php?error=' . urlencode('Invalid action'));
 }
 
+$selected_address = trim($_POST['selected_address'] ?? '');
 $shipping_address = trim($_POST['shipping_address'] ?? '');
 $payment_method = trim($_POST['payment_method'] ?? '');
 
-if ($shipping_address === '' || $payment_method === '') {
-    redirect(SITE_URL . '/order_cart_process/checkout.php?error=' . urlencode('Please complete checkout details'));
+// Handle address selection
+if ($selected_address === 'custom') {
+    // Use custom address
+    if ($shipping_address === '') {
+        redirect(SITE_URL . '/order_cart_process/checkout.php?error=' . urlencode('Please enter a custom shipping address'));
+    }
+} elseif ($selected_address !== '' && is_numeric($selected_address)) {
+    // Use saved address
+    $address_id = (int)$selected_address;
+    $addr_stmt = $conn->prepare("SELECT * FROM user_addresses WHERE address_id = ? AND user_id = ?");
+    $addr_stmt->bind_param('ii', $address_id, $user_id);
+    $addr_stmt->execute();
+    $addr_result = $addr_stmt->get_result();
+    $saved_address = $addr_result->fetch_assoc();
+    $addr_stmt->close();
+    
+    if (!$saved_address) {
+        redirect(SITE_URL . '/order_cart_process/checkout.php?error=' . urlencode('Invalid address selected'));
+    }
+    
+    // Format saved address as shipping address
+    $shipping_address = sprintf(
+        "%s\n%s\n%s, %s %s\n%s\nPhone: %s",
+        $saved_address['full_name'],
+        $saved_address['address_line1'],
+        $saved_address['city'],
+        $saved_address['state'] ?? '',
+        $saved_address['postal_code'],
+        $saved_address['country'],
+        $saved_address['phone'] ?? ''
+    );
+} else {
+    // No address selected (fallback to custom)
+    if ($shipping_address === '') {
+        redirect(SITE_URL . '/order_cart_process/checkout.php?error=' . urlencode('Please select or enter a shipping address'));
+    }
+}
+
+if ($payment_method === '') {
+    redirect(SITE_URL . '/order_cart_process/checkout.php?error=' . urlencode('Please select a payment method'));
 }
 
 $conn->begin_transaction();
@@ -54,8 +93,24 @@ try {
         $total += ((float)($it['price'] ?? 0) * $qty);
     }
 
-    $stmt = $conn->prepare('INSERT INTO orders (user_id, total_amount, status, shipping_address, payment_method, created_at) VALUES (?, ?, \'pending\', ?, ?, NOW())');
-    $stmt->bind_param('idss', $user_id, $total, $shipping_address, $payment_method);
+    // Calculate VAT (13%)
+    $subtotal = $total;
+    $vat_amount = $total * 0.13;
+    $total_with_vat = $total * 1.13;
+
+// Determine if we should store address_id or shipping_address
+    $address_id_to_store = null;
+    if ($selected_address !== 'custom' && is_numeric($selected_address)) {
+        $address_id_to_store = (int)$selected_address;
+    }
+    
+    if ($address_id_to_store) {
+        $stmt = $conn->prepare('INSERT INTO orders (user_id, address_id, total_amount, status, payment_method, created_at) VALUES (?, ?, ?, \'pending\', ?, NOW())');
+        $stmt->bind_param('iids', $user_id, $address_id_to_store, $total_with_vat, $payment_method);
+    } else {
+        $stmt = $conn->prepare('INSERT INTO orders (user_id, total_amount, status, shipping_address, payment_method, created_at) VALUES (?, ?, \'pending\', ?, ?, NOW())');
+        $stmt->bind_param('idss', $user_id, $total_with_vat, $shipping_address, $payment_method);
+    }
     $stmt->execute();
     $order_id = (int)$stmt->insert_id;
     $stmt->close();
@@ -67,8 +122,9 @@ try {
         $book_id = (int)$it['book_id'];
         $qty = (int)$it['quantity'];
         $price = (float)$it['price'];
+        $price_with_vat = $price * 1.13; // Include VAT in item price
 
-        $stmt_item->bind_param('iiid', $order_id, $book_id, $qty, $price);
+        $stmt_item->bind_param('iiid', $order_id, $book_id, $qty, $price_with_vat);
         $stmt_item->execute();
 
         $stmt_stock->bind_param('ii', $qty, $book_id);
