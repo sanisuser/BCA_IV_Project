@@ -1,0 +1,432 @@
+/**
+ * style.css
+ * Navbar and navigation styles for BookHub
+ */
+
+/* Reset and base styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Navbar container */
+.navbar {
+    background-color: #2c3e50;
+    padding: 15px 0;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.nav-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+}
+
+/* Logo */
+.logo {
+    color: #fff;
+    text-decoration: none;
+    font-size: 1.5rem;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.logo-img {
+    height: 40px;
+    width: auto;
+    max-width: 120px;
+    object-fit: contain;
+}
+
+.logo:hover {
+    opacity: 0.9;
+}
+
+/* Search Form */
+.search-form {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    max-width: 450px;
+    margin: 0 20px;
+    position: relative;
+}
+
+.search-input {
+    flex: 1;
+    padding: 12px 20px;
+    border: 2px solid rgba(255,255,255,0.2);
+    border-radius: 30px;
+    background: rgba(255,255,255,0.12);
+    color: #fff;
+    font-size: 0.95rem;
+    outline: none;
+    transition: all 0.3s ease;
+    padding-right: 50px;
+}
+
+.search-input::placeholder {
+    color: rgba(255,255,255,0.5);
+    font-weight: 400;
+}
+
+.search-input:focus {
+    background: rgba(255,255,255,0.2);
+    border-color: rgba(255,255,255,0.4);
+    box-shadow: 0 0 20px rgba(52, 152, 219, 0.3);
+}
+
+.search-btn {
+    position: absolute;
+    right: 5px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 38px;
+    height: 38px;
+    border: none;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.search-btn:hover {
+    transform: translateY(-50%) scale(1.05);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+}
+
+.search-btn:active {
+    transform: translateY(-50%) scale(0.95);
+}
+
+/* Mobile Search */
+.mobile-search-form {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.mobile-search-input {
+    flex: 1;
+    padding: 12px 15px;
+    border: none;
+    border-radius: 25px 0 0 25px;
+    background: rgba(255,255,255,0.15);
+    color: #fff;
+    font-size: 1rem;
+    outline: none;
+}
+
+.mobile-search-input::placeholder {
+    color: rgba(255,255,255,0.6);
+}
+
+.mobile-search-btn {
+    padding: 12px 18px;
+    border: none;
+    border-radius: 0 25px 25px 0;
+    background: #3498db;
+    color: #fff;
+    cursor: pointer;
+    font-size: 1rem;
+}
+
+/* Navigation links */
+.nav-links {
+    display: flex;
+    list-style: none;
+    gap: 30px;
+    align-items: center;
+}
+
+.nav-links li {
+    position: relative;
+}
+
+.nav-links li.dropdown {
+    position: relative;
+}
+
+.nav-links a {
+    color: #fff;
+    text-decoration: none;
+    padding: 8px 12px;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.nav-links a:hover {
+    background-color: rgba(255,255,255,0.1);
+}
+
+/* Login/Register buttons */
+.btn-login, .btn-register {
+    border: 1px solid #3498db;
+}
+
+.btn-register {
+    background-color: #3498db;
+}
+
+.btn-register:hover {
+    background-color: #2980b9;
+}
+
+/* Dropdown menu */
+.dropdown-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background-color: #34495e;
+    min-width: 180px;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+    border-radius: 4px;
+    list-style: none;
+    padding: 10px 0;
+    z-index: 1000;
+    margin-top: 5px;
+}
+
+.dropdown:hover .dropdown-menu,
+.dropdown-menu:hover {
+    display: block;
+}
+
+.dropdown-menu li {
+    width: 100%;
+}
+
+.dropdown-menu a {
+    padding: 10px 20px;
+    display: block;
+}
+
+.dropdown-menu a:hover {
+    background-color: #2c3e50;
+}
+
+/* User Dropdown with Profile Image */
+.user-dropdown {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px;
+    border-radius: 50%;
+    transition: background-color 0.3s ease;
+}
+
+.user-dropdown:hover {
+    background-color: rgba(255,255,255,0.1);
+}
+
+.nav-profile-img {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #fff;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    display: block;
+}
+
+.nav-profile-placeholder {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #fff;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.nav-profile-placeholder i {
+    font-size: 14px;
+    color: #fff;
+}
+
+/* Mobile toggle button */
+.mobile-toggle {
+    display: none;
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 5px;
+}
+
+/* Right-side cluster for mobile (profile + hamburger) */
+.nav-right-mobile {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+/* Mobile profile link in navbar */
+.mobile-profile-link {
+    display: none;
+    margin-right: 0;
+    line-height: 0;
+}
+
+.mobile-profile-link .mobile-profile-img {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(255,255,255,0.8);
+}
+
+.mobile-profile-link .mobile-profile-placeholder {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid rgba(255,255,255,0.5);
+}
+
+.mobile-profile-link .mobile-profile-placeholder i {
+    font-size: 16px;
+    color: #fff;
+}
+
+@media (max-width: 768px) {
+    .mobile-profile-link {
+        display: inline-flex;
+        align-items: center;
+    }
+}
+
+/* Mobile menu */
+.mobile-menu {
+    display: none;
+    background-color: #34495e;
+    position: absolute;
+    top: 60px;
+    left: 0;
+    right: 0;
+    z-index: 999;
+    padding: 20px;
+}
+
+ .mobile-profile {
+     display: flex !important;
+     align-items: center;
+     gap: 10px;
+     padding: 12px 0;
+     border-bottom: 1px solid rgba(255,255,255,0.1);
+ }
+
+ .mobile-profile-img {
+     width: 32px;
+     height: 32px;
+     border-radius: 50%;
+     object-fit: cover;
+     border: 2px solid rgba(255,255,255,0.8);
+     flex-shrink: 0;
+ }
+
+ .mobile-profile-placeholder {
+     width: 32px;
+     height: 32px;
+     border-radius: 50%;
+     background: rgba(255,255,255,0.15);
+     display: flex;
+     align-items: center;
+     justify-content: center;
+     border: 2px solid rgba(255,255,255,0.5);
+     flex-shrink: 0;
+ }
+
+ .mobile-profile-placeholder i {
+     font-size: 14px;
+     color: #fff;
+ }
+
+ .mobile-profile-text {
+     color: #fff;
+     font-weight: 600;
+ }
+
+.mobile-menu a {
+    color: #fff;
+    text-decoration: none;
+    display: block;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.mobile-menu a:last-child {
+    border-bottom: none;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+    .nav-links {
+        display: none;
+    }
+    
+    .search-form {
+        display: none;
+    }
+    
+    .mobile-toggle {
+        display: block;
+    }
+    
+    .mobile-menu {
+        display: none;
+    }
+    
+    .mobile-menu[style*="block"] {
+        display: block !important;
+    }
+}
+
+/* Show search on tablet */
+@media (max-width: 992px) {
+    .search-form {
+        max-width: 250px;
+        margin: 0 10px;
+    }
+}
+
+/* Main content container */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.main-content {
+    padding: 40px 20px;
+    min-height: calc(100vh - 200px);
+}
