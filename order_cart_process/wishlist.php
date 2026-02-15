@@ -84,9 +84,7 @@ $stmt->close();
             <i class="fas fa-heart-broken"></i>
             <h2>Your wishlist is empty</h2>
             <p>Browse our collection and save your favorite books!</p>
-            <a href="<?php echo SITE_URL; ?>/page/booklist.php" class="btn btn-primary">
-                <i class="fas fa-search"></i> Browse Books
-            </a>
+            
         </div>
     <?php endif; ?>
 </div>
