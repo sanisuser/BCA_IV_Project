@@ -56,8 +56,16 @@ $success = isset($_GET['success']) ? $_GET['success'] : '';
             
             <div class="form-group">
                 <label for="password" class="form-label">Password</label>
-                <input type="password" id="password" name="password" class="form-input" required 
-                       placeholder="Enter your password">
+                <div style="position: relative;">
+                    <input type="password" id="password" name="password" class="form-input" required 
+                           placeholder="Enter your password" style="padding-right: 45px;">
+                    <button type="button" class="password-toggle" onclick="togglePassword('password')" 
+                            style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); 
+                                   background: none; border: none; color: #6c757d; cursor: pointer; 
+                                   padding: 5px; font-size: 16px;">
+                        <i class="fas fa-eye" id="password-eye"></i>
+                    </button>
+                </div>
             </div>
             
             <div class="form-group">
@@ -79,6 +87,23 @@ $success = isset($_GET['success']) ? $_GET['success'] : '';
         
     </div>
 </div>
+
+<script>
+function togglePassword(fieldId) {
+    const passwordField = document.getElementById(fieldId);
+    const eyeIcon = document.getElementById(fieldId + '-eye');
+    
+    if (passwordField.type === 'password') {
+        passwordField.type = 'text';
+        eyeIcon.classList.remove('fa-eye');
+        eyeIcon.classList.add('fa-eye-slash');
+    } else {
+        passwordField.type = 'password';
+        eyeIcon.classList.remove('fa-eye-slash');
+        eyeIcon.classList.add('fa-eye');
+    }
+}
+</script>
 
 <?php
 require_once __DIR__ . '/../includes/footer.php';

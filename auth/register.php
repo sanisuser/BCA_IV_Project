@@ -58,15 +58,31 @@ $error = isset($_GET['error']) ? $_GET['error'] : '';
             
             <div class="form-group">
                 <label for="password" class="form-label">Password</label>
-                <input type="password" id="password" name="password" class="form-input" required 
-                       placeholder="Create a password" minlength="6">
+                <div style="position: relative;">
+                    <input type="password" id="password" name="password" class="form-input" required 
+                           placeholder="Create a password" minlength="6" style="padding-right: 45px;">
+                    <button type="button" class="password-toggle" onclick="togglePassword('password')" 
+                            style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); 
+                                   background: none; border: none; color: #6c757d; cursor: pointer; 
+                                   padding: 5px; font-size: 16px;">
+                        <i class="fas fa-eye" id="password-eye"></i>
+                    </button>
+                </div>
                 <small class="form-help">Minimum 6 characters</small>
             </div>
             
             <div class="form-group">
                 <label for="confirm_password" class="form-label">Confirm Password</label>
-                <input type="password" id="confirm_password" name="confirm_password" class="form-input" required 
-                       placeholder="Confirm your password">
+                <div style="position: relative;">
+                    <input type="password" id="confirm_password" name="confirm_password" class="form-input" required 
+                           placeholder="Confirm your password" style="padding-right: 45px;">
+                    <button type="button" class="password-toggle" onclick="togglePassword('confirm_password')" 
+                            style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); 
+                                   background: none; border: none; color: #6c757d; cursor: pointer; 
+                                   padding: 5px; font-size: 16px;">
+                        <i class="fas fa-eye" id="confirm_password-eye"></i>
+                    </button>
+                </div>
             </div>
             
             <div class="form-group">
@@ -89,6 +105,23 @@ $error = isset($_GET['error']) ? $_GET['error'] : '';
         
     </div>
 </div>
+
+<script>
+function togglePassword(fieldId) {
+    const passwordField = document.getElementById(fieldId);
+    const eyeIcon = document.getElementById(fieldId + '-eye');
+    
+    if (passwordField.type === 'password') {
+        passwordField.type = 'text';
+        eyeIcon.classList.remove('fa-eye');
+        eyeIcon.classList.add('fa-eye-slash');
+    } else {
+        passwordField.type = 'password';
+        eyeIcon.classList.remove('fa-eye-slash');
+        eyeIcon.classList.add('fa-eye');
+    }
+}
+</script>
 
 <?php
 require_once __DIR__ . '/../includes/footer.php';
