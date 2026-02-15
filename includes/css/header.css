@@ -210,7 +210,8 @@
 }
 
 .dropdown:hover .dropdown-menu,
-.dropdown-menu:hover {
+.dropdown-menu:hover,
+.dropdown-menu.active {
     display: block;
 }
 
@@ -235,6 +236,7 @@
     padding: 2px;
     border-radius: 50%;
     transition: background-color 0.3s ease;
+    cursor: pointer;
 }
 
 .user-dropdown:hover {

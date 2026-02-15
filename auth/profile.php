@@ -108,10 +108,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
     $location = clean_input($_POST['location'] ?? '');
     $phone = clean_input($_POST['phone'] ?? '');
     $bio = clean_input($_POST['bio'] ?? '');
+    $is_autosave = isset($_POST['autosave']);
     
     $profile_image = $user['profile_image'] ?? '';
     
-    // Handle profile image upload
+    // Handle profile image upload (works for both manual and autosave)
     if (isset($_FILES['profile_image']) && $_FILES['profile_image']['error'] !== UPLOAD_ERR_NO_FILE) {
         if ($_FILES['profile_image']['error'] === UPLOAD_ERR_OK) {
             $tmp = $_FILES['profile_image']['tmp_name'];
@@ -148,6 +149,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
     $stmt->bind_param('sssssi', $full_name, $location, $phone, $bio, $profile_image, $user_id);
     
     if ($stmt->execute()) {
+        if ($is_autosave) {
+            // Silent response for autosave
+            http_response_code(200);
+            echo 'OK';
+            exit;
+        }
         $success = 'Profile updated successfully!';
         // Refresh user data
         $stmt->close();
@@ -158,6 +165,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
         $user = $result->fetch_assoc();
         $stmt->close();
     } else {
+        if ($is_autosave) {
+            http_response_code(500);
+            echo 'Error';
+            exit;
+        }
         $error = 'Failed to update profile.';
         $stmt->close();
     }
@@ -453,17 +465,71 @@ require_once __DIR__ . '/../includes/header_navbar.php';
                     </div>
                 </div>
 
-                <div class="form-actions">
-                    <button type="submit" name="update_profile" class="btn btn-primary">
-                        <i class="fas fa-save"></i> Save Changes
-                    </button>
-                    <a href="<?php echo SITE_URL; ?>/index.php" class="btn btn-secondary">
-                        <i class="fas fa-arrow-left"></i> Back to Home
-                    </a>
+                <div class="form-actions" style="justify-content: flex-start; border: none; background: transparent; padding: 0;">
+                    <span id="autosave-status" style="color: #27ae60; font-size: 0.9rem; opacity: 0; transition: opacity 0.3s; display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fas fa-check-circle"></i> Auto-saved
+                    </span>
                 </div>
             </form>
 
             <script>
+            // Auto-save functionality
+            (function() {
+                const form = document.querySelector('.profile-form');
+                const status = document.getElementById('autosave-status');
+                let saveTimeout;
+                
+                const fields = ['full_name', 'phone', 'location', 'bio'];
+                
+                function showStatus(message, type = 'success') {
+                    status.innerHTML = type === 'success' 
+                        ? '<i class="fas fa-check-circle"></i> ' + message
+                        : '<i class="fas fa-exclamation-circle"></i> ' + message;
+                    status.style.color = type === 'success' ? '#27ae60' : '#e74c3c';
+                    status.style.opacity = '1';
+                    
+                    setTimeout(() => {
+                        status.style.opacity = '0';
+                    }, 3000);
+                }
+                
+                function autoSave() {
+                    const formData = new FormData(form);
+                    formData.append('update_profile', '1');
+                    formData.append('autosave', '1');
+                    
+                    fetch(window.location.href, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(response => response.text())
+                    .then(() => {
+                        showStatus('Auto-saved');
+                    })
+                    .catch(() => {
+                        showStatus('Save failed', 'error');
+                    });
+                }
+                
+                fields.forEach(fieldName => {
+                    const field = document.getElementById(fieldName);
+                    if (field) {
+                        field.addEventListener('input', function() {
+                            clearTimeout(saveTimeout);
+                            saveTimeout = setTimeout(autoSave, 1000);
+                        });
+                        
+                        field.addEventListener('blur', function() {
+                            clearTimeout(saveTimeout);
+                            autoSave();
+                        });
+                    }
+                });
+            })();
+            
             function useProfileLocation() {
                 const location = '<?php echo htmlspecialchars($user['location'] ?? ''); ?>';
                 if (!location) {
@@ -539,6 +605,7 @@ require_once __DIR__ . '/../includes/header_navbar.php';
                     const file = input.files && input.files[0];
                     if (!file) return;
 
+                    // Show preview immediately
                     const url = URL.createObjectURL(file);
                     if (preview) {
                         preview.src = url;
@@ -547,6 +614,41 @@ require_once __DIR__ . '/../includes/header_navbar.php';
                     if (placeholder) {
                         placeholder.style.display = 'none';
                     }
+                    
+                    // Auto-upload the image
+                    const formData = new FormData();
+                    formData.append('update_profile', '1');
+                    formData.append('autosave', '1');
+                    formData.append('full_name', document.getElementById('full_name').value);
+                    formData.append('phone', document.getElementById('phone').value);
+                    formData.append('location', document.getElementById('location').value);
+                    formData.append('bio', document.getElementById('bio').value);
+                    formData.append('profile_image', file);
+                    
+                    const status = document.getElementById('autosave-status');
+                    status.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
+                    status.style.color = '#3498db';
+                    status.style.opacity = '1';
+                    
+                    fetch(window.location.href, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(response => response.text())
+                    .then(() => {
+                        status.innerHTML = '<i class="fas fa-check-circle"></i> Image saved';
+                        status.style.color = '#27ae60';
+                        setTimeout(() => {
+                            status.style.opacity = '0';
+                        }, 3000);
+                    })
+                    .catch(() => {
+                        status.innerHTML = '<i class="fas fa-exclamation-circle"></i> Upload failed';
+                        status.style.color = '#e74c3c';
+                    });
                 });
             })();
 

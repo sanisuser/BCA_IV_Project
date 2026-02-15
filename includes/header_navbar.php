@@ -102,7 +102,6 @@ if (is_logged_in()) {
                     </a>
                     <ul class="dropdown-menu">
                         <li><a href="<?php echo SITE_URL; ?>/auth/profile.php"><i class="fas fa-id-card"></i> My Profile</a></li>
-                        <li><a href="#" onclick="toggleDarkMode(); return false;"><i class="fas fa-moon"></i> Dark Mode</a></li>
                         <li><a href="<?php echo SITE_URL; ?>/auth/logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
                     </ul>
                 </li>
@@ -112,7 +111,6 @@ if (is_logged_in()) {
                         <i class="fas fa-user-circle"></i> Profile
                     </a>
                     <ul class="dropdown-menu">
-                        <li><a href="#" onclick="toggleDarkMode(); return false;"><i class="fas fa-moon"></i> Dark Mode</a></li>
                         <li><a href="<?php echo SITE_URL; ?>/auth/login.php"><i class="fas fa-sign-in-alt"></i> Login</a></li>
                     </ul>
                 </li>
@@ -151,43 +149,14 @@ if (is_logged_in()) {
         <a href="<?php echo SITE_URL; ?>/order_cart_process/cart.php">Cart</a>
         <a href="<?php echo SITE_URL; ?>/order_cart_process/wishlist.php">Wishlist</a>
         <a href="<?php echo SITE_URL; ?>/order_cart_process/orders.php">Orders</a>
-        <a href="#" onclick="toggleDarkMode(); return false;">Dark Mode</a>
         <a href="<?php echo SITE_URL; ?>/auth/logout.php">Logout</a>
     <?php else: ?>
-        <a href="#" onclick="toggleDarkMode(); return false;">Dark Mode</a>
         <a href="<?php echo SITE_URL; ?>/auth/login.php">Login</a>
     <?php endif; ?>
 </div>
 
-<!-- Dark Mode Toggle Script -->
+<!-- Live Search Functionality -->
 <script>
-function toggleDarkMode() {
-    document.body.classList.toggle('dark-mode');
-    const isDark = document.body.classList.contains('dark-mode');
-    localStorage.setItem('darkMode', isDark ? 'enabled' : 'disabled');
-    
-    // Update icon
-    const icon = document.querySelector('.fa-moon, .fa-sun');
-    if (icon) {
-        icon.classList.toggle('fa-moon', !isDark);
-        icon.classList.toggle('fa-sun', isDark);
-    }
-}
-
-// Check saved preference on load
-document.addEventListener('DOMContentLoaded', function() {
-    if (localStorage.getItem('darkMode') === 'enabled') {
-        document.body.classList.add('dark-mode');
-        // Update icon if needed
-        const icon = document.querySelector('.fa-moon');
-        if (icon) {
-            icon.classList.remove('fa-moon');
-            icon.classList.add('fa-sun');
-        }
-    }
-});
-
-// Live Search Functionality
 (function() {
     const searchInput = document.getElementById('search-input');
     const suggestionsContainer = document.getElementById('search-suggestions');
@@ -288,6 +257,41 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 })();
+
+// Dropdown Toggle Functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const dropdownToggles = document.querySelectorAll('.dropdown-toggle');
+    
+    dropdownToggles.forEach(toggle => {
+        toggle.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const dropdown = this.closest('.dropdown');
+            const menu = dropdown.querySelector('.dropdown-menu');
+            const isActive = menu.classList.contains('active');
+            
+            // Close all other dropdowns first
+            document.querySelectorAll('.dropdown-menu.active').forEach(otherMenu => {
+                otherMenu.classList.remove('active');
+            });
+            
+            // Only open if it wasn't already active (clicking profile keeps it open)
+            if (!isActive) {
+                menu.classList.add('active');
+            }
+        });
+    });
+    
+    // Close dropdown only when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.dropdown')) {
+            document.querySelectorAll('.dropdown-menu.active').forEach(menu => {
+                menu.classList.remove('active');
+            });
+        }
+    });
+});
 </script>
 
 <!-- Navbar JS for mobile menu toggle -->
