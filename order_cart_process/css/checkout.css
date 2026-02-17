@@ -354,16 +354,53 @@
     background: #e9ecef;
 }
 
+/* Mobile Order Summary */
+.mobile-order-summary {
+    display: none;
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 1.25rem;
+    margin: 1.5rem 0;
+    border: 1px solid #e9ecef;
+}
+
+.mobile-order-summary .summary-header {
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid #dee2e6;
+}
+
+/* Desktop Order Summary */
+.desktop-summary {
+    display: block;
+}
+
 /* Responsive */
 @media (max-width: 992px) {
+    *, *::before, *::after {
+        box-sizing: border-box;
+    }
+    
+    body {
+        overflow-x: hidden;
+    }
+    
     .checkout-layout {
         grid-template-columns: 1fr;
+        max-width: 100%;
     }
 
-    .order-summary {
-        position: static;
-        order: -1;
-        margin-bottom: 1.5rem;
+    .mobile-order-summary {
+        display: block;
+    }
+
+    .desktop-summary {
+        display: none;
+    }
+
+    .checkout-form-wrapper {
+        order: 1;
     }
 
     .summary-items {
@@ -373,91 +410,344 @@
 
 @media (max-width: 768px) {
     .checkout-container {
-        padding: 1rem;
+        padding: 0.75rem;
+        max-width: 100%;
+        overflow-x: hidden;
     }
 
     .checkout-header {
-        margin-bottom: 1.5rem;
+        margin-bottom: 1rem;
     }
 
     .checkout-header h1 {
-        font-size: 1.5rem;
+        font-size: 1.25rem;
+        gap: 0.5rem;
+    }
+
+    .checkout-subtitle {
+        font-size: 0.85rem;
     }
 
     .checkout-form-wrapper {
-        padding: 1.25rem;
+        padding: 1rem;
+        border-radius: 12px;
+        max-width: 100%;
+        overflow: hidden;
     }
 
     .form-section {
-        margin-bottom: 1.5rem;
+        margin-bottom: 1.25rem;
+        border: 1px solid #e9ecef;
+        border-radius: 10px;
+        padding: 1rem;
+        background: #ffffff;
+        max-width: 100%;
+        overflow: hidden;
+    }
+
+    .form-section:last-child {
+        margin-bottom: 1.25rem;
     }
 
     .section-title {
-        font-size: 1rem;
+        font-size: 0.95rem;
+        margin-bottom: 1rem;
+    }
+
+    .form-group {
+        margin-bottom: 1rem;
+        max-width: 100%;
+    }
+
+    .form-label {
+        font-size: 0.85rem;
+        margin-bottom: 0.4rem;
     }
 
     .form-input,
     .form-textarea,
     .form-select {
-        padding: 0.75rem;
-        font-size: 0.95rem;
+        padding: 0.65rem 0.75rem;
+        font-size: 0.9rem;
+        border-radius: 8px;
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+
+    .form-textarea {
+        min-height: 80px;
+        max-width: 100%;
     }
 
     .payment-option {
-        padding: 0.875rem 1rem;
+        padding: 0.75rem;
+        gap: 0.75rem;
+        border-radius: 8px;
+        max-width: 100%;
     }
 
     .payment-icon {
-        width: 36px;
-        height: 36px;
-        font-size: 1rem;
+        width: 32px;
+        height: 32px;
+        font-size: 0.9rem;
+        border-radius: 6px;
+        flex-shrink: 0;
     }
 
-    .btn-place-order {
-        padding: 1rem;
-        font-size: 1rem;
-    }
-
-    .order-summary {
-        padding: 1.25rem;
-    }
-
-    .summary-header {
-        font-size: 1.1rem;
-    }
-
-    .summary-total {
-        font-size: 1.2rem;
-    }
-}
-
-@media (max-width: 480px) {
-    .checkout-header h1 {
-        font-size: 1.3rem;
-    }
-
-    .checkout-form-wrapper {
-        padding: 1rem;
-    }
-
-    .form-label {
+    .payment-name {
         font-size: 0.9rem;
     }
 
-    .payment-option {
-        flex-wrap: wrap;
+    .payment-desc {
+        font-size: 0.75rem;
     }
 
-    .payment-details {
-        width: calc(100% - 60px);
+    .btn-place-order {
+        padding: 0.875rem;
+        font-size: 0.95rem;
+        border-radius: 8px;
+        max-width: 100%;
+    }
+
+    .mobile-order-summary {
+        margin: 1rem 0;
+        padding: 1rem;
+        border-radius: 10px;
+        border: 1px solid #e9ecef;
+        background: #ffffff;
+        max-width: 100%;
+        overflow: hidden;
+    }
+
+    .mobile-order-summary .summary-header {
+        font-size: 1rem;
+        margin-bottom: 0.875rem;
+        padding-bottom: 0.625rem;
+    }
+
+    .mobile-order-summary .summary-item {
+        padding: 0.5rem 0;
+        gap: 0.5rem;
+    }
+
+    .mobile-order-summary .summary-item-image {
+        width: 45px;
+        height: 60px;
+        border-radius: 5px;
+    }
+
+    .mobile-order-summary .summary-item-title {
+        font-size: 0.85rem;
+    }
+
+    .mobile-order-summary .summary-item-meta {
+        font-size: 0.75rem;
+    }
+
+    .mobile-order-summary .summary-item-price {
+        font-size: 0.85rem;
+    }
+
+    .mobile-order-summary .summary-row {
+        font-size: 0.85rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .mobile-order-summary .summary-total {
+        font-size: 1.1rem;
+        margin-top: 0.625rem;
+        padding-top: 0.625rem;
+    }
+
+    .order-summary {
+        padding: 1rem;
+        border-radius: 12px;
+        margin-top: 1rem;
+    }
+
+    .summary-header {
+        font-size: 1rem;
+        margin-bottom: 1rem;
+        padding-bottom: 0.75rem;
+    }
+
+    .summary-item {
+        padding: 0.6rem 0;
+        gap: 0.6rem;
     }
 
     .summary-item-image {
         width: 45px;
         height: 60px;
+        border-radius: 5px;
     }
 
     .summary-item-title {
         font-size: 0.85rem;
+    }
+
+    .summary-item-meta {
+        font-size: 0.75rem;
+    }
+
+    .summary-item-price {
+        font-size: 0.85rem;
+    }
+
+    .summary-row {
+        font-size: 0.85rem;
+        margin-bottom: 0.6rem;
+    }
+
+    .summary-total {
+        font-size: 1.1rem;
+        margin-top: 0.75rem;
+        padding-top: 0.75rem;
+    }
+
+    .btn-back {
+        padding: 0.75rem;
+        font-size: 0.85rem;
+        margin-top: 0.75rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .checkout-container {
+        padding: 0.5rem;
+        overflow-x: hidden;
+    }
+
+    .checkout-header h1 {
+        font-size: 1.1rem;
+    }
+
+    .checkout-subtitle {
+        font-size: 0.8rem;
+    }
+
+    .checkout-form-wrapper {
+        padding: 0.875rem;
+        overflow: hidden;
+    }
+
+    .form-section {
+        margin-bottom: 1rem;
+        padding: 0.875rem;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    .form-section:last-child {
+        margin-bottom: 1rem;
+    }
+
+    .mobile-order-summary {
+        margin: 0.75rem 0;
+        padding: 0.875rem;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    .form-label {
+        font-size: 0.8rem;
+    }
+
+    .form-input,
+    .form-textarea,
+    .form-select {
+        padding: 0.6rem;
+        font-size: 0.85rem;
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+
+    .payment-option {
+        flex-wrap: wrap;
+        padding: 0.6rem;
+        gap: 0.5rem;
+        max-width: 100%;
+    }
+
+    .payment-details {
+        width: calc(100% - 50px);
+    }
+
+    .payment-name {
+        font-size: 0.85rem;
+    }
+
+    .payment-desc {
+        font-size: 0.7rem;
+    }
+
+    .summary-item-image {
+        width: 40px;
+        height: 55px;
+    }
+
+    .summary-item-title {
+        font-size: 0.8rem;
+    }
+
+    .summary-item-meta {
+        font-size: 0.7rem;
+    }
+
+    .summary-item-price {
+        font-size: 0.8rem;
+    }
+
+    .summary-row {
+        font-size: 0.8rem;
+    }
+
+    .summary-total {
+        font-size: 1rem;
+    }
+
+    .btn-back {
+        font-size: 0.8rem;
+        padding: 0.65rem;
+    }
+
+    .btn-place-order {
+        font-size: 0.9rem;
+        padding: 0.75rem;
+    }
+
+    .mobile-order-summary {
+        margin: 0.75rem 0;
+        padding: 0.875rem;
+    }
+
+    .mobile-order-summary .summary-header {
+        font-size: 0.95rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .mobile-order-summary .summary-item-image {
+        width: 40px;
+        height: 55px;
+    }
+
+    .mobile-order-summary .summary-item-title {
+        font-size: 0.8rem;
+    }
+
+    .mobile-order-summary .summary-item-meta {
+        font-size: 0.7rem;
+    }
+
+    .mobile-order-summary .summary-item-price {
+        font-size: 0.8rem;
+    }
+
+    .mobile-order-summary .summary-row {
+        font-size: 0.8rem;
+    }
+
+    .mobile-order-summary .summary-total {
+        font-size: 1rem;
     }
 }

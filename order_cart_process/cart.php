@@ -66,8 +66,15 @@ $stmt->close();
                                     <?php echo htmlspecialchars($item['title']); ?>
                                 </a>
                             </h3>
-                            <p class="item-price-unit">
-                                <strong><?php echo format_price($item['price']); ?></strong> each
+                            <p class="item-price-each"><?php echo format_price($item['price']); ?> each</p>
+                            <p class="item-stock">
+                                <?php if ($item['stock'] > 10): ?>
+                                    <span class="stock-in"><i class="fas fa-check-circle"></i> In Stock</span>
+                                <?php elseif ($item['stock'] > 0): ?>
+                                    <span class="stock-low"><i class="fas fa-exclamation-circle"></i> Only <?php echo $item['stock']; ?> left</span>
+                                <?php else: ?>
+                                    <span class="stock-out"><i class="fas fa-times-circle"></i> Out of Stock</span>
+                                <?php endif; ?>
                             </p>
                             
                             <div class="item-quantity">
@@ -85,25 +92,18 @@ $stmt->close();
                                         <button type="button" class="qty-btn qty-plus" onclick="if(parseInt(this.parentElement.querySelector('.quantity-input').value) < <?php echo $item['stock']; ?>) { this.parentElement.querySelector('.quantity-input').value++; this.parentElement.submit(); }">
                                             <i class="fas fa-plus"></i>
                                         </button>
+                                        <a href="<?php echo SITE_URL; ?>/order_cart_process/process/cart_process.php?action=remove&id=<?php echo $item['cart_id']; ?>" 
+                                           class="qty-btn btn-delete-item"
+                                           onclick="return confirm('Remove this item from cart?')"
+                                           title="Remove item">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </a>
                                     </form>
                                 <?php else: ?>
                                     <span class="stock-unavailable"><i class="fas fa-times-circle"></i> Out of Stock</span>
                                 <?php endif; ?>
                             </div>
                         </div>
-                        
-                        <!-- Item Total -->
-                        <div class="item-total">
-                            <?php echo format_price($item['price'] * $item['quantity']); ?>
-                        </div>
-                        
-                        <!-- Remove Button -->
-                        <a href="<?php echo SITE_URL; ?>/order_cart_process/process/cart_process.php?action=remove&id=<?php echo $item['cart_id']; ?>" 
-                           class="btn-remove"
-                           onclick="return confirm('Remove this item from cart?')"
-                           title="Remove item">
-                            <i class="fas fa-trash-alt"></i>
-                        </a>
                     </div>
                 <?php endforeach; ?>
             </div>
@@ -132,13 +132,15 @@ $stmt->close();
                     <span><?php echo format_price($total); ?></span>
                 </div>
                 
-                <a href="<?php echo SITE_URL; ?>/order_cart_process/checkout.php" class="btn btn-checkout">
-                    <i class="fas fa-lock"></i> Proceed to Checkout
-                </a>
-                
-                <a href="<?php echo SITE_URL; ?>/page/booklist.php" class="btn btn-continue">
-                    <i class="fas fa-arrow-left"></i> Continue Shopping
-                </a>
+                <div class="cart-actions">
+                    <a href="<?php echo SITE_URL; ?>/page/booklist.php" class="btn btn-continue">
+                        <i class="fas fa-arrow-left"></i> Continue
+                    </a>
+                    <a href="<?php echo SITE_URL; ?>/order_cart_process/checkout.php" class="btn btn-checkout">
+                        <i class="fas fa-lock"></i> Checkout
+                    </a>
+                    
+                </div>
             </div>
             
         </div>

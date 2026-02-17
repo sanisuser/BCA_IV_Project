@@ -97,10 +97,11 @@
 /* Mobile responsiveness */
 @media (max-width: 768px) {
     .search-suggestions {
-        position: fixed;
-        top: auto;
-        left: 10px;
-        right: 10px;
-        max-height: 300px;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        max-height: 50vh;
+        margin-top: 6px;
     }
 }

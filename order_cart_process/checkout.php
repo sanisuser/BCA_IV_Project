@@ -130,6 +130,46 @@ if (count($cart_items) === 0) {
                     <?php endif; ?>
                 </div>
 
+                <!-- Order Summary (Mobile Only) -->
+                <div class="mobile-order-summary">
+                    <h3 class="summary-header"><i class="fas fa-shopping-bag"></i> Order Summary</h3>
+
+                    <div class="summary-items">
+                        <?php foreach ($cart_items as $item): ?>
+                            <div class="summary-item"> 
+                                <div class="summary-item-image">
+                                    <img src="<?php echo SITE_URL . '/' . get_book_cover($item['cover_image']); ?>" alt="<?php echo htmlspecialchars($item['title']); ?>">
+                                </div>
+                                <div class="summary-item-details">
+                                    <div class="summary-item-title"><?php echo htmlspecialchars($item['title']); ?></div>
+                                    <div class="summary-item-meta">Qty: <?php echo (int)$item['quantity']; ?> × <?php echo format_price($item['price']); ?></div>
+                                </div>
+                                <div class="summary-item-price"><?php echo format_price(($item['price'] ?? 0) * ($item['quantity'] ?? 0)); ?></div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+
+                    <hr class="summary-divider">
+
+                    <div class="summary-row">
+                        <span>Subtotal</span>
+                        <span><?php echo format_price($total); ?></span>
+                    </div>
+                    <div class="summary-row">
+                        <span>Shipping</span>
+                        <span>Free</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>VAT (13%)</span>
+                        <span><?php echo format_price($total * 0.13); ?></span>
+                    </div>
+
+                    <div class="summary-total">
+                        <span>Total (incl. VAT)</span>
+                        <span><?php echo format_price($total * 1.13); ?></span>
+                    </div>
+                </div>
+
                 <!-- Payment Section -->
                 <div class="form-section">
                     <h3 class="section-title"><i class="fas fa-wallet"></i> Payment Method</h3>
@@ -166,8 +206,8 @@ if (count($cart_items) === 0) {
             </form>
         </div>
 
-        <!-- Order Summary -->
-        <div class="order-summary">
+        <!-- Order Summary (Desktop Only) -->
+        <div class="order-summary desktop-summary">
             <h3 class="summary-header"><i class="fas fa-shopping-bag"></i> Order Summary</h3>
 
             <div class="summary-items">

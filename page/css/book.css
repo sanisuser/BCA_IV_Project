@@ -691,3 +691,478 @@
     font-weight: bold;
     color: #27ae60;
 }
+
+/* =============================
+   Book Rating Display Styles
+   ============================= */
+
+/* Rating below cover image (desktop default) */
+.book-cover-rating {
+    margin-top: 1rem;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.book-cover-rating .rating-stars {
+    display: flex;
+    gap: 0.15rem;
+}
+
+.book-cover-rating .rating-stars .fa-star {
+    color: #ddd;
+    font-size: 1rem;
+}
+
+.book-cover-rating .rating-stars .fa-star.filled {
+    color: #f1c40f;
+}
+
+.book-cover-rating .rating-text {
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+/* Title and Rating container */
+.book-title-rating {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+/* Rating beside title (hidden on desktop by default) */
+.book-title-rating-stars {
+    display: none;
+}
+
+/* =============================
+   Reviews Section Styles
+   ============================= */
+
+/* Review Form Header with user name */
+.review-form-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.review-form-header h3 {
+    font-size: 1.2rem;
+    color: #2c3e50;
+    margin: 0;
+}
+
+.reviewing-as {
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+.reviewing-as strong {
+    color: #2c3e50;
+}
+
+.reviews-section {
+    background: #fff;
+    border-radius: 12px;
+    padding: 2rem;
+    margin-top: 2rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+}
+
+.reviews-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.reviews-header h2 {
+    font-size: 1.5rem;
+    color: #2c3e50;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.reviews-header h2 i {
+    color: #f1c40f;
+}
+
+/* Average Rating Summary */
+.reviews-summary {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.average-rating {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.rating-number {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #2c3e50;
+}
+
+.rating-stars {
+    display: flex;
+    gap: 0.25rem;
+}
+
+.rating-stars .fa-star {
+    color: #ddd;
+    font-size: 1.1rem;
+}
+
+.rating-stars .fa-star.filled {
+    color: #f1c40f;
+}
+
+.review-count {
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+/* Review Messages */
+.review-message {
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+}
+
+.review-message.error {
+    background: #fee;
+    color: #c33;
+    border: 1px solid #fcc;
+}
+
+.review-message.success {
+    background: #efe;
+    color: #3a3;
+    border: 1px solid #cfc;
+}
+
+/* Review Form */
+.review-form-container {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.review-form-container h3 {
+    font-size: 1.2rem;
+    color: #2c3e50;
+    margin-bottom: 1rem;
+}
+
+.review-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.rating-input label,
+.comment-input label {
+    display: block;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 0.5rem;
+}
+
+/* Star Rating Input */
+.star-rating-input {
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: flex-end;
+    gap: 0.25rem;
+}
+
+.star-rating-input input[type="radio"] {
+    display: none;
+}
+
+.star-rating-input .star-label {
+    cursor: pointer;
+    font-size: 1.75rem;
+    color: #ddd;
+    transition: color 0.2s ease;
+}
+
+.star-rating-input .star-label i {
+    transition: color 0.2s ease;
+}
+
+.star-rating-input .star-label:hover,
+.star-rating-input .star-label:hover ~ .star-label,
+.star-rating-input input:checked ~ .star-label {
+    color: #f1c40f;
+}
+
+.comment-input textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 1rem;
+    resize: vertical;
+    font-family: inherit;
+}
+
+.comment-input textarea:focus {
+    outline: none;
+    border-color: #3498db;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+.btn-submit-review {
+    background: #3498db;
+    color: #fff;
+    border: none;
+    padding: 0.875rem 1.5rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    align-self: flex-start;
+    transition: background 0.3s ease;
+}
+
+.btn-submit-review:hover {
+    background: #2980b9;
+}
+
+/* Login Prompt */
+.review-login-prompt {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 1.5rem;
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.review-login-prompt p {
+    margin: 0;
+    color: #6c757d;
+}
+
+.review-login-prompt a {
+    color: #3498db;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.review-login-prompt a:hover {
+    text-decoration: underline;
+}
+
+/* Reviews List */
+.reviews-list h3 {
+    font-size: 1.2rem;
+    color: #2c3e50;
+    margin-bottom: 1rem;
+}
+
+.review-item {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+}
+
+.review-item:last-child {
+    margin-bottom: 0;
+}
+
+.review-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
+}
+
+.reviewer-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.reviewer-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #fff;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.reviewer-avatar-placeholder {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 1rem;
+    border: 2px solid #fff;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.reviewer-details {
+    display: flex;
+    flex-direction: column;
+}
+
+.reviewer-name {
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.review-date {
+    font-size: 0.85rem;
+    color: #6c757d;
+}
+
+.review-rating {
+    display: flex;
+    gap: 0.15rem;
+}
+
+.review-rating .fa-star {
+    color: #ddd;
+    font-size: 0.9rem;
+}
+
+.review-rating .fa-star.filled {
+    color: #f1c40f;
+}
+
+.review-content {
+    color: #495057;
+    line-height: 1.6;
+}
+
+.review-content p {
+    margin: 0;
+}
+
+/* No Reviews */
+.no-reviews {
+    text-align: center;
+    padding: 2rem;
+    color: #6c757d;
+}
+
+.no-reviews i {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    display: block;
+    color: #adb5bd;
+}
+
+/* Mobile Responsive Reviews */
+@media (max-width: 768px) {
+    .reviews-section {
+        padding: 1rem;
+        margin-top: 1.5rem;
+    }
+    
+    .reviews-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+    
+    .reviews-header h2 {
+        font-size: 1.25rem;
+    }
+    
+    .average-rating {
+        gap: 0.5rem;
+    }
+    
+    .rating-number {
+        font-size: 1.5rem;
+    }
+    
+    .review-form-container {
+        padding: 1rem;
+    }
+    
+    .review-header {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .reviewer-info {
+        gap: 0.5rem;
+    }
+    
+    .reviewer-avatar,
+    .reviewer-avatar-placeholder {
+        width: 36px;
+        height: 36px;
+    }
+    
+    /* Mobile: hide rating below cover */
+    .book-cover-rating {
+        display: none;
+    }
+    
+    /* Mobile: show rating beside title */
+    .book-title-rating {
+        flex-direction: row;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+    }
+    
+    .book-title-rating-stars {
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+    }
+    
+    .book-title-rating-stars .rating-stars {
+        display: flex;
+        gap: 0.1rem;
+    }
+    
+    .book-title-rating-stars .rating-stars .fa-star {
+        color: #ddd;
+        font-size: 0.85rem;
+    }
+    
+    .book-title-rating-stars .rating-stars .fa-star.filled {
+        color: #f1c40f;
+    }
+    
+    .book-title-rating-stars .rating-text {
+        font-size: 0.8rem;
+        color: #6c757d;
+    }
+    
+    .book-title {
+        margin-bottom: 0;
+    }
+}

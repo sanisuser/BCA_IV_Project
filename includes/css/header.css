@@ -396,12 +396,51 @@
         display: none;
     }
     
+    .nav-container {
+        flex-wrap: wrap;
+    }
+
+    .logo {
+        order: 1;
+    }
+
+    .nav-right-mobile {
+        order: 2;
+    }
+    
     .search-form {
-        display: none;
+        display: flex;
+        order: 3;
+        flex: 0 0 100%;
+        flex-basis: 100%;
+        width: 100%;
+        max-width: 100%;
+        margin: 15px 0 0 0;
+        max-height: 70px;
+        overflow: hidden;
+        opacity: 1;
+        transform: translateY(0);
+        transition: max-height 200ms ease, margin-top 200ms ease, opacity 200ms ease, transform 200ms ease;
+    }
+
+    .navbar.mobile-search-hidden .search-form {
+        max-height: 0;
+        margin-top: 0;
+        opacity: 0;
+        transform: translateY(-10px);
+        pointer-events: none;
+    }
+    
+    .search-input {
+        width: 100%;
     }
     
     .mobile-toggle {
         display: block;
+    }
+
+    .navbar.is-book-view .search-form {
+        display: none;
     }
     
     .mobile-menu {
@@ -414,7 +453,7 @@
 }
 
 /* Show search on tablet */
-@media (max-width: 992px) {
+@media (max-width: 992px) and (min-width: 769px) {
     .search-form {
         max-width: 250px;
         margin: 0 10px;

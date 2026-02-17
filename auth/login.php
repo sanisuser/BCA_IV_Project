@@ -24,6 +24,7 @@ echo '<link rel="stylesheet" href="' . SITE_URL . '/auth/css/auth.css">';
 // Check for error or success messages from process
 $error = isset($_GET['error']) ? $_GET['error'] : '';
 $success = isset($_GET['success']) ? $_GET['success'] : '';
+$saved_username = isset($_GET['username']) ? htmlspecialchars($_GET['username']) : '';
 ?>
 
 <div class="auth-container">
@@ -51,7 +52,7 @@ $success = isset($_GET['success']) ? $_GET['success'] : '';
             <div class="form-group">
                 <label for="username" class="form-label">Username or Email</label>
                 <input type="text" id="username" name="username" class="form-input" required 
-                       placeholder="Enter your username or email">
+                       placeholder="Enter your username or email" value="<?php echo $saved_username; ?>">
             </div>
             
             <div class="form-group">

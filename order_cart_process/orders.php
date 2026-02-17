@@ -11,7 +11,7 @@ if (!is_logged_in()) {
 $user_id = (int)get_user_id();
 
 $orders = [];
-$stmt = $conn->prepare('SELECT * FROM orders WHERE user_id = ? ORDER BY created_at DESC');
+$stmt = $conn->prepare('SELECT * FROM orders WHERE user_id = ? ORDER BY created_at DESC LIMIT 1');
 $stmt->bind_param('i', $user_id);
 $stmt->execute();
 $result = $stmt->get_result();
@@ -25,7 +25,7 @@ function getStatusClass($status) {
     return match($status) {
         'pending' => 'pending',
         'processing' => 'processing',
-        'shipped' => 'shipped',
+        'shipped' => 'dispatched',
         'delivered' => 'delivered',
         'cancelled' => 'cancelled',
         default => 'pending'
@@ -36,8 +36,28 @@ function getStatusClass($status) {
 function getStatusLabel($status) {
     return match($status) {
         'shipped' => 'Dispatched',
+        'delivered' => 'Received',
         default => ucfirst((string)$status),
     };
+}
+
+// Helper function to get order status progress
+function getOrderStatusProgress($status) {
+    $steps = [
+        'pending' => ['step' => 1, 'label' => 'Pending', 'completed' => true, 'active' => $status === 'pending'],
+        'processing' => ['step' => 2, 'label' => 'Processing', 'completed' => in_array($status, ['processing', 'shipped', 'delivered']), 'active' => $status === 'processing'],
+        'shipped' => ['step' => 3, 'label' => 'Dispatched', 'completed' => in_array($status, ['shipped', 'delivered']), 'active' => $status === 'shipped'],
+        'delivered' => ['step' => 4, 'label' => 'Received', 'completed' => $status === 'delivered', 'active' => $status === 'delivered']
+    ];
+    
+    if ($status === 'cancelled') {
+        return [
+            'pending' => ['step' => 1, 'label' => 'Pending', 'completed' => true, 'active' => false],
+            'cancelled' => ['step' => 2, 'label' => 'Cancelled', 'completed' => false, 'active' => true]
+        ];
+    }
+    
+    return $steps;
 }
 
 // Get payment method icon
@@ -54,8 +74,8 @@ function getPaymentIcon($method) {
 
 <div class="orders-container">
     <div class="orders-header">
-        <h1><i class="fas fa-receipt"></i> My Orders</h1>
-        <p class="orders-count"><?php echo count($orders); ?> order<?php echo count($orders) !== 1 ? 's' : ''; ?> placed</p>
+        <h1><i class="fas fa-receipt"></i> Current Order</h1>
+        <p class="orders-count"><?php echo count($orders) > 0 ? 'Your most recent order' : 'No active orders'; ?></p>
     </div>
 
     <?php if (isset($_GET['success'])): ?>
@@ -100,6 +120,38 @@ function getPaymentIcon($method) {
                     <span class="order-status <?php echo getStatusClass($order['status']); ?>">
                         <?php echo htmlspecialchars(getStatusLabel($order['status'])); ?>
                     </span>
+                </div>
+
+                <!-- Order Status Progress Bar -->
+                <div class="order-progress-section">
+                    <div class="progress-title">Order Status</div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar">
+                            <?php 
+                            $progress = getOrderStatusProgress($order['status']);
+                            $total_steps = count($progress);
+                            $current_step = 0;
+                            
+                            foreach ($progress as $step_key => $step):
+                                $current_step++;
+                                $is_completed = $step['completed'];
+                                $is_active = $step['active'];
+                                $step_width = (100 / $total_steps);
+                            ?>
+                                <div class="progress-step <?php echo $is_completed ? 'completed' : ''; ?> <?php echo $is_active ? 'active' : ''; ?>"
+                                     style="width: <?php echo $step_width; ?>%">
+                                    <div class="step-icon">
+                                        <?php if ($is_completed): ?>
+                                            <i class="fas fa-check"></i>
+                                        <?php else: ?>
+                                            <i class="fas fa-circle"></i>
+                                        <?php endif; ?>
+                                    </div>
+                                    <div class="step-label"><?php echo htmlspecialchars($step['label']); ?></div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="order-body">

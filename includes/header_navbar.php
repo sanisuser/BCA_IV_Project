@@ -37,6 +37,10 @@ if (is_logged_in()) {
     $stmt->close();
 }
 
+$current_page = basename($_SERVER['PHP_SELF'] ?? '');
+$is_book_view_page = ($current_page === 'book.php');
+$navbar_page_class = $is_book_view_page ? ' is-book-view' : '';
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -59,7 +63,7 @@ if (is_logged_in()) {
 <body>
 
 <!-- Navigation Bar -->
-<nav class="navbar">
+<nav class="navbar<?php echo $navbar_page_class; ?>">
     <div class="container nav-container">
         <!-- Logo -->
         <a href="<?php echo SITE_URL; ?>/index.php" class="logo">
@@ -138,7 +142,7 @@ if (is_logged_in()) {
 </nav>
 
 <!-- Mobile Navigation (hidden by default) -->
-<div id="mobile-menu" class="mobile-menu">
+<div id="mobile-menu" class="mobile-menu<?php echo $navbar_page_class; ?>">
     <form class="mobile-search-form" action="<?php echo SITE_URL; ?>/page/booklist.php" method="GET">
         <input type="text" name="search" class="mobile-search-input" placeholder="Search books...">
         <button type="submit" class="mobile-search-btn"><i class="fas fa-search"></i></button>

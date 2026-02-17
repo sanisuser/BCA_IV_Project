@@ -24,12 +24,51 @@ document.addEventListener('click', function(event) {
 });
 
 // Close mobile menu on window resize to desktop
-document.addEventListener('resize', function() {
+window.addEventListener('resize', function() {
     const menu = document.getElementById('mobile-menu');
     if (window.innerWidth > 768 && menu) {
         menu.style.display = 'none';
     }
 });
+
+// Mobile: hide search bar on scroll up, show on scroll down
+(function() {
+    let lastY = window.scrollY;
+    let ticking = false;
+    const threshold = 10;
+
+    function onScroll() {
+        if (window.innerWidth > 768) return;
+
+        const navbar = document.querySelector('.navbar');
+        if (!navbar) return;
+
+        const y = window.scrollY;
+        const delta = y - lastY;
+
+        if (Math.abs(delta) < threshold) return;
+
+        if (delta < 0) {
+            // scrolling up
+            navbar.classList.add('mobile-search-hidden');
+        } else {
+            // scrolling down
+            navbar.classList.remove('mobile-search-hidden');
+        }
+
+        lastY = y;
+    }
+
+    window.addEventListener('scroll', function() {
+        if (!ticking) {
+            window.requestAnimationFrame(function() {
+                onScroll();
+                ticking = false;
+            });
+            ticking = true;
+        }
+    }, { passive: true });
+})();
 
 /**
  * Hero Slider functionality
@@ -45,8 +84,8 @@ function initSlider() {
     
     if (slides.length === 0) return;
     
-    // Start auto-rotation
-    startAutoSlide();
+    // Start auto-rotation - DISABLED
+    // startAutoSlide();
     
     // Add click handlers to dots
     dots.forEach((dot, index) => {
