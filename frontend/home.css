@@ -12,6 +12,7 @@
     width: 100%;
     height: 500px;
     overflow: hidden;
+    background: var(--bg-dark, #0f0f11);
 }
 
 .slider-container {
@@ -56,7 +57,7 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background: linear-gradient(135deg, rgba(44, 62, 80, 0.9) 0%, rgba(52, 152, 219, 0.7) 100%);
+    background: linear-gradient(135deg, rgba(15, 15, 17, 0.95) 0%, rgba(234, 179, 8, 0.3) 100%);
 }
 
 .slide-content {
@@ -76,7 +77,7 @@
 
 .slide-author {
     font-size: 1.2rem;
-    color: #3498db;
+    color: var(--accent, #eab308);
     margin-bottom: 15px;
 }
 
@@ -90,14 +91,14 @@
 .slide-price {
     font-size: 1.5rem;
     font-weight: bold;
-    color: #2ecc71;
+    color: var(--success, #22c55e);
     margin-bottom: 20px;
 }
 
 .btn-slide {
     display: inline-block;
-    background: #3498db;
-    color: #fff;
+    background: var(--accent, #eab308);
+    color: #000;
     padding: 12px 30px;
     border-radius: 25px;
     text-decoration: none;
@@ -106,9 +107,9 @@
 }
 
 .btn-slide:hover {
-    background: #2980b9;
+    background: var(--accent-hover, #facc15);
     transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
+    box-shadow: 0 5px 15px rgba(234, 179, 8, 0.4);
 }
 
 /* Slider Dots */
@@ -132,7 +133,7 @@
 }
 
 .dot.active {
-    background: #3498db;
+    background: var(--accent, #eab308);
     transform: scale(1.2);
 }
 
@@ -192,18 +193,18 @@
 
 .section-header h2 {
     font-size: 1.8rem;
-    color: #2c3e50;
+    color: var(--text-primary, #fafafa);
     display: flex;
     align-items: center;
     gap: 10px;
 }
 
 .section-header h2 i {
-    color: #3498db;
+    color: var(--accent, #eab308);
 }
 
 .view-all {
-    color: #3498db;
+    color: var(--accent, #eab308);
     text-decoration: none;
     font-weight: 500;
     display: flex;
@@ -213,7 +214,7 @@
 }
 
 .view-all:hover {
-    color: #2980b9;
+    color: var(--accent-hover, #facc15);
 }
 
 /* ============================================
@@ -229,7 +230,7 @@
     cursor: grab;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: thin;
-    scrollbar-color: #3498db #ecf0f1;
+    scrollbar-color: var(--accent, #eab308) var(--bg-card, #18181b);
 }
 
 .horizontal-scroll::-webkit-scrollbar {
@@ -237,17 +238,17 @@
 }
 
 .horizontal-scroll::-webkit-scrollbar-track {
-    background: #ecf0f1;
+    background: var(--bg-card, #18181b);
     border-radius: 4px;
 }
 
 .horizontal-scroll::-webkit-scrollbar-thumb {
-    background: #3498db;
+    background: var(--accent, #eab308);
     border-radius: 4px;
 }
 
 .horizontal-scroll::-webkit-scrollbar-thumb:hover {
-    background: #2980b9;
+    background: var(--accent-hover, #facc15);
 }
 
 /* ============================================
@@ -256,16 +257,17 @@
 .book-card {
     flex: 0 0 auto;
     width: 200px;
-    background: #fff;
+    background: var(--bg-card, #18181b);
     border-radius: 12px;
     overflow: hidden;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    border: 1px solid var(--border, #3f3f46);
     transition: all 0.3s ease;
 }
 
 .book-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.4);
 }
 
 .book-cover {
@@ -306,8 +308,8 @@
 }
 
 .btn-quick {
-    background: #3498db;
-    color: #fff;
+    background: var(--accent, #eab308);
+    color: #000;
     padding: 10px 25px;
     border-radius: 20px;
     text-decoration: none;
@@ -316,7 +318,7 @@
 }
 
 .btn-quick:hover {
-    background: #2980b9;
+    background: var(--accent-hover, #facc15);
     transform: scale(1.05);
 }
 
@@ -348,7 +350,7 @@
 
 .book-title {
     font-size: 1rem;
-    color: #2c3e50;
+    color: var(--text-primary, #fafafa);
     margin-bottom: 5px;
     white-space: nowrap;
     overflow: hidden;
@@ -357,7 +359,7 @@
 
 .book-author {
     font-size: 0.85rem;
-    color: #7f8c8d;
+    color: var(--text-secondary, #a1a1aa);
     margin-bottom: 10px;
     white-space: nowrap;
     overflow: hidden;
@@ -367,18 +369,18 @@
 .book-price {
     font-size: 1.1rem;
     font-weight: bold;
-    color: #27ae60;
+    color: var(--success, #22c55e);
 }
 
 /* ============================================
    SECTION SPECIFIC COLORS
    ============================================ */
 .recently-added {
-    background: linear-gradient(180deg, #fff 0%, #f8f9fa 100%);
+    background: var(--bg-dark, #0f0f11);
 }
 
 .top-favorites {
-    background: linear-gradient(180deg, #f8f9fa 0%, #fff 100%);
+    background: var(--bg-dark, #0f0f11);
 }
 
 /* ============================================

@@ -23,9 +23,29 @@ $action = $_GET['action'] ?? 'list';
 $book_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
 $q = trim($_GET['q'] ?? '');
+$search_column = isset($_GET['column']) ? clean_input($_GET['column']) : 'all';
 $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
+$sort = isset($_GET['sort']) ? clean_input($_GET['sort']) : 'book_id';
+$order = isset($_GET['order']) && strtoupper($_GET['order']) === 'DESC' ? 'DESC' : 'ASC';
 $per_page = ($page === 1) ? 10 : 20;
 $offset = ($page === 1) ? 0 : (10 + (20 * ($page - 2)));
+
+// Validate search column
+$allowed_columns = ['all', 'title', 'author', 'genre', 'price', 'stock', 'published_year'];
+if (!in_array($search_column, $allowed_columns, true)) {
+    $search_column = 'all';
+}
+
+// Validate sort column
+$allowed_sort = ['book_id', 'title', 'author', 'genre', 'price', 'stock', 'published_year'];
+if (!in_array($sort, $allowed_sort, true)) {
+    $sort = 'book_id';
+}
+
+$allowed_order = ['ASC', 'DESC'];
+if (!in_array($order, $allowed_order, true)) {
+    $order = 'ASC';
+}
 
 // Handle delete
 if ($action === 'delete' && $book_id > 0) {
@@ -102,9 +122,24 @@ $error = $error !== '' ? $error : (string)($_GET['error'] ?? '');
 // Count books
 $total_books = 0;
 if ($q !== '') {
-    $like = '%' . $q . '%';
-    $stmt = $conn->prepare("SELECT COUNT(*) AS c FROM books WHERE title LIKE ? OR author LIKE ? OR genre LIKE ?");
-    $stmt->bind_param('sss', $like, $like, $like);
+    if ($search_column === 'all') {
+        $like = '%' . $q . '%';
+        $stmt = $conn->prepare("SELECT COUNT(*) AS c FROM books WHERE title LIKE ? OR author LIKE ? OR genre LIKE ?");
+        $stmt->bind_param('sss', $like, $like, $like);
+    } elseif ($search_column === 'price') {
+        $stmt = $conn->prepare("SELECT COUNT(*) AS c FROM books WHERE price = ?");
+        $stmt->bind_param('d', (float)$q);
+    } elseif ($search_column === 'stock') {
+        $stmt = $conn->prepare("SELECT COUNT(*) AS c FROM books WHERE stock = ?");
+        $stmt->bind_param('i', (int)$q);
+    } elseif ($search_column === 'published_year') {
+        $stmt = $conn->prepare("SELECT COUNT(*) AS c FROM books WHERE published_year = ?");
+        $stmt->bind_param('i', (int)$q);
+    } else {
+        $like = '%' . $q . '%';
+        $stmt = $conn->prepare("SELECT COUNT(*) AS c FROM books WHERE $search_column LIKE ?");
+        $stmt->bind_param('s', $like);
+    }
     $stmt->execute();
     $res = $stmt->get_result();
     $row = $res->fetch_assoc();
@@ -117,19 +152,34 @@ if ($q !== '') {
     if ($r) { $r->free(); }
 }
 
-// Fetch books ascending
+// Fetch books with sorting
 $books = [];
 if ($action === 'list') {
     if ($q !== '') {
-        $like = '%' . $q . '%';
-        $stmt = $conn->prepare("SELECT book_id, title, author, genre, price, stock, cover_image, published_year, condition_status, created_at FROM books WHERE title LIKE ? OR author LIKE ? OR genre LIKE ? ORDER BY book_id ASC LIMIT ? OFFSET ?");
-        $stmt->bind_param('sssii', $like, $like, $like, $per_page, $offset);
+        if ($search_column === 'all') {
+            $like = '%' . $q . '%';
+            $stmt = $conn->prepare("SELECT book_id, title, author, genre, price, stock, cover_image, published_year, condition_status, created_at FROM books WHERE title LIKE ? OR author LIKE ? OR genre LIKE ? ORDER BY $sort $order LIMIT ? OFFSET ?");
+            $stmt->bind_param('sssii', $like, $like, $like, $per_page, $offset);
+        } elseif ($search_column === 'price') {
+            $stmt = $conn->prepare("SELECT book_id, title, author, genre, price, stock, cover_image, published_year, condition_status, created_at FROM books WHERE price = ? ORDER BY $sort $order LIMIT ? OFFSET ?");
+            $stmt->bind_param('dii', (float)$q, $per_page, $offset);
+        } elseif ($search_column === 'stock') {
+            $stmt = $conn->prepare("SELECT book_id, title, author, genre, price, stock, cover_image, published_year, condition_status, created_at FROM books WHERE stock = ? ORDER BY $sort $order LIMIT ? OFFSET ?");
+            $stmt->bind_param('iii', (int)$q, $per_page, $offset);
+        } elseif ($search_column === 'published_year') {
+            $stmt = $conn->prepare("SELECT book_id, title, author, genre, price, stock, cover_image, published_year, condition_status, created_at FROM books WHERE published_year = ? ORDER BY $sort $order LIMIT ? OFFSET ?");
+            $stmt->bind_param('iii', (int)$q, $per_page, $offset);
+        } else {
+            $like = '%' . $q . '%';
+            $stmt = $conn->prepare("SELECT book_id, title, author, genre, price, stock, cover_image, published_year, condition_status, created_at FROM books WHERE $search_column LIKE ? ORDER BY $sort $order LIMIT ? OFFSET ?");
+            $stmt->bind_param('sii', $like, $per_page, $offset);
+        }
         $stmt->execute();
         $res = $stmt->get_result();
         while ($row = $res->fetch_assoc()) { $books[] = $row; }
         $stmt->close();
     } else {
-        $stmt = $conn->prepare("SELECT book_id, title, author, genre, price, stock, cover_image, published_year, condition_status, created_at FROM books ORDER BY book_id ASC LIMIT ? OFFSET ?");
+        $stmt = $conn->prepare("SELECT book_id, title, author, genre, price, stock, cover_image, published_year, condition_status, created_at FROM books ORDER BY $sort $order LIMIT ? OFFSET ?");
         $stmt->bind_param('ii', $per_page, $offset);
         $stmt->execute();
         $res = $stmt->get_result();
@@ -138,7 +188,30 @@ if ($action === 'list') {
     }
 }
 
-$page_title = 'Manage Books';
+// Helper function to generate sort URL
+function sort_url(string $col, string $current_sort, string $current_order, string $q, int $page, string $search_column): string {
+    $new_order = ($current_sort === $col && $current_order === 'ASC') ? 'DESC' : 'ASC';
+    $params = [
+        'sort' => $col,
+        'order' => $new_order,
+        'page' => 1
+    ];
+    if ($q !== '') {
+        $params['q'] = $q;
+        $params['column'] = $search_column;
+    }
+    return SITE_URL . '/admin/manage_books.php?' . http_build_query($params);
+}
+
+// Helper function for sort icon
+function sort_icon(string $col, string $current_sort, string $current_order): string {
+    if ($current_sort !== $col) {
+        return '<i class="fas fa-sort" style="color: #adb5bd; margin-left: 0.25rem;"></i>';
+    }
+    return $current_order === 'ASC' 
+        ? '<i class="fas fa-sort-up" style="color: #3498db; margin-left: 0.25rem;"></i>'
+        : '<i class="fas fa-sort-down" style="color: #3498db; margin-left: 0.25rem;"></i>';
+}
 $active_page = 'books';
 ?>
 <?php require_once __DIR__ . '/partials/header.php'; ?>
@@ -149,10 +222,21 @@ $active_page = 'books';
                 </div>
 
                 <div class="filter-bar">
-                    <form method="GET" style="display: flex; gap: 0.5rem; align-items: center;">
-                        <input type="text" name="q" value="<?php echo htmlspecialchars($q); ?>" placeholder="Search title, author, genre..." />
+                    <form method="GET" style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                        <select name="column" class="admin-input" style="min-width: 120px;">
+                            <option value="all" <?php echo $search_column === 'all' ? 'selected' : ''; ?>>All Columns</option>
+                            <option value="title" <?php echo $search_column === 'title' ? 'selected' : ''; ?>>Title</option>
+                            <option value="author" <?php echo $search_column === 'author' ? 'selected' : ''; ?>>Author</option>
+                            <option value="genre" <?php echo $search_column === 'genre' ? 'selected' : ''; ?>>Genre</option>
+                            <option value="price" <?php echo $search_column === 'price' ? 'selected' : ''; ?>>Price</option>
+                            <option value="stock" <?php echo $search_column === 'stock' ? 'selected' : ''; ?>>Stock</option>
+                            <option value="published_year" <?php echo $search_column === 'published_year' ? 'selected' : ''; ?>>Year</option>
+                        </select>
+                        <input type="text" name="q" value="<?php echo htmlspecialchars($q); ?>" placeholder="Search..." style="min-width: 200px;" />
+                        <input type="hidden" name="sort" value="<?php echo htmlspecialchars($sort); ?>" />
+                        <input type="hidden" name="order" value="<?php echo htmlspecialchars($order); ?>" />
                         <input type="hidden" name="page" value="1" />
-                        <button type="submit" class="btn btn-primary">Filter</button>
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-filter"></i> Filter</button>
                         <a href="<?php echo SITE_URL; ?>/admin/manage_books.php" class="btn btn-secondary">Clear</a>
                     </form>
                 </div>
@@ -164,19 +248,19 @@ $active_page = 'books';
                     <div style="background: #f8d7da; color: #721c24; padding: 0.75rem; border-radius: 4px; margin-bottom: 1rem;"><?php echo htmlspecialchars($error); ?></div>
                 <?php endif; ?>
 
-                <div style="overflow-x: auto;">
-                    <table class="data-table">
+                <div class="data-table-container" style="overflow-x: auto;">
+                    <table class="data-table" style="width: 100%; min-width: 900px;">
                         <thead>
                             <tr>
-                                <th>ID</th>
-                                <th>Title</th>
-                                <th>Author</th>
-                                <th>Genre</th>
-                                <th>Price</th>
-                                <th>Stock</th>
-                                <th>Condition</th>
-                                <th>Year</th>
+                                <th><a href="<?php echo sort_url('book_id', $sort, $order, $q, $page, $search_column); ?>" style="text-decoration: none; color: inherit;">ID<?php echo sort_icon('book_id', $sort, $order); ?></a></th>
                                 <th>Cover</th>
+                                <th><a href="<?php echo sort_url('title', $sort, $order, $q, $page, $search_column); ?>" style="text-decoration: none; color: inherit;">Title<?php echo sort_icon('title', $sort, $order); ?></a></th>
+                                <th><a href="<?php echo sort_url('author', $sort, $order, $q, $page, $search_column); ?>" style="text-decoration: none; color: inherit;">Author<?php echo sort_icon('author', $sort, $order); ?></a></th>
+                                <th><a href="<?php echo sort_url('genre', $sort, $order, $q, $page, $search_column); ?>" style="text-decoration: none; color: inherit;">Genre<?php echo sort_icon('genre', $sort, $order); ?></a></th>
+                                <th><a href="<?php echo sort_url('price', $sort, $order, $q, $page, $search_column); ?>" style="text-decoration: none; color: inherit;">Price<?php echo sort_icon('price', $sort, $order); ?></a></th>
+                                <th><a href="<?php echo sort_url('stock', $sort, $order, $q, $page, $search_column); ?>" style="text-decoration: none; color: inherit;">Stock<?php echo sort_icon('stock', $sort, $order); ?></a></th>
+                                <th>Condition</th>
+                                <th><a href="<?php echo sort_url('published_year', $sort, $order, $q, $page, $search_column); ?>" style="text-decoration: none; color: inherit;">Year<?php echo sort_icon('published_year', $sort, $order); ?></a></th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -184,6 +268,7 @@ $active_page = 'books';
                             <?php foreach ($books as $b): ?>
                             <tr>
                                 <td><?php echo (int)$b['book_id']; ?></td>
+                                <td><?php echo !empty($b['cover_image']) ? '<i class="fas fa-image" style="color: #28a745;"></i>' : '<i class="fas fa-times" style="color: #dc3545;"></i>'; ?></td>
                                 <td><?php echo htmlspecialchars($b['title']); ?></td>
                                 <td><?php echo htmlspecialchars($b['author']); ?></td>
                                 <td><?php echo htmlspecialchars($b['genre'] ?? '-'); ?></td>
@@ -194,10 +279,9 @@ $active_page = 'books';
                                     <span class="badge badge-<?php echo $cond; ?>"><?php echo ucfirst($cond); ?></span>
                                 </td>
                                 <td><?php echo (int)($b['published_year'] ?? 0) ?: '-'; ?></td>
-                                <td><?php echo !empty($b['cover_image']) ? '<i class="fas fa-image" style="color: #28a745;"></i>' : '<i class="fas fa-times" style="color: #dc3545;"></i>'; ?></td>
-                                <td class="actions">
-                                    <a href="<?php echo SITE_URL; ?>/admin/manage_books.php?action=edit&id=<?php echo (int)$b['book_id']; ?>" class="btn btn-primary btn-small">Edit</a>
-                                    <a href="<?php echo SITE_URL; ?>/admin/manage_books.php?action=delete&id=<?php echo (int)$b['book_id']; ?>" class="btn btn-danger btn-small" onclick="return confirm('Delete this book?')">Delete</a>
+                                <td class="actions" style="display: flex; gap: 0.5rem; flex-wrap: nowrap;">
+                                    <a href="<?php echo SITE_URL; ?>/admin/manage_books.php?action=edit&id=<?php echo (int)$b['book_id']; ?>&sort=<?php echo urlencode($sort); ?>&order=<?php echo urlencode($order); ?>&q=<?php echo urlencode($q); ?>&column=<?php echo urlencode($search_column); ?>&page=<?php echo $page; ?>" class="btn btn-primary btn-small"><i class="fas fa-edit"></i> Edit</a>
+                                    <a href="<?php echo SITE_URL; ?>/admin/manage_books.php?action=delete&id=<?php echo (int)$b['book_id']; ?>&sort=<?php echo urlencode($sort); ?>&order=<?php echo urlencode($order); ?>&q=<?php echo urlencode($q); ?>&column=<?php echo urlencode($search_column); ?>&page=<?php echo $page; ?>" class="btn btn-danger btn-small" onclick="return confirm('Delete this book?')"><i class="fas fa-trash"></i> Delete</a>
                                 </td>
                             </tr>
                             <?php endforeach; ?>
@@ -215,11 +299,11 @@ $active_page = 'books';
                 <?php if ($total_pages > 1): ?>
                     <div class="pagination">
                         <?php if ($page > 1): ?>
-                            <a class="btn btn-secondary" href="<?php echo SITE_URL; ?>/admin/manage_books.php?q=<?php echo urlencode($q); ?>&page=<?php echo (int)($page - 1); ?>">← Prev</a>
+                            <a class="btn btn-secondary" href="<?php echo SITE_URL; ?>/admin/manage_books.php?q=<?php echo urlencode($q); ?>&column=<?php echo urlencode($search_column); ?>&page=<?php echo (int)($page - 1); ?>&sort=<?php echo urlencode($sort); ?>&order=<?php echo urlencode($order); ?>">← Prev</a>
                         <?php endif; ?>
                         <span style="color: #6c757d;">Page <?php echo (int)$page; ?> of <?php echo (int)$total_pages; ?></span>
                         <?php if ($page < $total_pages): ?>
-                            <a class="btn btn-secondary" href="<?php echo SITE_URL; ?>/admin/manage_books.php?q=<?php echo urlencode($q); ?>&page=<?php echo (int)($page + 1); ?>">Next →</a>
+                            <a class="btn btn-secondary" href="<?php echo SITE_URL; ?>/admin/manage_books.php?q=<?php echo urlencode($q); ?>&column=<?php echo urlencode($search_column); ?>&page=<?php echo (int)($page + 1); ?>&sort=<?php echo urlencode($sort); ?>&order=<?php echo urlencode($order); ?>">Next →</a>
                         <?php endif; ?>
                     </div>
                 <?php endif; ?>

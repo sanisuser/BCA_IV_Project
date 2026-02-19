@@ -55,6 +55,9 @@ $navbar_page_class = $is_book_view_page ? ' is-book-view' : '';
     <!-- Main stylesheet -->
     <link rel="stylesheet" href="<?php echo SITE_URL; ?>/includes/css/header.css">
     
+    <!-- Global Dark Theme -->
+    <link rel="stylesheet" href="<?php echo SITE_URL; ?>/assets/css/theme.css">
+    
     <!-- Font Awesome for icons (CDN) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Search Suggestions Styles -->
@@ -85,7 +88,12 @@ $navbar_page_class = $is_book_view_page ? ' is-book-view' : '';
             <li><a href="<?php echo SITE_URL; ?>/page/booklist.php">Books</a></li>
 
             <?php if (is_logged_in()): ?>
-                 <li><a href="<?php echo SITE_URL; ?>/order_cart_process/wishlist.php">
+                <?php if (is_admin()): ?>
+                <li><a href="<?php echo SITE_URL; ?>/admin/index.php" style="color: var(--accent, #eab308);">
+                    <i class="fas fa-shield-alt"></i> Admin Panel
+                </a></li>
+                <?php endif; ?>
+                <li><a href="<?php echo SITE_URL; ?>/order_cart_process/wishlist.php">
                     <i class="fas fa-heart"></i> Wishlist
                 </a></li>
                 <li><a href="<?php echo SITE_URL; ?>/order_cart_process/cart.php">

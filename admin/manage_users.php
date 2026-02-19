@@ -23,9 +23,29 @@ $action = $_GET['action'] ?? 'list';
 $user_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
 $q = trim($_GET['q'] ?? '');
+$search_column = isset($_GET['column']) ? clean_input($_GET['column']) : 'all';
 $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
+$sort = isset($_GET['sort']) ? clean_input($_GET['sort']) : 'user_id';
+$order = isset($_GET['order']) && strtoupper($_GET['order']) === 'DESC' ? 'DESC' : 'ASC';
 $per_page = ($page === 1) ? 10 : 20;
 $offset = ($page === 1) ? 0 : (10 + (20 * ($page - 2)));
+
+// Validate search column
+$allowed_columns = ['all', 'username', 'email', 'role'];
+if (!in_array($search_column, $allowed_columns, true)) {
+    $search_column = 'all';
+}
+
+// Validate sort column
+$allowed_sort = ['user_id', 'username', 'email', 'role', 'created_at'];
+if (!in_array($sort, $allowed_sort, true)) {
+    $sort = 'user_id';
+}
+
+$allowed_order = ['ASC', 'DESC'];
+if (!in_array($order, $allowed_order, true)) {
+    $order = 'ASC';
+}
 
 // Handle role change from dropdown
 if ($action === 'change_role' && $user_id > 0 && $_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -135,9 +155,15 @@ $error = $error !== '' ? $error : (string)($_GET['error'] ?? '');
 // Count users
 $total_users = 0;
 if ($q !== '') {
-    $like = '%' . $q . '%';
-    $stmt = $conn->prepare("SELECT COUNT(*) AS c FROM users WHERE username LIKE ? OR email LIKE ? OR role LIKE ?");
-    $stmt->bind_param('sss', $like, $like, $like);
+    if ($search_column === 'all') {
+        $like = '%' . $q . '%';
+        $stmt = $conn->prepare("SELECT COUNT(*) AS c FROM users WHERE username LIKE ? OR email LIKE ? OR role LIKE ?");
+        $stmt->bind_param('sss', $like, $like, $like);
+    } else {
+        $like = '%' . $q . '%';
+        $stmt = $conn->prepare("SELECT COUNT(*) AS c FROM users WHERE $search_column LIKE ?");
+        $stmt->bind_param('s', $like);
+    }
     $stmt->execute();
     $res = $stmt->get_result();
     $row = $res->fetch_assoc();
@@ -150,25 +176,56 @@ if ($q !== '') {
     if ($r) { $r->free(); }
 }
 
-// Fetch users ascending
+// Fetch users with sorting
 $users = [];
 if ($action === 'list') {
     if ($q !== '') {
-        $like = '%' . $q . '%';
-        $stmt = $conn->prepare("SELECT user_id, username, email, role, created_at FROM users WHERE username LIKE ? OR email LIKE ? OR role LIKE ? ORDER BY user_id ASC LIMIT ? OFFSET ?");
-        $stmt->bind_param('sssii', $like, $like, $like, $per_page, $offset);
+        if ($search_column === 'all') {
+            $like = '%' . $q . '%';
+            $stmt = $conn->prepare("SELECT user_id, username, email, role, created_at FROM users WHERE username LIKE ? OR email LIKE ? OR role LIKE ? ORDER BY $sort $order LIMIT ? OFFSET ?");
+            $stmt->bind_param('sssii', $like, $like, $like, $per_page, $offset);
+        } else {
+            $like = '%' . $q . '%';
+            $stmt = $conn->prepare("SELECT user_id, username, email, role, created_at FROM users WHERE $search_column LIKE ? ORDER BY $sort $order LIMIT ? OFFSET ?");
+            $stmt->bind_param('sii', $like, $per_page, $offset);
+        }
         $stmt->execute();
         $res = $stmt->get_result();
         while ($row = $res->fetch_assoc()) { $users[] = $row; }
         $stmt->close();
     } else {
-        $stmt = $conn->prepare("SELECT user_id, username, email, role, created_at FROM users ORDER BY user_id ASC LIMIT ? OFFSET ?");
+        $stmt = $conn->prepare("SELECT user_id, username, email, role, created_at FROM users ORDER BY $sort $order LIMIT ? OFFSET ?");
         $stmt->bind_param('ii', $per_page, $offset);
         $stmt->execute();
         $res = $stmt->get_result();
         while ($row = $res->fetch_assoc()) { $users[] = $row; }
         $stmt->close();
     }
+}
+
+// Helper function to generate sort URL
+function sort_url(string $col, string $current_sort, string $current_order, string $q, int $page, string $search_column): string {
+    $new_order = ($current_sort === $col && $current_order === 'ASC') ? 'DESC' : 'ASC';
+    $params = [
+        'sort' => $col,
+        'order' => $new_order,
+        'page' => 1
+    ];
+    if ($q !== '') {
+        $params['q'] = $q;
+        $params['column'] = $search_column;
+    }
+    return SITE_URL . '/admin/manage_users.php?' . http_build_query($params);
+}
+
+// Helper function for sort icon
+function sort_icon(string $col, string $current_sort, string $current_order): string {
+    if ($current_sort !== $col) {
+        return '<i class="fas fa-sort" style="color: #adb5bd; margin-left: 0.25rem;"></i>';
+    }
+    return $current_order === 'ASC' 
+        ? '<i class="fas fa-sort-up" style="color: #3498db; margin-left: 0.25rem;"></i>'
+        : '<i class="fas fa-sort-down" style="color: #3498db; margin-left: 0.25rem;"></i>';
 }
 
 $page_title = 'Manage Users';
@@ -182,10 +239,18 @@ $active_page = 'users';
                 </div>
 
                 <div class="filter-bar">
-                    <form method="GET" style="display: flex; gap: 0.5rem; align-items: center;">
-                        <input type="text" name="q" value="<?php echo htmlspecialchars($q); ?>" placeholder="Search username, email, role..." />
+                    <form method="GET" style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                        <select name="column" class="admin-input" style="min-width: 120px;">
+                            <option value="all" <?php echo $search_column === 'all' ? 'selected' : ''; ?>>All Columns</option>
+                            <option value="username" <?php echo $search_column === 'username' ? 'selected' : ''; ?>>Username</option>
+                            <option value="email" <?php echo $search_column === 'email' ? 'selected' : ''; ?>>Email</option>
+                            <option value="role" <?php echo $search_column === 'role' ? 'selected' : ''; ?>>Role</option>
+                        </select>
+                        <input type="text" name="q" value="<?php echo htmlspecialchars($q); ?>" placeholder="Search..." style="min-width: 200px;" />
+                        <input type="hidden" name="sort" value="<?php echo htmlspecialchars($sort); ?>" />
+                        <input type="hidden" name="order" value="<?php echo htmlspecialchars($order); ?>" />
                         <input type="hidden" name="page" value="1" />
-                        <button type="submit" class="btn btn-primary">Filter</button>
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-filter"></i> Filter</button>
                         <a href="<?php echo SITE_URL; ?>/admin/manage_users.php" class="btn btn-secondary">Clear</a>
                     </form>
                 </div>
@@ -197,15 +262,15 @@ $active_page = 'users';
                     <div style="background: #f8d7da; color: #721c24; padding: 0.75rem; border-radius: 4px; margin-bottom: 1rem;"><?php echo htmlspecialchars($error); ?></div>
                 <?php endif; ?>
 
-                <div style="overflow-x: auto;">
-                    <table class="data-table">
+                <div class="data-table-container" style="overflow-x: auto;">
+                    <table class="data-table" style="width: 100%; min-width: 700px;">
                         <thead>
                             <tr>
-                                <th>ID</th>
-                                <th>Username</th>
-                                <th>Email</th>
-                                <th>Role</th>
-                                <th>Joined</th>
+                                <th><a href="<?php echo sort_url('user_id', $sort, $order, $q, $page, $search_column); ?>" style="text-decoration: none; color: inherit;">ID<?php echo sort_icon('user_id', $sort, $order); ?></a></th>
+                                <th><a href="<?php echo sort_url('username', $sort, $order, $q, $page, $search_column); ?>" style="text-decoration: none; color: inherit;">Username<?php echo sort_icon('username', $sort, $order); ?></a></th>
+                                <th><a href="<?php echo sort_url('email', $sort, $order, $q, $page, $search_column); ?>" style="text-decoration: none; color: inherit;">Email<?php echo sort_icon('email', $sort, $order); ?></a></th>
+                                <th><a href="<?php echo sort_url('role', $sort, $order, $q, $page, $search_column); ?>" style="text-decoration: none; color: inherit;">Role<?php echo sort_icon('role', $sort, $order); ?></a></th>
+                                <th><a href="<?php echo sort_url('created_at', $sort, $order, $q, $page, $search_column); ?>" style="text-decoration: none; color: inherit;">Joined<?php echo sort_icon('created_at', $sort, $order); ?></a></th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -223,7 +288,7 @@ $active_page = 'users';
                                 <td>
                                     <?php $role = $u['role'] ?? 'user'; $is_admin = $role === 'admin'; ?>
                                     <?php if ((int)$u['user_id'] !== (int)$_SESSION['user_id']): ?>
-                                        <form method="POST" action="<?php echo SITE_URL; ?>/admin/manage_users.php?action=change_role&id=<?php echo (int)$u['user_id']; ?>" style="display: inline;">
+                                        <form method="POST" action="<?php echo SITE_URL; ?>/admin/manage_users.php?action=change_role&id=<?php echo (int)$u['user_id']; ?>&sort=<?php echo urlencode($sort); ?>&order=<?php echo urlencode($order); ?>&q=<?php echo urlencode($q); ?>&column=<?php echo urlencode($search_column); ?>&page=<?php echo $page; ?>" style="display: inline;">
                                             <select name="role" onchange="this.form.submit()" class="role-select">
                                                 <option value="user" <?php echo !$is_admin ? 'selected' : ''; ?>>Normal</option>
                                                 <option value="admin" <?php echo $is_admin ? 'selected' : ''; ?>>Admin</option>
@@ -234,9 +299,10 @@ $active_page = 'users';
                                     <?php endif; ?>
                                 </td>
                                 <td><?php echo date('M d, Y', strtotime($u['created_at'])); ?></td>
-                                <td class="actions">
+                                <td class="actions" style="display: flex; gap: 0.5rem; flex-wrap: nowrap;">
+                                    <a href="<?php echo SITE_URL; ?>/admin/manage_users.php?action=edit&id=<?php echo (int)$u['user_id']; ?>&sort=<?php echo urlencode($sort); ?>&order=<?php echo urlencode($order); ?>&q=<?php echo urlencode($q); ?>&column=<?php echo urlencode($search_column); ?>&page=<?php echo $page; ?>" class="btn btn-primary btn-small"><i class="fas fa-edit"></i> Edit</a>
                                     <?php if ((int)$u['user_id'] !== (int)$_SESSION['user_id']): ?>
-                                        <a href="<?php echo SITE_URL; ?>/admin/manage_users.php?action=delete&id=<?php echo (int)$u['user_id']; ?>" class="btn btn-danger btn-small" onclick="return confirm('Delete this user?')">Delete</a>
+                                        <a href="<?php echo SITE_URL; ?>/admin/manage_users.php?action=delete&id=<?php echo (int)$u['user_id']; ?>&sort=<?php echo urlencode($sort); ?>&order=<?php echo urlencode($order); ?>&q=<?php echo urlencode($q); ?>&column=<?php echo urlencode($search_column); ?>&page=<?php echo $page; ?>" class="btn btn-danger btn-small" onclick="return confirm('Delete this user?')"><i class="fas fa-trash"></i> Delete</a>
                                     <?php endif; ?>
                                 </td>
                             </tr>
@@ -255,11 +321,11 @@ $active_page = 'users';
                 <?php if ($total_pages > 1): ?>
                     <div class="pagination">
                         <?php if ($page > 1): ?>
-                            <a class="btn btn-secondary" href="<?php echo SITE_URL; ?>/admin/manage_users.php?q=<?php echo urlencode($q); ?>&page=<?php echo (int)($page - 1); ?>">← Prev</a>
+                            <a class="btn btn-secondary" href="<?php echo SITE_URL; ?>/admin/manage_users.php?q=<?php echo urlencode($q); ?>&column=<?php echo urlencode($search_column); ?>&page=<?php echo (int)($page - 1); ?>&sort=<?php echo urlencode($sort); ?>&order=<?php echo urlencode($order); ?>">← Prev</a>
                         <?php endif; ?>
                         <span style="color: #6c757d;">Page <?php echo (int)$page; ?> of <?php echo (int)$total_pages; ?></span>
                         <?php if ($page < $total_pages): ?>
-                            <a class="btn btn-secondary" href="<?php echo SITE_URL; ?>/admin/manage_users.php?q=<?php echo urlencode($q); ?>&page=<?php echo (int)($page + 1); ?>">Next →</a>
+                            <a class="btn btn-secondary" href="<?php echo SITE_URL; ?>/admin/manage_users.php?q=<?php echo urlencode($q); ?>&column=<?php echo urlencode($search_column); ?>&page=<?php echo (int)($page + 1); ?>&sort=<?php echo urlencode($sort); ?>&order=<?php echo urlencode($order); ?>">Next →</a>
                         <?php endif; ?>
                     </div>
                 <?php endif; ?>

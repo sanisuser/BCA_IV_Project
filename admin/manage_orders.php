@@ -24,6 +24,56 @@ if (!in_array($status_filter, $allowed_filters, true)) {
     $status_filter = '';
 }
 
+$search_column = isset($_GET['column']) ? clean_input($_GET['column']) : 'all';
+$q = trim($_GET['q'] ?? '');
+
+// Validate search column
+$allowed_columns = ['all', 'order_id', 'username', 'full_name', 'total_amount'];
+if (!in_array($search_column, $allowed_columns, true)) {
+    $search_column = 'all';
+}
+
+$sort = isset($_GET['sort']) ? clean_input($_GET['sort']) : 'created_at';
+$order = isset($_GET['order']) && strtoupper($_GET['order']) === 'ASC' ? 'ASC' : 'DESC';
+
+// Validate sort column
+$allowed_sort = ['order_id', 'created_at', 'total_amount', 'status'];
+if (!in_array($sort, $allowed_sort, true)) {
+    $sort = 'created_at';
+}
+
+$allowed_order = ['ASC', 'DESC'];
+if (!in_array($order, $allowed_order, true)) {
+    $order = 'DESC';
+}
+
+// Helper function to generate sort URL
+function sort_url(string $col, string $current_sort, string $current_order, string $status_filter, string $q, string $search_column): string {
+    $new_order = ($current_sort === $col && $current_order === 'DESC') ? 'ASC' : 'DESC';
+    $params = [
+        'sort' => $col,
+        'order' => $new_order
+    ];
+    if ($status_filter !== '') {
+        $params['status'] = $status_filter;
+    }
+    if ($q !== '') {
+        $params['q'] = $q;
+        $params['column'] = $search_column;
+    }
+    return SITE_URL . '/admin/manage_orders.php?' . http_build_query($params);
+}
+
+// Helper function for sort icon
+function sort_icon(string $col, string $current_sort, string $current_order): string {
+    if ($current_sort !== $col) {
+        return '<i class="fas fa-sort" style="color: #adb5bd; margin-left: 0.25rem;"></i>';
+    }
+    return $current_order === 'ASC' 
+        ? '<i class="fas fa-sort-up" style="color: #3498db; margin-left: 0.25rem;"></i>'
+        : '<i class="fas fa-sort-down" style="color: #3498db; margin-left: 0.25rem;"></i>';
+}
+
 function admin_status_label(string $status): string {
     return match ($status) {
         'shipped' => 'Dispatched',
@@ -64,11 +114,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'updat
 }
 
 $orders = [];
+$query_base = "SELECT o.*, u.username, u.full_name, u.email, u.phone as user_phone FROM orders o JOIN users u ON o.user_id = u.user_id";
+$where_clause = '';
+$params = [];
+$types = '';
+
+// Build WHERE clause
 if ($status_filter !== '') {
-    $stmt = $conn->prepare('SELECT o.*, u.username, u.full_name, u.email, u.phone as user_phone FROM orders o JOIN users u ON o.user_id = u.user_id WHERE o.status = ? ORDER BY o.created_at DESC');
-    $stmt->bind_param('s', $status_filter);
-} else {
-    $stmt = $conn->prepare('SELECT o.*, u.username, u.full_name, u.email, u.phone as user_phone FROM orders o JOIN users u ON o.user_id = u.user_id ORDER BY o.created_at DESC');
+    $where_clause = " WHERE o.status = ?";
+    $params[] = $status_filter;
+    $types .= 's';
+}
+
+if ($q !== '') {
+    if ($search_column === 'all') {
+        $where_clause = $where_clause ? $where_clause . " AND (o.order_id LIKE ? OR u.username LIKE ? OR u.full_name LIKE ?)" : " WHERE (o.order_id LIKE ? OR u.username LIKE ? OR u.full_name LIKE ?)";
+        $like = '%' . $q . '%';
+        $params[] = $like;
+        $params[] = $like;
+        $params[] = $like;
+        $types .= 'sss';
+    } elseif ($search_column === 'order_id') {
+        $where_clause = $where_clause ? $where_clause . " AND o.order_id = ?" : " WHERE o.order_id = ?";
+        $params[] = (int)$q;
+        $types .= 'i';
+    } elseif ($search_column === 'total_amount') {
+        $where_clause = $where_clause ? $where_clause . " AND o.total_amount = ?" : " WHERE o.total_amount = ?";
+        $params[] = (float)$q;
+        $types .= 'd';
+    } else {
+        $where_clause = $where_clause ? $where_clause . " AND u.$search_column LIKE ?" : " WHERE u.$search_column LIKE ?";
+        $like = '%' . $q . '%';
+        $params[] = $like;
+        $types .= 's';
+    }
+}
+
+$query = $query_base . $where_clause . " ORDER BY $sort $order";
+$stmt = $conn->prepare($query);
+if (!empty($params)) {
+    $stmt->bind_param($types, ...$params);
 }
 $stmt->execute();
 $res = $stmt->get_result();
@@ -86,7 +171,15 @@ $stmt->close();
         <div style="color: #6c757d; font-size: 0.9rem;">Home / Orders</div>
     </div>
     <div class="dash-top-actions">
-        <form method="GET" action="" style="display:flex; gap: 0.5rem; align-items:center;">
+        <form method="GET" action="" style="display:flex; gap: 0.5rem; align-items:center; flex-wrap: wrap;">
+            <select name="column" class="admin-input" style="min-width: 120px;">
+                <option value="all" <?php echo $search_column === 'all' ? 'selected' : ''; ?>>All Columns</option>
+                <option value="order_id" <?php echo $search_column === 'order_id' ? 'selected' : ''; ?>>Order ID</option>
+                <option value="username" <?php echo $search_column === 'username' ? 'selected' : ''; ?>>Username</option>
+                <option value="full_name" <?php echo $search_column === 'full_name' ? 'selected' : ''; ?>>Full Name</option>
+                <option value="total_amount" <?php echo $search_column === 'total_amount' ? 'selected' : ''; ?>>Total Amount</option>
+            </select>
+            <input type="text" name="q" value="<?php echo htmlspecialchars($q); ?>" placeholder="Search..." class="admin-input" style="min-width: 200px;" />
             <select name="status" class="admin-input" style="min-width: 180px;">
                 <option value="" <?php echo $status_filter === '' ? 'selected' : ''; ?>>All Status</option>
                 <option value="pending" <?php echo $status_filter === 'pending' ? 'selected' : ''; ?>>Pending</option>
@@ -94,6 +187,7 @@ $stmt->close();
                 <option value="delivered" <?php echo $status_filter === 'delivered' ? 'selected' : ''; ?>>Delivered</option>
             </select>
             <button class="btn btn-secondary" type="submit"><i class="fa-solid fa-filter"></i> Filter</button>
+            <a href="<?php echo SITE_URL; ?>/admin/manage_orders.php" class="btn btn-secondary">Clear</a>
         </form>
     </div>
 </div>
@@ -115,11 +209,11 @@ $stmt->close();
         <table class="admin-table" style="min-width: 980px;">
             <thead>
                 <tr>
-                    <th>Order</th>
+                    <th><a href="<?php echo sort_url('order_id', $sort, $order, $status_filter, $q, $search_column); ?>" style="text-decoration: none; color: inherit;">Order<?php echo sort_icon('order_id', $sort, $order); ?></a></th>
                     <th>User</th>
-                    <th>Date</th>
-                    <th>Status</th>
-                    <th>Total</th>
+                    <th><a href="<?php echo sort_url('created_at', $sort, $order, $status_filter, $q, $search_column); ?>" style="text-decoration: none; color: inherit;">Date<?php echo sort_icon('created_at', $sort, $order); ?></a></th>
+                    <th><a href="<?php echo sort_url('status', $sort, $order, $status_filter, $q, $search_column); ?>" style="text-decoration: none; color: inherit;">Status<?php echo sort_icon('status', $sort, $order); ?></a></th>
+                    <th><a href="<?php echo sort_url('total_amount', $sort, $order, $status_filter, $q, $search_column); ?>" style="text-decoration: none; color: inherit;">Total<?php echo sort_icon('total_amount', $sort, $order); ?></a></th>
                     <th style="width: 260px;">Update</th>
                 </tr>
             </thead>

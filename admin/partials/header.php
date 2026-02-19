@@ -40,7 +40,6 @@ if (is_logged_in()) {
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="<?php echo SITE_URL; ?>/includes/css/header.css">
-    <link rel="stylesheet" href="<?php echo SITE_URL; ?>/css/style.css">
     <link rel="stylesheet" href="<?php echo SITE_URL; ?>/admin/css/admin.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -77,7 +76,7 @@ if (is_logged_in()) {
                         </a>
                         <ul class="dropdown-menu">
                             <li><a href="<?php echo SITE_URL; ?>/auth/profile.php"><i class="fas fa-id-card"></i> My Profile</a></li>
-                            <li><a href="#" onclick="toggleDarkMode(); return false;"><i class="fas fa-moon"></i> Dark Mode</a></li>
+                            <li><a href="<?php echo SITE_URL; ?>/index.php"><i class="fas fa-home"></i> Back to Site</a></li>
                             <li><a href="<?php echo SITE_URL; ?>/auth/logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
                         </ul>
                     </li>
@@ -99,44 +98,14 @@ if (is_logged_in()) {
         <a href="<?php echo SITE_URL; ?>/admin/manage_books.php"><i class="fas fa-book"></i> Manage Books</a>
         <a href="<?php echo SITE_URL; ?>/admin/manage_users.php"><i class="fas fa-users"></i> Manage Users</a>
         <a href="<?php echo SITE_URL; ?>/admin/manage_orders.php"><i class="fas fa-shopping-bag"></i> Orders</a>
-        <a href="<?php echo SITE_URL; ?>/index.php"><i class="fas fa-arrow-left"></i> Back to Site</a>
+        <a href="<?php echo SITE_URL; ?>/index.php"><i class="fas fa-home"></i> Back to Site</a>
         <?php if (is_logged_in()): ?>
             <a href="<?php echo SITE_URL; ?>/auth/profile.php"><i class="fas fa-id-card"></i> My Profile</a>
-            <a href="#" onclick="toggleDarkMode(); return false;"><i class="fas fa-moon"></i> Dark Mode</a>
             <a href="<?php echo SITE_URL; ?>/auth/logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a>
         <?php else: ?>
             <a href="<?php echo SITE_URL; ?>/auth/login.php"><i class="fas fa-sign-in-alt"></i> Login</a>
         <?php endif; ?>
     </div>
-
-    <!-- Dark Mode Toggle Script -->
-    <script>
-    function toggleDarkMode() {
-        document.body.classList.toggle('dark-mode');
-        const isDark = document.body.classList.contains('dark-mode');
-        localStorage.setItem('darkMode', isDark ? 'enabled' : 'disabled');
-        
-        // Update icon
-        const icon = document.querySelector('.fa-moon, .fa-sun');
-        if (icon) {
-            icon.classList.toggle('fa-moon', !isDark);
-            icon.classList.toggle('fa-sun', isDark);
-        }
-    }
-
-    // Check saved preference on load
-    document.addEventListener('DOMContentLoaded', function() {
-        if (localStorage.getItem('darkMode') === 'enabled') {
-            document.body.classList.add('dark-mode');
-            // Update icon if needed
-            const icon = document.querySelector('.fa-moon');
-            if (icon) {
-                icon.classList.remove('fa-moon');
-                icon.classList.add('fa-sun');
-            }
-        }
-    });
-    </script>
 
     <!-- Navbar JS for mobile menu toggle -->
     <script src="<?php echo SITE_URL; ?>/includes/js/navbar.js"></script>
