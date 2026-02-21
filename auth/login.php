@@ -74,7 +74,7 @@ $saved_username = isset($_GET['username']) ? htmlspecialchars($_GET['username'])
                     <input type="checkbox" id="remember" name="remember" value="1" class="form-checkbox">
                     <label for="remember" class="form-checkbox-label">Remember me</label>
                 </div>
-                <a href="#" class="auth-link" style="float: right;">Forgot password?</a>
+                <a href="forgot_password.php" class="auth-link" style="float: right;">Forgot password?</a>
             </div>
             
             <button type="submit" class="btn btn-primary btn-block">Sign In</button>
