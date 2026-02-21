@@ -338,10 +338,6 @@ body {
     gap: 1.5rem;
 }
 
-@media (min-width: 768px) {
-    .password-section.show { grid-template-columns: 1fr 1fr 1fr; }
-}
-
 .password-section .form-label {
     font-size: 0.75rem;
     color: var(--text-muted);

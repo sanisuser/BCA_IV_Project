@@ -30,6 +30,10 @@ if (!preg_match('/^[a-zA-Z0-9_]+$/', $username)) {
     $errors[] = 'Username can only contain letters, numbers, and underscores';
 }
 
+if (!preg_match('/[a-zA-Z]/', $username) || !preg_match('/[0-9]/', $username)) {
+    $errors[] = 'Username must contain at least one letter and one number';
+}
+
 if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
     $errors[] = 'Please enter a valid email address';
 }

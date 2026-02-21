@@ -16,8 +16,15 @@ $success = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $full_name = trim($_POST['full_name'] ?? '');
-    $location = trim($_POST['location'] ?? '');
     $ship_address = trim($_POST['ship_address'] ?? '');
+    if ($ship_address === '') {
+        $ship_address = null;
+    }
+    $phone = trim($_POST['phone'] ?? '');
+    $bio = trim($_POST['bio'] ?? '');
+    $location = trim($_POST['location'] ?? '');
+    $set_as_location = isset($_POST['set_as_location']) && $_POST['set_as_location'] === 'on';
+    $set_shipping_as_location = isset($_POST['set_shipping_as_location']) && $_POST['set_shipping_as_location'] === 'on';
 
     $current_password = (string)($_POST['current_password'] ?? '');
     $new_password = (string)($_POST['new_password'] ?? '');
@@ -61,9 +68,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         // Update basic fields
-        $sql = 'UPDATE users SET full_name = ?, location = ?, ship_address = ?';
-        $types = 'sss';
-        $params = [$full_name, $location, $ship_address];
+        $sql = 'UPDATE users SET full_name = ?, ship_address = ?, phone = ?, bio = ?, location = ?';
+        $types = 'sssss';
+        // If set_as_location is checked, use ship_address as location
+        // If set_shipping_as_location is checked, use location as ship_address
+        $final_location = $set_as_location && $ship_address ? $ship_address : $location;
+        $final_ship_address = $set_shipping_as_location && $location ? $location : $ship_address;
+        $params = [$full_name, $final_ship_address, $phone, $bio, $final_location];
 
         if ($new_profile_path !== null) {
             $sql .= ', profile_image = ?';
@@ -130,7 +141,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // Fetch user data
 $user = null;
-$stmt = $conn->prepare('SELECT user_id, username, email, full_name, profile_image, location, ship_address FROM users WHERE user_id = ?');
+$stmt = $conn->prepare('SELECT user_id, username, email, full_name, profile_image, location, ship_address, phone, bio FROM users WHERE user_id = ?');
 if ($stmt) {
     $stmt->bind_param('i', $user_id);
     $stmt->execute();
@@ -145,7 +156,7 @@ if (!$user) {
 
 // Fetch real order history
 $orders = [];
-$stmt = $conn->prepare('SELECT order_id, total_amount, status, payment_method, created_at FROM orders WHERE user_id = ? ORDER BY created_at DESC LIMIT 10');
+$stmt = $conn->prepare('SELECT order_id, total_amount, status, payment_method, created_at, admin_remark FROM orders WHERE user_id = ? ORDER BY created_at DESC LIMIT 10');
 if ($stmt) {
     $stmt->bind_param('i', $user_id);
     $stmt->execute();
@@ -204,8 +215,11 @@ if ($display_name === '') {
 
 $display_location = (string)($user['location'] ?? '');
 $display_ship = (string)($user['ship_address'] ?? '');
+$display_email = (string)($user['email'] ?? '');
+$display_phone = (string)($user['phone'] ?? '');
+$display_bio = (string)($user['bio'] ?? '');
 $profile_image = (string)($user['profile_image'] ?? '');
-$profile_image_url = $profile_image !== '' ? (SITE_URL . '/' . ltrim($profile_image, '/')) : 'https://i.pravatar.cc/300?u=' . urlencode((string)($user['username'] ?? 'user'));
+$profile_image_url = $profile_image !== '' ? (SITE_URL . '/' . ltrim($profile_image, '/')) : '';
 
 require_once __DIR__ . '/../includes/header_navbar.php';
 ?>
@@ -213,16 +227,6 @@ require_once __DIR__ . '/../includes/header_navbar.php';
 <link rel="stylesheet" href="<?php echo SITE_URL; ?>/auth/css/profile-modern.css">
 
 <div class="profile-container">
-    <div class="profile-header">
-        <div class="profile-header-left">
-            <i class="fa-solid fa-user-circle profile-icon"></i>
-            <h1 class="profile-title">My Profile</h1>
-        </div>
-        <div class="profile-header-right">
-            <div class="profile-status-dot"></div>
-            Logged in as <?php echo htmlspecialchars((string)($user['username'] ?? '')); ?>
-        </div>
-    </div>
 
     <?php if ($error !== ''): ?>
         <div class="alert alert-error">
@@ -242,10 +246,16 @@ require_once __DIR__ . '/../includes/header_navbar.php';
         <div class="profile-sidebar">
             <div class="card card-sticky">
                 <div class="profile-image-wrapper">
+                    <?php if ($profile_image_url !== ''): ?>
                     <img id="profileImage"
                          src="<?php echo htmlspecialchars($profile_image_url); ?>"
                          alt="Profile Picture"
                          class="profile-image">
+                    <?php else: ?>
+                    <div id="profileImage" class="profile-image-placeholder" style="width: 120px; height: 120px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 3rem;">
+                        <i class="fa-solid fa-user"></i>
+                    </div>
+                    <?php endif; ?>
                     <label for="profileUpload" class="profile-upload-btn">
                         <i class="fa-solid fa-camera"></i>
                         <span>Update</span>
@@ -253,15 +263,27 @@ require_once __DIR__ . '/../includes/header_navbar.php';
                 </div>
 
                 <h2 id="displayName" class="profile-name"><?php echo htmlspecialchars($display_name); ?></h2>
+                <p class="profile-email" style="color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 0.5rem;">
+                    <i class="fa-solid fa-envelope" style="margin-right: 0.5rem;"></i>
+                    <?php echo htmlspecialchars($display_email); ?>
+                </p>
+                <?php if ($display_phone !== ''): ?>
+                <p class="profile-phone" style="color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 0.5rem;">
+                    <i class="fa-solid fa-phone" style="margin-right: 0.5rem;"></i>
+                    <?php echo htmlspecialchars($display_phone); ?>
+                </p>
+                <?php endif; ?>
+                <?php if ($display_location !== ''): ?>
                 <p class="profile-location">
                     <i class="fa-solid fa-location-dot"></i>
                     <span id="displayLocation"><?php echo htmlspecialchars($display_location); ?></span>
                 </p>
-
-                <div class="profile-genres">
-                    <p class="profile-genres-title">Favourite Genres</p>
-                    <div id="previewGenres" class="genre-tags"></div>
-                </div>
+                <?php endif; ?>
+                <?php if ($display_bio !== ''): ?>
+                <p class="profile-bio" style="color: var(--text-muted); font-size: 0.875rem; margin-top: 1rem; font-style: italic;">
+                    "<?php echo htmlspecialchars($display_bio); ?>"
+                </p>
+                <?php endif; ?>
             </div>
         </div>
 
@@ -276,30 +298,42 @@ require_once __DIR__ . '/../includes/header_navbar.php';
                                class="form-input">
                     </div>
 
-                    <div class="form-row">
-                        <div class="form-group" style="margin-bottom: 0;">
-                            <label class="form-label">Current Location</label>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div class="form-group">
+                            <label class="form-label">Location</label>
                             <input id="locationInput" name="location" type="text" value="<?php echo htmlspecialchars($display_location); ?>"
+                                   placeholder="Enter your location (city, country)"
                                    class="form-input">
+                            <label style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.5rem; font-size: 0.875rem; color: var(--text-secondary); cursor: pointer;">
+                                <input type="checkbox" id="setShippingAsLocation" name="set_shipping_as_location" style="cursor: pointer;">
+                                <span>Use location as shipping address</span>
+                            </label>
                         </div>
-                        <div class="form-group" style="margin-bottom: 0;">
-                            <label class="form-label">Shipping Location</label>
+
+                        <div class="form-group">
+                            <label class="form-label">Shipping Address</label>
                             <input id="shippingInput" name="ship_address" type="text" value="<?php echo htmlspecialchars($display_ship); ?>"
                                    placeholder="Enter shipping address"
                                    class="form-input">
+                            <label style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.5rem; font-size: 0.875rem; color: var(--text-secondary); cursor: pointer;">
+                                <input type="checkbox" id="setAsLocation" name="set_as_location" style="cursor: pointer;">
+                                <span>Set shipping address as my location</span>
+                            </label>
                         </div>
                     </div>
 
-                    <div class="checkbox-group">
-                        <input type="checkbox" id="sameAsLocation" class="checkbox">
-                        <label for="sameAsLocation" class="checkbox-label">
-                            Set shipping location as my primary location
-                        </label>
+                    <div class="form-group">
+                        <label class="form-label">Phone Number</label>
+                        <input id="phoneInput" name="phone" type="tel" value="<?php echo htmlspecialchars($display_phone); ?>"
+                               placeholder="Enter your phone number"
+                               class="form-input">
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Favourite Genres</label>
-                        <div id="genreContainer" class="genre-pills-container"></div>
+                        <label class="form-label">Bio</label>
+                        <textarea id="bioInput" name="bio" rows="4"
+                                  placeholder="Tell us about yourself..."
+                                  class="form-input" style="resize: vertical;"><?php echo htmlspecialchars($display_bio); ?></textarea>
                     </div>
 
                     <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border);">
@@ -314,18 +348,42 @@ require_once __DIR__ . '/../includes/header_navbar.php';
                         <div id="passwordSection" class="password-section">
                             <div>
                                 <label class="form-label">Current Password</label>
-                                <input id="currentPass" name="current_password" type="password"
-                                       class="form-input">
+                                <div style="position: relative;">
+                                    <input id="currentPass" name="current_password" type="password"
+                                           class="form-input" style="padding-right: 45px;">
+                                    <button type="button" onclick="togglePasswordField('currentPass')"
+                                            style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+                                                   background: none; border: none; color: #a1a1aa; cursor: pointer;
+                                                   padding: 5px; font-size: 16px;">
+                                        <i class="fas fa-eye" id="currentPass-eye"></i>
+                                    </button>
+                                </div>
                             </div>
                             <div>
                                 <label class="form-label">New Password</label>
-                                <input id="newPass" name="new_password" type="password"
-                                       class="form-input">
+                                <div style="position: relative;">
+                                    <input id="newPass" name="new_password" type="password"
+                                           class="form-input" style="padding-right: 45px;">
+                                    <button type="button" onclick="togglePasswordField('newPass')"
+                                            style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+                                                   background: none; border: none; color: #a1a1aa; cursor: pointer;
+                                                   padding: 5px; font-size: 16px;">
+                                        <i class="fas fa-eye" id="newPass-eye"></i>
+                                    </button>
+                                </div>
                             </div>
                             <div>
                                 <label class="form-label">Confirm New</label>
-                                <input id="confirmPass" name="confirm_password" type="password"
-                                       class="form-input">
+                                <div style="position: relative;">
+                                    <input id="confirmPass" name="confirm_password" type="password"
+                                           class="form-input" style="padding-right: 45px;">
+                                    <button type="button" onclick="togglePasswordField('confirmPass')"
+                                            style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+                                                   background: none; border: none; color: #a1a1aa; cursor: pointer;
+                                                   padding: 5px; font-size: 16px;">
+                                        <i class="fas fa-eye" id="confirmPass-eye"></i>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -368,6 +426,12 @@ require_once __DIR__ . '/../includes/header_navbar.php';
                                             </div>
                                             <p class="order-items-text"><?php echo htmlspecialchars($itemText ?: 'Order items'); ?></p>
                                             <p class="order-meta"><?php echo $orderDate; ?> • <?php echo format_price($order['total_amount']); ?></p>
+                                            <?php if (!empty($order['admin_remark'])): ?>
+                                            <p class="order-remark" style="margin-top: 0.5rem; padding: 0.5rem; background: rgba(239, 68, 68, 0.1); border-left: 3px solid #ef4444; border-radius: 0 4px 4px 0; font-size: 0.875rem; color: #fca5a5;">
+                                                <i class="fa-solid fa-circle-exclamation" style="margin-right: 0.5rem; color: #ef4444;"></i>
+                                                <strong>Remark:</strong> <?php echo htmlspecialchars($order['admin_remark']); ?>
+                                            </p>
+                                            <?php endif; ?>
                                         </div>
                                         <a href="<?php echo SITE_URL; ?>/order_cart_process/orders.php" class="btn-view-order">
                                             VIEW DETAILS
@@ -393,14 +457,86 @@ require_once __DIR__ . '/../includes/header_navbar.php';
     <span id="toastText"></span>
 </div>
 
-<script>
-window.__PROFILE__ = {
-  welcomeName: <?php echo json_encode($display_name); ?>,
-  genres: ["Sci-Fi", "Fantasy", "Mystery", "Thriller", "Biography", "Self-Help"],
-  selectedGenres: []
-};
-</script>
 <script src="<?php echo SITE_URL; ?>/auth/js/profile-modern.js"></script>
+
+<script>
+// Handle "Set shipping address as my location" checkbox
+document.getElementById('setAsLocation').addEventListener('change', function() {
+    const locationInput = document.getElementById('locationInput');
+    const shippingInput = document.getElementById('shippingInput');
+    const setShippingAsLocation = document.getElementById('setShippingAsLocation');
+    
+    if (this.checked) {
+        // Uncheck the other checkbox
+        setShippingAsLocation.checked = false;
+        shippingInput.readOnly = false;
+        shippingInput.style.opacity = '1';
+        // Copy shipping address to location
+        locationInput.value = shippingInput.value;
+        locationInput.readOnly = true;
+        locationInput.style.opacity = '0.6';
+    } else {
+        locationInput.readOnly = false;
+        locationInput.style.opacity = '1';
+    }
+});
+
+// Handle "Use location as shipping address" checkbox
+document.getElementById('setShippingAsLocation').addEventListener('change', function() {
+    const locationInput = document.getElementById('locationInput');
+    const shippingInput = document.getElementById('shippingInput');
+    const setAsLocation = document.getElementById('setAsLocation');
+    
+    if (this.checked) {
+        // Uncheck the other checkbox
+        setAsLocation.checked = false;
+        locationInput.readOnly = false;
+        locationInput.style.opacity = '1';
+        // Copy location to shipping address
+        shippingInput.value = locationInput.value;
+        shippingInput.readOnly = true;
+        shippingInput.style.opacity = '0.6';
+    } else {
+        shippingInput.readOnly = false;
+        shippingInput.style.opacity = '1';
+    }
+});
+
+// Update location when shipping address changes if checkbox is checked
+document.getElementById('shippingInput').addEventListener('input', function() {
+    const setAsLocationCheckbox = document.getElementById('setAsLocation');
+    const locationInput = document.getElementById('locationInput');
+    
+    if (setAsLocationCheckbox.checked) {
+        locationInput.value = this.value;
+    }
+});
+
+// Update shipping address when location changes if checkbox is checked
+document.getElementById('locationInput').addEventListener('input', function() {
+    const setShippingAsLocationCheckbox = document.getElementById('setShippingAsLocation');
+    const shippingInput = document.getElementById('shippingInput');
+    
+    if (setShippingAsLocationCheckbox.checked) {
+        shippingInput.value = this.value;
+    }
+});
+
+// Before form submit, sync values based on checkboxes
+document.getElementById('profileForm').addEventListener('submit', function() {
+    const setAsLocationCheckbox = document.getElementById('setAsLocation');
+    const setShippingAsLocationCheckbox = document.getElementById('setShippingAsLocation');
+    const locationInput = document.getElementById('locationInput');
+    const shippingInput = document.getElementById('shippingInput');
+    
+    if (setAsLocationCheckbox.checked) {
+        locationInput.value = shippingInput.value;
+    }
+    if (setShippingAsLocationCheckbox.checked) {
+        shippingInput.value = locationInput.value;
+    }
+});
+</script>
 
 <?php
 require_once __DIR__ . '/../includes/footer.php';

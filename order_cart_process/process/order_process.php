@@ -14,17 +14,31 @@ if ($action !== 'place') {
 }
 
 $selected_address = trim($_POST['selected_address'] ?? '');
-$shipping_address = trim($_POST['shipping_address'] ?? '');
+$ship_address = trim($_POST['ship_address'] ?? '');
 $payment_method = trim($_POST['payment_method'] ?? '');
 
 // Handle address selection
 if ($selected_address === 'custom') {
     // Use custom address
-    if ($shipping_address === '') {
+    if ($ship_address === '') {
         redirect(SITE_URL . '/order_cart_process/checkout.php?error=' . urlencode('Please enter a custom shipping address'));
     }
+} elseif ($selected_address === 'profile') {
+    // Use profile shipping address
+    $ship_stmt = $conn->prepare("SELECT ship_address FROM users WHERE user_id = ?");
+    $ship_stmt->bind_param('i', $user_id);
+    $ship_stmt->execute();
+    $ship_result = $ship_stmt->get_result();
+    $profile = $ship_result->fetch_assoc();
+    $ship_stmt->close();
+    
+    if (!$profile || empty($profile['ship_address'])) {
+        redirect(SITE_URL . '/order_cart_process/checkout.php?error=' . urlencode('No profile shipping address found. Please add one in your profile.'));
+    }
+    
+    $ship_address = (string)$profile['ship_address'];
 } elseif ($selected_address !== '' && is_numeric($selected_address)) {
-    // Use saved address
+    // Use saved address from user_addresses table
     $address_id = (int)$selected_address;
     $addr_stmt = $conn->prepare("SELECT * FROM user_addresses WHERE address_id = ? AND user_id = ?");
     $addr_stmt->bind_param('ii', $address_id, $user_id);
@@ -38,7 +52,7 @@ if ($selected_address === 'custom') {
     }
     
     // Format saved address as shipping address
-    $shipping_address = sprintf(
+    $ship_address = sprintf(
         "%s\n%s\n%s, %s %s\n%s\nPhone: %s",
         $saved_address['full_name'],
         $saved_address['address_line1'],
@@ -50,7 +64,7 @@ if ($selected_address === 'custom') {
     );
 } else {
     // No address selected (fallback to custom)
-    if ($shipping_address === '') {
+    if (trim($ship_address) === '') {
         redirect(SITE_URL . '/order_cart_process/checkout.php?error=' . urlencode('Please select or enter a shipping address'));
     }
 }
@@ -108,8 +122,8 @@ try {
         $stmt = $conn->prepare('INSERT INTO orders (user_id, address_id, total_amount, status, payment_method, created_at) VALUES (?, ?, ?, \'pending\', ?, NOW())');
         $stmt->bind_param('iids', $user_id, $address_id_to_store, $total_with_vat, $payment_method);
     } else {
-        $stmt = $conn->prepare('INSERT INTO orders (user_id, total_amount, status, shipping_address, payment_method, created_at) VALUES (?, ?, \'pending\', ?, ?, NOW())');
-        $stmt->bind_param('idss', $user_id, $total_with_vat, $shipping_address, $payment_method);
+        $stmt = $conn->prepare('INSERT INTO orders (user_id, total_amount, status, ship_address, payment_method, created_at) VALUES (?, ?, \'pending\', ?, ?, NOW())');
+        $stmt->bind_param('idss', $user_id, $total_with_vat, $ship_address, $payment_method);
     }
     $stmt->execute();
     $order_id = (int)$stmt->insert_id;

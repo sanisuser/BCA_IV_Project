@@ -35,7 +35,14 @@
 
       const reader = new FileReader();
       reader.onload = function (ev) {
-        profileImg.src = ev.target && ev.target.result ? ev.target.result : profileImg.src;
+        const nextUrl = ev.target && ev.target.result ? ev.target.result : '';
+        if (profileImg && profileImg.tagName === 'IMG') {
+          profileImg.src = nextUrl || profileImg.src;
+        } else if (profileImg && nextUrl) {
+          profileImg.style.backgroundImage = `url(${nextUrl})`;
+          profileImg.style.backgroundSize = 'cover';
+          profileImg.style.backgroundPosition = 'center';
+        }
         showToast('Profile picture preview updated');
       };
       reader.readAsDataURL(file);
@@ -99,11 +106,27 @@
     const section = document.getElementById('passwordSection');
     const chevron = document.getElementById('passwordChevron');
     if (!section || !chevron) return;
-    section.classList.toggle('hidden');
-    chevron.classList.toggle('rotate-180');
+    section.classList.toggle('show');
+    chevron.classList.toggle('rotate');
   }
 
   window.togglePasswordSection = togglePasswordSection;
+
+  function togglePasswordField(fieldId) {
+    const input = document.getElementById(fieldId);
+    const icon = document.getElementById(fieldId + '-eye');
+    if (!input) return;
+
+    const isPassword = input.type === 'password';
+    input.type = isPassword ? 'text' : 'password';
+
+    if (icon) {
+      icon.classList.toggle('fa-eye', !isPassword);
+      icon.classList.toggle('fa-eye-slash', isPassword);
+    }
+  }
+
+  window.togglePasswordField = togglePasswordField;
 
   function viewOrder(orderId) {
     showToast(`Opening order #${String(orderId).padStart(4, '0')} details...`);

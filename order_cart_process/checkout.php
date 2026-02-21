@@ -10,19 +10,25 @@ if (!is_logged_in()) {
 
 $user_id = (int)get_user_id();
 
+$error = $_GET['error'] ?? '';
+$success = $_GET['success'] ?? '';
+
+// Fetch user's profile shipping address
+$profile_ship_address = '';
+$ship_stmt = $conn->prepare("SELECT ship_address FROM users WHERE user_id = ?");
+$ship_stmt->bind_param('i', $user_id);
+$ship_stmt->execute();
+$ship_result = $ship_stmt->get_result();
+if ($ship_row = $ship_result->fetch_assoc()) {
+    $profile_ship_address = $ship_row['ship_address'] ?? '';
+}
+$ship_stmt->close();
+
 $cart_items = [];
 $total = 0;
 
-// Fetch user addresses
-$addresses = [];
-$addr_stmt = $conn->prepare("SELECT * FROM user_addresses WHERE user_id = ? ORDER BY is_default DESC, created_at DESC");
-$addr_stmt->bind_param('i', $user_id);
-$addr_stmt->execute();
-$addr_result = $addr_stmt->get_result();
-while ($addr_row = $addr_result->fetch_assoc()) {
-    $addresses[] = $addr_row;
-}
-$addr_stmt->close();
+// Check if user has a profile shipping address
+$has_profile_address = !empty($profile_ship_address);
 
 $stmt = $conn->prepare('
     SELECT c.cart_id, c.quantity, c.book_id, b.title, b.price, b.stock, b.cover_image
@@ -59,43 +65,45 @@ if (count($cart_items) === 0) {
             <form method="POST" action="<?php echo SITE_URL; ?>/order_cart_process/process/order_process.php">
                 <input type="hidden" name="action" value="place">
 
+    <?php if ($error !== ''): ?>
+        <div class="alert alert-error">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <?php echo htmlspecialchars($error); ?>
+        </div>
+    <?php endif; ?>
+
+    <?php if ($success !== ''): ?>
+        <div class="alert alert-success">
+            <i class="fa-solid fa-circle-check"></i>
+            <?php echo htmlspecialchars($success); ?>
+        </div>
+    <?php endif; ?>
+
                 <!-- Shipping Section -->
                 <div class="form-section">
                     <h3 class="section-title"><i class="fas fa-shipping-fast"></i> Shipping Information</h3>
                     
-                    <?php if (count($addresses) > 0): ?>
+                    <?php if ($has_profile_address): ?>
+                        <!-- User has profile shipping address - show as default option -->
                         <div class="address-selection">
                             <label class="form-label"><i class="fas fa-map-marker-alt"></i> Select Shipping Address</label>
-                            <?php foreach ($addresses as $index => $addr): ?>
-                                <div class="address-option">
-                                    <label class="address-radio-label">
-                                        <input type="radio" name="selected_address" value="<?php echo $addr['address_id']; ?>" 
-                                               <?php echo ($addr['is_default'] || $index === 0) ? 'checked' : ''; ?>
-                                               class="address-radio"
-                                               onchange="toggleCustomAddress(this)">
-                                        <div class="address-card">
-                                            <div class="address-header">
-                                                <span class="address-type"><?php echo ucfirst($addr['address_type']); ?></span>
-                                                <?php if ($addr['is_default']): ?>
-                                                    <span class="default-badge">Default</span>
-                                                <?php endif; ?>
-                                            </div>
-                                            <div class="address-details">
-                                                <p><strong><?php echo htmlspecialchars($addr['full_name']); ?></strong></p>
-                                                <p><?php echo nl2br(htmlspecialchars($addr['address_line1'])); ?></p>
-                                                <?php if (!empty($addr['address_line2'])): ?>
-                                                    <p><?php echo nl2br(htmlspecialchars($addr['address_line2'])); ?></p>
-                                                <?php endif; ?>
-                                                <p><?php echo htmlspecialchars($addr['city']); ?>, <?php echo htmlspecialchars($addr['state'] ?? ''); ?> <?php echo htmlspecialchars($addr['postal_code']); ?></p>
-                                                <p><?php echo htmlspecialchars($addr['country']); ?></p>
-                                                <?php if (!empty($addr['phone'])): ?>
-                                                    <p><i class="fas fa-phone"></i> <?php echo htmlspecialchars($addr['phone']); ?></p>
-                                                <?php endif; ?>
-                                            </div>
+                            
+                            <div class="address-option">
+                                <label class="address-radio-label">
+                                    <input type="radio" name="selected_address" value="profile" checked
+                                           class="address-radio"
+                                           onchange="toggleCustomAddress(this)">
+                                    <div class="address-card">
+                                        <div class="address-header">
+                                            <span class="address-type">Profile Address</span>
+                                            <span class="default-badge">Default</span>
                                         </div>
-                                    </label>
-                                </div>
-                            <?php endforeach; ?>
+                                        <div class="address-details">
+                                            <p><?php echo nl2br(htmlspecialchars($profile_ship_address)); ?></p>
+                                        </div>
+                                    </div>
+                                </label>
+                            </div>
                             
                             <div class="address-option">
                                 <label class="address-radio-label">
@@ -105,7 +113,7 @@ if (count($cart_items) === 0) {
                                             <span class="address-type">Custom Address</span>
                                         </div>
                                         <div class="address-details">
-                                            <p><i class="fas fa-plus"></i> Enter a new shipping address</p>
+                                            <p><i class="fas fa-plus"></i> Enter a different shipping address</p>
                                         </div>
                                     </div>
                                 </label>
@@ -116,15 +124,15 @@ if (count($cart_items) === 0) {
                         <div id="custom-address-form" style="display: none;" class="custom-address-section">
                             <div class="form-group">
                                 <label class="form-label"><i class="fas fa-map-marker-alt"></i> Custom Shipping Address</label>
-                                <textarea name="shipping_address" rows="4" class="form-textarea"
+                                <textarea name="ship_address" rows="4" class="form-textarea"
                                           placeholder="Enter your full address including street, city, and postal code..."></textarea>
                             </div>
                         </div>
                     <?php else: ?>
-                        <!-- No saved addresses, show custom form -->
+                        <!-- No profile address, show custom form -->
                         <div class="form-group">
                             <label class="form-label"><i class="fas fa-map-marker-alt"></i> Shipping Address</label>
-                            <textarea name="shipping_address" rows="4" required class="form-textarea"
+                            <textarea name="ship_address" rows="4" required class="form-textarea"
                                       placeholder="Enter your full address including street, city, and postal code..."></textarea>
                         </div>
                     <?php endif; ?>

@@ -19,7 +19,7 @@ $success = '';
 $error = '';
 
 $status_filter = isset($_GET['status']) ? clean_input($_GET['status']) : '';
-$allowed_filters = ['pending', 'shipped', 'delivered', ''];
+$allowed_filters = ['pending', 'shipped', 'delivered', 'cancelled', ''];
 if (!in_array($status_filter, $allowed_filters, true)) {
     $status_filter = '';
 }
@@ -77,6 +77,7 @@ function sort_icon(string $col, string $current_sort, string $current_order): st
 function admin_status_label(string $status): string {
     return match ($status) {
         'shipped' => 'Dispatched',
+        'cancelled' => 'Cancelled',
         default => ucfirst($status),
     };
 }
@@ -84,10 +85,13 @@ function admin_status_label(string $status): string {
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'update_status') {
     $order_id = isset($_POST['order_id']) ? (int)$_POST['order_id'] : 0;
     $new_status = isset($_POST['status']) ? clean_input($_POST['status']) : '';
+    $admin_remark = isset($_POST['admin_remark']) ? clean_input($_POST['admin_remark']) : '';
 
-    $allowed_statuses = ['shipped'];
+    $allowed_statuses = ['shipped', 'cancelled'];
     if ($order_id <= 0 || !in_array($new_status, $allowed_statuses, true)) {
         $error = 'Invalid status update request.';
+    } elseif ($new_status === 'cancelled' && empty($admin_remark)) {
+        $error = 'Remark is required when cancelling an order.';
     } else {
         $stmt = $conn->prepare('SELECT status FROM orders WHERE order_id = ? LIMIT 1');
         $stmt->bind_param('i', $order_id);
@@ -98,13 +102,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'updat
 
         if ($current === '') {
             $error = 'Order not found.';
-        } elseif ($current !== 'pending') {
+        } elseif ($current === 'delivered' || $current === 'cancelled') {
+            $error = 'Delivered or cancelled orders cannot be modified.';
+        } elseif ($current !== 'pending' && $new_status === 'shipped') {
             $error = 'Only pending orders can be dispatched.';
+        } elseif ($current === 'shipped' && $new_status === 'cancelled') {
+            $error = 'Shipped orders cannot be cancelled.';
         } else {
-            $stmt = $conn->prepare('UPDATE orders SET status = ?, updated_at = NOW() WHERE order_id = ?');
-            $stmt->bind_param('si', $new_status, $order_id);
+            $stmt = $conn->prepare('UPDATE orders SET status = ?, admin_remark = ?, updated_at = NOW() WHERE order_id = ?');
+            $stmt->bind_param('ssi', $new_status, $admin_remark, $order_id);
             if ($stmt->execute()) {
-                $success = 'Order dispatched.';
+                $success = $new_status === 'cancelled' ? 'Order cancelled successfully.' : 'Order dispatched.';
             } else {
                 $error = 'Failed to update order status.';
             }
@@ -185,6 +193,7 @@ $stmt->close();
                 <option value="pending" <?php echo $status_filter === 'pending' ? 'selected' : ''; ?>>Pending</option>
                 <option value="shipped" <?php echo $status_filter === 'shipped' ? 'selected' : ''; ?>>Dispatched</option>
                 <option value="delivered" <?php echo $status_filter === 'delivered' ? 'selected' : ''; ?>>Delivered</option>
+                <option value="cancelled" <?php echo $status_filter === 'cancelled' ? 'selected' : ''; ?>>Cancelled</option>
             </select>
             <button class="btn btn-secondary" type="submit"><i class="fa-solid fa-filter"></i> Filter</button>
             <a href="<?php echo SITE_URL; ?>/admin/manage_orders.php" class="btn btn-secondary">Clear</a>
@@ -219,7 +228,7 @@ $stmt->close();
             </thead>
             <tbody>
                 <?php if (count($orders) === 0): ?>
-                    <tr><td colspan="6" style="padding: 1rem; color:#6c757d;">No orders found.</td></tr>
+                    <tr><td colspan="7" style="padding: 1rem; color:#6c757d;">No orders found.</td></tr>
                 <?php else: ?>
                     <?php foreach ($orders as $o): ?>
                         <tr class="order-row">
@@ -236,15 +245,19 @@ $stmt->close();
                             </td>
                             <td><?php echo format_price((float)($o['total_amount'] ?? 0)); ?></td>
                             <td>
-                                <form method="POST" action="" style="display:flex; gap:0.5rem; align-items:center;">
+                                <form method="POST" action="" style="display:flex; gap:0.5rem; align-items:center; flex-wrap: wrap;">
                                     <input type="hidden" name="action" value="update_status">
                                     <input type="hidden" name="order_id" value="<?php echo (int)$o['order_id']; ?>">
                                     <?php if (($o['status'] ?? '') === 'pending'): ?>
-                                        <select name="status" class="admin-input" style="min-width: 160px;">
+                                        <select name="status" class="admin-input" style="min-width: 140px;" onchange="toggleRemarkField(this, <?php echo (int)$o['order_id']; ?>)">
                                             <option value="pending" selected disabled>Pending</option>
                                             <option value="shipped">Dispatched</option>
+                                            <option value="cancelled">Cancel</option>
                                         </select>
-                                        <button type="submit" class="btn btn-primary"><i class="fa-solid fa-truck"></i> Dispatch</button>
+                                        <div id="remark-field-<?php echo (int)$o['order_id']; ?>" style="display: none; width: 100%; margin-top: 0.5rem;">
+                                            <input type="text" name="admin_remark" class="admin-input" placeholder="Enter remark (required for cancellation) *" style="width: 100%;" required>
+                                        </div>
+                                        <button type="submit" class="btn btn-primary" id="btn-update-<?php echo (int)$o['order_id']; ?>"><i class="fa-solid fa-truck"></i> Dispatch</button>
                                     <?php elseif (($o['status'] ?? '') === 'shipped'): ?>
                                         <select class="admin-input" style="min-width: 160px;" disabled>
                                             <option selected>Dispatched (locked)</option>
@@ -255,6 +268,11 @@ $stmt->close();
                                             <option selected>Delivered</option>
                                         </select>
                                         <button type="button" class="btn btn-secondary" disabled><i class="fa-solid fa-lock"></i> Locked</button>
+                                    <?php elseif (($o['status'] ?? '') === 'cancelled'): ?>
+                                        <select class="admin-input" style="min-width: 160px;" disabled>
+                                            <option selected>Cancelled</option>
+                                        </select>
+                                        <button type="button" class="btn btn-secondary" disabled><i class="fa-solid fa-lock"></i> Locked</button>
                                     <?php else: ?>
                                         <select class="admin-input" style="min-width: 160px;" disabled>
                                             <option selected><?php echo htmlspecialchars(admin_status_label((string)($o['status'] ?? ''))); ?></option>
@@ -262,11 +280,16 @@ $stmt->close();
                                         <button type="button" class="btn btn-secondary" disabled><i class="fa-solid fa-lock"></i> Locked</button>
                                     <?php endif; ?>
                                 </form>
+                                <?php if (!empty($o['admin_remark'])): ?>
+                                    <div style="margin-top: 0.5rem; font-size: 0.85rem; color: #e53e3e; background: #fff5f5; padding: 0.5rem; border-radius: 4px; border-left: 3px solid #e53e3e;">
+                                        <i class="fa-solid fa-sticky-note"></i> <strong>Remark:</strong> <?php echo htmlspecialchars($o['admin_remark']); ?>
+                                    </div>
+                                <?php endif; ?>
                             </td>
                         </tr>
                         <!-- Order Details Row -->
                         <tr class="order-details-row" id="details-<?php echo (int)$o['order_id']; ?>" style="display: none;">
-                            <td colspan="6" style="padding: 0; background: #f8f9fa;">
+                            <td colspan="7" style="padding: 0; background: #f8f9fa;">
                                 <div style="padding: 1rem;">
                                     <?php
                                     // Fetch order items
@@ -387,6 +410,31 @@ $stmt->close();
 </section>
 
 <script>
+function toggleRemarkField(selectElement, orderId) {
+    const remarkField = document.getElementById('remark-field-' + orderId);
+    const btnUpdate = document.getElementById('btn-update-' + orderId);
+    const remarkInput = remarkField.querySelector('input[name="admin_remark"]');
+    
+    if (selectElement.value === 'cancelled') {
+        remarkField.style.display = 'block';
+        remarkInput.required = true;
+        btnUpdate.innerHTML = '<i class="fa-solid fa-ban"></i> Cancel Order';
+        btnUpdate.className = 'btn btn-danger';
+    } else if (selectElement.value === 'shipped') {
+        remarkField.style.display = 'none';
+        remarkInput.required = false;
+        remarkInput.value = '';
+        btnUpdate.innerHTML = '<i class="fa-solid fa-truck"></i> Dispatch';
+        btnUpdate.className = 'btn btn-primary';
+    } else {
+        remarkField.style.display = 'none';
+        remarkInput.required = false;
+        remarkInput.value = '';
+        btnUpdate.innerHTML = '<i class="fa-solid fa-truck"></i> Dispatch';
+        btnUpdate.className = 'btn btn-primary';
+    }
+}
+
 function toggleOrderDetails(orderId) {
     const detailsRow = document.getElementById('details-' + orderId);
     if (detailsRow.style.display === 'none') {
