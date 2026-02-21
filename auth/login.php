@@ -84,6 +84,9 @@ $saved_username = isset($_GET['username']) ? htmlspecialchars($_GET['username'])
         <div class="auth-footer">
             Don't have an account? 
             <a href="register.php" class="auth-link">Create Account</a>
+            <div class="legal-links">
+                By signing in, you agree to our <a href="<?php echo SITE_URL; ?>/legal/terms.php" class="auth-link">Terms</a> and <a href="<?php echo SITE_URL; ?>/legal/privacy.php" class="auth-link">Privacy Policy</a>
+            </div>
         </div>
         
     </div>

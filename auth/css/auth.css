@@ -246,6 +246,17 @@ body {
     text-decoration: underline;
 }
 
+.legal-links {
+    margin-top: 0.75rem;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+.legal-links a {
+    font-weight: 500;
+}
+
 /* Loading State */
 .btn.loading {
     opacity: 0.7;

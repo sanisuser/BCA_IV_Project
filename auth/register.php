@@ -89,7 +89,7 @@ $error = isset($_GET['error']) ? $_GET['error'] : '';
                 <div class="form-checkbox-group">
                     <input type="checkbox" id="terms" name="terms" required class="form-checkbox">
                     <label for="terms" class="form-checkbox-label">
-                        I agree to the <a href="#" class="auth-link">Terms of Service</a> and <a href="#" class="auth-link">Privacy Policy</a>
+                        I agree to the <a href="<?php echo SITE_URL; ?>/legal/terms.php" class="auth-link">Terms of Service</a> and <a href="<?php echo SITE_URL; ?>/legal/privacy.php" class="auth-link">Privacy Policy</a>
                     </label>
                 </div>
             </div>
