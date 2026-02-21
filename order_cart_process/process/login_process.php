@@ -82,6 +82,11 @@ $_SESSION['user_id'] = $user['user_id'];
 $_SESSION['username'] = $user['username'];
 $_SESSION['role'] = $user['role'] ?? 'user';
 
+// Set admin panel access flag only if admin logged in
+if ($_SESSION['role'] === 'admin') {
+    $_SESSION['admin_panel_access'] = true;
+}
+
 // Clear output buffer before redirect
 ob_end_clean();
 

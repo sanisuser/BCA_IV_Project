@@ -8,7 +8,7 @@
     border: 1px solid #e9ecef;
     border-radius: 0 0 8px 8px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    z-index: 1000;
+    z-index: 1301;
     max-height: 400px;
     overflow-y: auto;
     display: none;
@@ -103,5 +103,6 @@
         right: 0;
         max-height: 50vh;
         margin-top: 6px;
+        z-index: 1301;
     }
 }

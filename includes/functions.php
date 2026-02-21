@@ -61,6 +61,10 @@ function is_admin() {
     return is_logged_in() && isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
 }
 
+function is_admin_panel_access() {
+    return is_admin() && isset($_SESSION['admin_panel_access']) && $_SESSION['admin_panel_access'] === true;
+}
+
 /**
  * Get current user ID
  * Returns user_id from session or false if not logged in

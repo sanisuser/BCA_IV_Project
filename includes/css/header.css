@@ -122,6 +122,7 @@
     margin-bottom: 15px;
     padding-bottom: 15px;
     border-bottom: 1px solid rgba(255,255,255,0.1);
+    position: relative;
 }
 
 .mobile-search-input {
@@ -283,7 +284,7 @@
 
 /* Right-side cluster for mobile (profile + hamburger) */
 .nav-right-mobile {
-    display: flex;
+    display: none;
     align-items: center;
     gap: 6px;
     flex-shrink: 0;
@@ -318,6 +319,25 @@
 .mobile-profile-link .mobile-profile-placeholder i {
     font-size: 16px;
     color: #fff;
+}
+
+/* Mobile nav link (e.g., Books text for guests) */
+.mobile-nav-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 0.95rem;
+    font-weight: 500;
+    text-decoration: none;
+    padding: 6px 12px;
+    margin-right: 15px;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+}
+
+.mobile-nav-link:hover {
+    background-color: rgba(255,255,255,0.1);
 }
 
 @media (max-width: 768px) {
@@ -405,6 +425,7 @@
     }
 
     .nav-right-mobile {
+        display: flex;
         order: 2;
     }
     
@@ -417,7 +438,7 @@
         max-width: 100%;
         margin: 15px 0 0 0;
         max-height: 70px;
-        overflow: hidden;
+        overflow: visible;
         opacity: 1;
         transform: translateY(0);
         transition: max-height 200ms ease, margin-top 200ms ease, opacity 200ms ease, transform 200ms ease;
@@ -445,6 +466,13 @@
     
     .mobile-menu {
         display: none;
+        position: fixed;
+        top: 60px;
+        left: 0;
+        right: 0;
+        z-index: 1200;
+        max-height: calc(100vh - 60px);
+        overflow: auto;
     }
     
     .mobile-menu[style*="block"] {
