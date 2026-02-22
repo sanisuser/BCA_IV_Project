@@ -123,8 +123,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_review']) && i
         $review_error = 'Please select a rating between 1 and 5 stars.';
     } elseif (empty($comment)) {
         $review_error = 'Please write a review comment.';
-    } elseif (strlen($comment) < 10) {
-        $review_error = 'Review comment must be at least 10 characters long.';
     } else {
         $user_id = get_user_id();
         
@@ -322,7 +320,7 @@ if (isset($_GET['review_success']) && $_GET['review_success'] == '1') {
                     </div>
                     <div class="comment-input">
                         <label for="review-comment">Your Review:</label>
-                        <textarea name="comment" id="review-comment" rows="4" placeholder="Share your thoughts about this book... (minimum 10 characters)" required minlength="10"><?php echo $user_has_reviewed ? htmlspecialchars($user_review['comment']) : ''; ?></textarea>
+                        <textarea name="comment" id="review-comment" rows="4" placeholder="Share your thoughts about this book..." required><?php echo $user_has_reviewed ? htmlspecialchars($user_review['comment']) : ''; ?></textarea>
                     </div>
                     <button type="submit" name="submit_review" class="btn-submit-review">
                         <i class="fas fa-paper-plane"></i> <?php echo $user_has_reviewed ? 'Update Review' : 'Submit Review'; ?>

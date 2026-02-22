@@ -20,6 +20,12 @@ $condition = isset($_GET['condition']) ? clean_input($_GET['condition']) : '';
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 if ($page < 1) $page = 1;
 
+// Get sort parameter
+$sort = isset($_GET['sort']) ? clean_input($_GET['sort']) : '';
+if (!in_array($sort, ['newest', 'rating', 'price_low', 'price_high', ''])) {
+    $sort = '';
+}
+
 $per_page = 12; // Books per page
 $offset = ($page - 1) * $per_page;
 
@@ -82,8 +88,26 @@ if (!empty($params)) {
 
 $total_pages = ceil($total_books / $per_page);
 
+// Build ORDER BY clause based on sort parameter
+switch ($sort) {
+    case 'newest':
+        $order_by = "ORDER BY b.created_at DESC, b.book_id DESC";
+        break;
+    case 'rating':
+        $order_by = "ORDER BY avg_rating DESC, review_count DESC, b.book_id DESC";
+        break;
+    case 'price_low':
+        $order_by = "ORDER BY b.price ASC, b.book_id DESC";
+        break;
+    case 'price_high':
+        $order_by = "ORDER BY b.price DESC, b.book_id DESC";
+        break;
+    default:
+        $order_by = "ORDER BY b.book_id DESC";
+}
+
 // Get books for current page
-$sql = "SELECT * FROM books $where_sql ORDER BY book_id DESC LIMIT ? OFFSET ?";
+$sql = "SELECT b.* FROM books b $where_sql $order_by LIMIT ? OFFSET ?";
 $books = [];
 
 if (!empty($params)) {
@@ -281,7 +305,7 @@ $conditions = ['new', 'used'];
         <?php if ($total_pages > 1): ?>
             <div class="pagination">
                 <?php if ($page > 1): ?>
-                    <a href="<?php echo SITE_URL; ?>/page/booklist.php?page=<?php echo $page - 1; ?><?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?><?php echo $year_from > 0 ? '&year_from=' . $year_from : ''; ?><?php echo $year_to > 0 ? '&year_to=' . $year_to : ''; ?><?php echo !empty($genre) ? '&genre=' . urlencode($genre) : ''; ?><?php echo !empty($condition) ? '&condition=' . urlencode($condition) : ''; ?>" class="pagination-btn">
+                    <a href="<?php echo SITE_URL; ?>/page/booklist.php?page=<?php echo $page - 1; ?><?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?><?php echo $year_from > 0 ? '&year_from=' . $year_from : ''; ?><?php echo $year_to > 0 ? '&year_to=' . $year_to : ''; ?><?php echo !empty($genre) ? '&genre=' . urlencode($genre) : ''; ?><?php echo !empty($condition) ? '&condition=' . urlencode($condition) : ''; ?><?php echo !empty($sort) ? '&sort=' . urlencode($sort) : ''; ?>" class="pagination-btn">
                         <i class="fas fa-chevron-left"></i>
                     </a>
                 <?php endif; ?>
@@ -290,12 +314,12 @@ $conditions = ['new', 'used'];
                     <?php if ($i == $page): ?>
                         <span class="pagination-btn active"><?php echo $i; ?></span>
                     <?php else: ?>
-                        <a href="<?php echo SITE_URL; ?>/page/booklist.php?page=<?php echo $i; ?><?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?><?php echo $year_from > 0 ? '&year_from=' . $year_from : ''; ?><?php echo $year_to > 0 ? '&year_to=' . $year_to : ''; ?><?php echo !empty($genre) ? '&genre=' . urlencode($genre) : ''; ?><?php echo !empty($condition) ? '&condition=' . urlencode($condition) : ''; ?>" class="pagination-btn"><?php echo $i; ?></a>
+                        <a href="<?php echo SITE_URL; ?>/page/booklist.php?page=<?php echo $i; ?><?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?><?php echo $year_from > 0 ? '&year_from=' . $year_from : ''; ?><?php echo $year_to > 0 ? '&year_to=' . $year_to : ''; ?><?php echo !empty($genre) ? '&genre=' . urlencode($genre) : ''; ?><?php echo !empty($condition) ? '&condition=' . urlencode($condition) : ''; ?><?php echo !empty($sort) ? '&sort=' . urlencode($sort) : ''; ?>" class="pagination-btn"><?php echo $i; ?></a>
                     <?php endif; ?>
                 <?php endfor; ?>
                 
                 <?php if ($page < $total_pages): ?>
-                    <a href="<?php echo SITE_URL; ?>/page/booklist.php?page=<?php echo $page + 1; ?><?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?><?php echo $year_from > 0 ? '&year_from=' . $year_from : ''; ?><?php echo $year_to > 0 ? '&year_to=' . $year_to : ''; ?><?php echo !empty($genre) ? '&genre=' . urlencode($genre) : ''; ?><?php echo !empty($condition) ? '&condition=' . urlencode($condition) : ''; ?>" class="pagination-btn">
+                    <a href="<?php echo SITE_URL; ?>/page/booklist.php?page=<?php echo $page + 1; ?><?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?><?php echo $year_from > 0 ? '&year_from=' . $year_from : ''; ?><?php echo $year_to > 0 ? '&year_to=' . $year_to : ''; ?><?php echo !empty($genre) ? '&genre=' . urlencode($genre) : ''; ?><?php echo !empty($condition) ? '&condition=' . urlencode($condition) : ''; ?><?php echo !empty($sort) ? '&sort=' . urlencode($sort) : ''; ?>" class="pagination-btn">
                         <i class="fas fa-chevron-right"></i>
                     </a>
                 <?php endif; ?>

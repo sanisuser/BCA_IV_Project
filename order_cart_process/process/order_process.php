@@ -112,10 +112,19 @@ try {
     $vat_amount = $total * 0.13;
     $total_with_vat = $total * 1.13;
 
-// Determine if we should store address_id or shipping_address
+    // Determine if we should store address_id or shipping_address
     $address_id_to_store = null;
     if ($selected_address !== 'custom' && is_numeric($selected_address)) {
         $address_id_to_store = (int)$selected_address;
+    }
+
+    // If this order will store ship_address, we must ensure users.ship_address exists first
+    // due to FK constraint: orders.ship_address -> users.ship_address
+    if (!$address_id_to_store && !empty($ship_address)) {
+        $update_stmt = $conn->prepare('UPDATE users SET ship_address = ? WHERE user_id = ?');
+        $update_stmt->bind_param('si', $ship_address, $user_id);
+        $update_stmt->execute();
+        $update_stmt->close();
     }
     
     if ($address_id_to_store) {

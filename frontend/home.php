@@ -24,9 +24,17 @@ if ($result) {
     $result->free();
 }
 
-// Fetch top favorite books (latest added, top 10)
+// Fetch top favorite books (highest rated, top 10)
 $favorite_books = [];
-$result = $conn->query("SELECT book_id, title, author, cover_image, price, created_at FROM books ORDER BY created_at DESC LIMIT 10");
+$result = $conn->query("
+    SELECT b.*, COALESCE(AVG(r.rating), 0) as avg_rating, COUNT(r.review_id) as review_count
+    FROM books b
+    LEFT JOIN reviews r ON b.book_id = r.book_id
+    GROUP BY b.book_id
+    HAVING review_count > 0
+    ORDER BY avg_rating DESC, review_count DESC
+    LIMIT 10
+");
 if ($result) {
     while ($row = $result->fetch_assoc()) {
         $favorite_books[] = $row;
@@ -72,7 +80,7 @@ if ($result) {
 <section class="section recently-added">
     <div class="section-header">
         <h2><i class="fas fa-clock"></i> Recently Added</h2>
-        <a href="<?php echo SITE_URL; ?>/page/books.php?sort=newest" class="view-all">View All <i class="fas fa-arrow-right"></i></a>
+        <a href="<?php echo SITE_URL; ?>/page/booklist.php?sort=newest" class="view-all">View All <i class="fas fa-arrow-right"></i></a>
     </div>
     <div class="horizontal-scroll">
         <?php foreach ($recent_books as $book): ?>

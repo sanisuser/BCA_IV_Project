@@ -112,13 +112,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'updat
             $stmt = $conn->prepare('UPDATE orders SET status = ?, admin_remark = ?, updated_at = NOW() WHERE order_id = ?');
             $stmt->bind_param('ssi', $new_status, $admin_remark, $order_id);
             if ($stmt->execute()) {
-                $success = $new_status === 'cancelled' ? 'Order cancelled successfully.' : 'Order dispatched.';
+                $msg = $new_status === 'cancelled' ? 'cancelled' : 'dispatched';
+                $stmt->close();
+                header('Location: ' . $_SERVER['PHP_SELF'] . '?success=' . $msg);
+                exit;
             } else {
                 $error = 'Failed to update order status.';
             }
             $stmt->close();
         }
     }
+}
+
+// Handle success message from redirect
+if (isset($_GET['success'])) {
+    $success = $_GET['success'] === 'cancelled' ? 'Order cancelled successfully.' : 'Order dispatched.';
 }
 
 $orders = [];
