@@ -147,6 +147,22 @@
 }
 
 /* Dashboard-only styles */
+.dash-card-link {
+    text-decoration: none !important;
+    color: inherit;
+    display: block;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.dash-card-link:hover {
+    transform: translateY(-2px);
+    text-decoration: none !important;
+}
+
+.dash-card-link:hover .dash-card {
+    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+}
+
 .dash-top-actions {
     display: flex;
     gap: 0.75rem;

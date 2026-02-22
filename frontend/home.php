@@ -105,7 +105,7 @@ if ($result) {
 <section class="section top-favorites">
     <div class="section-header">
         <h2><i class="fas fa-heart"></i> Top Favorites</h2>
-        <a href="<?php echo SITE_URL; ?>/page/books.php" class="view-all">View All <i class="fas fa-arrow-right"></i></a>
+        <a href="<?php echo SITE_URL; ?>/page/booklist.php?sort=rating" class="view-all">View All <i class="fas fa-arrow-right"></i></a>
     </div>
     <div class="horizontal-scroll">
         <?php foreach ($favorite_books as $book): ?>

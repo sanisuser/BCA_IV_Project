@@ -23,7 +23,9 @@ $total_books = 0;
 $total_users = 0;
 $total_orders = 0;
 $bookCoverCount = 0;
-$bookPdfCount = 0;
+$total_sales = 0;
+$total_profit = 0;
+$delivered_orders = 0;
 
 // Check table columns
 $bookCols = [];
@@ -32,12 +34,6 @@ if ($result = $conn->query('SHOW COLUMNS FROM books')) {
         if (isset($row['Field'])) $bookCols[(string)$row['Field']] = true;
     }
     $result->free();
-}
-
-// Find PDF column
-$pdfCol = '';
-foreach (['ebook', 'pdf', 'pdf_url', 'pdf_link', 'pdf_path'] as $c) {
-    if (isset($bookCols[$c])) { $pdfCol = $c; break; }
 }
 
 try {
@@ -64,12 +60,14 @@ try {
         }
     }
     
-    // PDF count
-    if ($pdfCol !== '') {
-        $result = $conn->query("SELECT COUNT(*) as count FROM books WHERE `$pdfCol` IS NOT NULL AND `$pdfCol` <> ''");
-        if ($result) {
-            $bookPdfCount = $result->fetch_assoc()['count'];
-        }
+    // Sales and profit from delivered orders only
+    $result = $conn->query("SELECT COUNT(*) as count, COALESCE(SUM(total_amount), 0) as total_sales FROM orders WHERE status = 'delivered'");
+    if ($result) {
+        $row = $result->fetch_assoc();
+        $delivered_orders = $row['count'];
+        $total_sales = $row['total_sales'];
+        // Calculate profit as 30% of sales (adjust percentage as needed)
+        $total_profit = $total_sales * 0.30;
     }
 } catch (Exception $e) {
     $error = 'Database error: ' . $e->getMessage();
@@ -85,7 +83,11 @@ function pct($part, $total) {
 }
 
 $coverPct = pct($bookCoverCount, $total_books);
-$pdfPct = pct($bookPdfCount, $total_books);
+
+// Format currency helper
+function format_currency($amount) {
+    return 'Rs ' . number_format($amount, 2);
+}
 
 $page_title = 'Admin Dashboard';
 $active_page = 'dashboard';
@@ -109,80 +111,107 @@ $active_page = 'dashboard';
             </div>
 
             <section class="dash-metrics">
-                <article class="dash-card">
-                    <div class="dash-card-row">
-                        <div class="dash-card-icon"><i class="fa-solid fa-book"></i></div>
-                        <div class="dash-card-main">
-                            <div class="dash-card-value"><?php echo (int)$total_books; ?></div>
-                            <div class="dash-card-title">Total Books</div>
-                            <div class="dash-card-sub">All books in database</div>
+                <a href="<?php echo SITE_URL; ?>/admin/manage_books.php" class="dash-card-link">
+                    <article class="dash-card">
+                        <div class="dash-card-row">
+                            <div class="dash-card-icon"><i class="fa-solid fa-book"></i></div>
+                            <div class="dash-card-main">
+                                <div class="dash-card-value"><?php echo (int)$total_books; ?></div>
+                                <div class="dash-card-title">Total Books</div>
+                                <div class="dash-card-sub">All books in database</div>
+                            </div>
                         </div>
-                    </div>
-                    <div class="dash-progress">
-                        <div class="dash-progress-bar dash-progress-blue" style="width: 100%"></div>
-                    </div>
-                    <div class="dash-progress-meta"><span>Books</span><strong><?php echo (int)$total_books; ?></strong></div>
-                </article>
+                        <div class="dash-progress">
+                            <div class="dash-progress-bar dash-progress-blue" style="width: 100%"></div>
+                        </div>
+                        <div class="dash-progress-meta"><span>Books</span><strong><?php echo (int)$total_books; ?></strong></div>
+                    </article>
+                </a>
 
-                <article class="dash-card">
-                    <div class="dash-card-row">
-                        <div class="dash-card-icon"><i class="fa-regular fa-image"></i></div>
-                        <div class="dash-card-main">
-                            <div class="dash-card-value"><?php echo (int)$bookCoverCount; ?>/<?php echo (int)$total_books; ?></div>
-                            <div class="dash-card-title">Books With Cover</div>
-                            <div class="dash-card-sub">Coverage availability</div>
+                <a href="<?php echo SITE_URL; ?>/admin/manage_books.php" class="dash-card-link">
+                    <article class="dash-card">
+                        <div class="dash-card-row">
+                            <div class="dash-card-icon"><i class="fa-regular fa-image"></i></div>
+                            <div class="dash-card-main">
+                                <div class="dash-card-value"><?php echo (int)$bookCoverCount; ?>/<?php echo (int)$total_books; ?></div>
+                                <div class="dash-card-title">Books With Cover</div>
+                                <div class="dash-card-sub">Coverage availability</div>
+                            </div>
                         </div>
-                    </div>
-                    <div class="dash-progress">
-                        <div class="dash-progress-bar dash-progress-green" style="width: <?php echo (int)$coverPct; ?>%"></div>
-                    </div>
-                    <div class="dash-progress-meta"><span>Coverage</span><strong><?php echo (int)$coverPct; ?>%</strong></div>
-                </article>
+                        <div class="dash-progress">
+                            <div class="dash-progress-bar dash-progress-green" style="width: <?php echo (int)$coverPct; ?>>%"></div>
+                        </div>
+                        <div class="dash-progress-meta"><span>Coverage</span><strong><?php echo (int)$coverPct; ?>%</strong></div>
+                    </article>
+                </a>
 
-                <article class="dash-card">
-                    <div class="dash-card-row">
-                        <div class="dash-card-icon"><i class="fa-regular fa-file-pdf"></i></div>
-                        <div class="dash-card-main">
-                            <div class="dash-card-value"><?php echo (int)$bookPdfCount; ?>/<?php echo (int)$total_books; ?></div>
-                            <div class="dash-card-title">Books With PDF</div>
-                            <div class="dash-card-sub"><?php echo $pdfCol !== '' ? 'Column: ' . htmlspecialchars($pdfCol) : 'No PDF column found'; ?></div>
+                <a href="<?php echo SITE_URL; ?>/admin/manage_users.php" class="dash-card-link">
+                    <article class="dash-card">
+                        <div class="dash-card-row">
+                            <div class="dash-card-icon"><i class="fa-solid fa-users"></i></div>
+                            <div class="dash-card-main">
+                                <div class="dash-card-value"><?php echo (int)$total_users; ?></div>
+                                <div class="dash-card-title">Total Users</div>
+                                <div class="dash-card-sub">Registered accounts</div>
+                            </div>
                         </div>
-                    </div>
-                    <div class="dash-progress">
-                        <div class="dash-progress-bar dash-progress-amber" style="width: <?php echo (int)$pdfPct; ?>%"></div>
-                    </div>
-                    <div class="dash-progress-meta"><span>Availability</span><strong><?php echo (int)$pdfPct; ?>%</strong></div>
-                </article>
+                        <div class="dash-progress">
+                            <div class="dash-progress-bar dash-progress-red" style="width: 100%"></div>
+                        </div>
+                        <div class="dash-progress-meta"><span>Users</span><strong><?php echo (int)$total_users; ?></strong></div>
+                    </article>
+                </a>
 
-                <article class="dash-card">
-                    <div class="dash-card-row">
-                        <div class="dash-card-icon"><i class="fa-solid fa-users"></i></div>
-                        <div class="dash-card-main">
-                            <div class="dash-card-value"><?php echo (int)$total_users; ?></div>
-                            <div class="dash-card-title">Total Users</div>
-                            <div class="dash-card-sub">Registered accounts</div>
+                <a href="<?php echo SITE_URL; ?>/admin/manage_orders.php" class="dash-card-link">
+                    <article class="dash-card">
+                        <div class="dash-card-row">
+                            <div class="dash-card-icon"><i class="fa-solid fa-bag-shopping"></i></div>
+                            <div class="dash-card-main">
+                                <div class="dash-card-value"><?php echo (int)$total_orders; ?></div>
+                                <div class="dash-card-title">Total Orders</div>
+                                <div class="dash-card-sub">Orders placed by users</div>
+                            </div>
                         </div>
-                    </div>
-                    <div class="dash-progress">
-                        <div class="dash-progress-bar dash-progress-red" style="width: 100%"></div>
-                    </div>
-                    <div class="dash-progress-meta"><span>Users</span><strong><?php echo (int)$total_users; ?></strong></div>
-                </article>
+                        <div class="dash-progress">
+                            <div class="dash-progress-bar dash-progress-purple" style="width: 100%"></div>
+                        </div>
+                        <div class="dash-progress-meta"><span>Orders</span><strong><?php echo (int)$total_orders; ?></strong></div>
+                    </article>
+                </a>
 
-                <article class="dash-card">
-                    <div class="dash-card-row">
-                        <div class="dash-card-icon"><i class="fa-solid fa-bag-shopping"></i></div>
-                        <div class="dash-card-main">
-                            <div class="dash-card-value"><?php echo (int)$total_orders; ?></div>
-                            <div class="dash-card-title">Total Orders</div>
-                            <div class="dash-card-sub">Orders placed by users</div>
+                <a href="<?php echo SITE_URL; ?>/admin/manage_orders.php" class="dash-card-link">
+                    <article class="dash-card">
+                        <div class="dash-card-row">
+                            <div class="dash-card-icon"><i class="fa-solid fa-money-bill-wave"></i></div>
+                            <div class="dash-card-main">
+                                <div class="dash-card-value"><?php echo format_currency($total_sales); ?></div>
+                                <div class="dash-card-title">Total Sales</div>
+                                <div class="dash-card-sub"><?php echo (int)$delivered_orders; ?> delivered orders</div>
+                            </div>
                         </div>
-                    </div>
-                    <div class="dash-progress">
-                        <div class="dash-progress-bar dash-progress-purple" style="width: 100%"></div>
-                    </div>
-                    <div class="dash-progress-meta"><span>Orders</span><strong><?php echo (int)$total_orders; ?></strong></div>
-                </article>
+                        <div class="dash-progress">
+                            <div class="dash-progress-bar dash-progress-amber" style="width: 100%"></div>
+                        </div>
+                        <div class="dash-progress-meta"><span>Sales</span><strong>Delivered</strong></div>
+                    </article>
+                </a>
+
+                <a href="<?php echo SITE_URL; ?>/admin/manage_orders.php" class="dash-card-link">
+                    <article class="dash-card">
+                        <div class="dash-card-row">
+                            <div class="dash-card-icon"><i class="fa-solid fa-chart-line"></i></div>
+                            <div class="dash-card-main">
+                                <div class="dash-card-value"><?php echo format_currency($total_profit); ?></div>
+                                <div class="dash-card-title">Total Profit</div>
+                                <div class="dash-card-sub">30% of sales revenue</div>
+                            </div>
+                        </div>
+                        <div class="dash-progress">
+                            <div class="dash-progress-bar dash-progress-teal" style="width: 30%"></div>
+                        </div>
+                        <div class="dash-progress-meta"><span>Profit</span><strong>30% margin</strong></div>
+                    </article>
+                </a>
             </section>
 
             <section class="dash-quick">

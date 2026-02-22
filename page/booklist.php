@@ -88,13 +88,15 @@ if (!empty($params)) {
 
 $total_pages = ceil($total_books / $per_page);
 
-// Build ORDER BY clause based on sort parameter
+// Build ORDER BY clause and JOIN based on sort parameter
+$join_sql = '';
 switch ($sort) {
     case 'newest':
         $order_by = "ORDER BY b.created_at DESC, b.book_id DESC";
         break;
     case 'rating':
-        $order_by = "ORDER BY avg_rating DESC, review_count DESC, b.book_id DESC";
+        $join_sql = "LEFT JOIN (SELECT book_id, AVG(rating) as avg_rating, COUNT(*) as review_count FROM reviews GROUP BY book_id) r ON b.book_id = r.book_id";
+        $order_by = "ORDER BY COALESCE(r.avg_rating, 0) DESC, COALESCE(r.review_count, 0) DESC, b.book_id DESC";
         break;
     case 'price_low':
         $order_by = "ORDER BY b.price ASC, b.book_id DESC";
@@ -107,7 +109,7 @@ switch ($sort) {
 }
 
 // Get books for current page
-$sql = "SELECT b.* FROM books b $where_sql $order_by LIMIT ? OFFSET ?";
+$sql = "SELECT b.* FROM books b $join_sql $where_sql $order_by LIMIT ? OFFSET ?";
 $books = [];
 
 if (!empty($params)) {
