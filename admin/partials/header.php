@@ -108,7 +108,30 @@ if (is_logged_in()) {
 
     <!-- Navbar JS for mobile menu toggle -->
     <script src="<?php echo SITE_URL; ?>/includes/js/navbar.js"></script>
+    
+    <!-- Admin Sidebar Toggle Script -->
+    <script>
+    function toggleAdminSidebar() {
+        const sidebar = document.querySelector('.admin-sidebar');
+        sidebar.classList.toggle('active');
+    }
+    
+    // Close sidebar when clicking outside on mobile
+    document.addEventListener('click', function(e) {
+        const sidebar = document.querySelector('.admin-sidebar');
+        const toggleBtn = document.querySelector('.mobile-sidebar-toggle');
+        if (window.innerWidth <= 768 && sidebar.classList.contains('active')) {
+            if (!sidebar.contains(e.target) && (!toggleBtn || !toggleBtn.contains(e.target))) {
+                sidebar.classList.remove('active');
+            }
+        }
+    });
+    </script>
 
     <div class="admin-container">
         <?php require __DIR__ . '/sidebar.php'; ?>
         <main class="admin-main">
+            <!-- Mobile Sidebar Toggle -->
+            <button type="button" class="mobile-sidebar-toggle" onclick="toggleAdminSidebar()" style="display: none;">
+                <i class="fas fa-bars"></i> Menu
+            </button>

@@ -95,7 +95,7 @@ $navbar_page_class = ($is_book_view_page ? ' is-book-view' : '') . ($is_home_pag
             <?php if (is_logged_in()): ?>
                 <?php if (is_admin_panel_access()): ?>
                 <li><a href="<?php echo SITE_URL; ?>/admin/index.php" style="color: var(--accent, #eab308);">
-                    <i class="fas fa-shield-alt"></i> Admin Panel
+                    <i class="fas fa-shield-alt"></i> Admin
                 </a></li>
                 <?php endif; ?>
                 <li><a href="<?php echo SITE_URL; ?>/order_cart_process/wishlist.php">
