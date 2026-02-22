@@ -102,7 +102,7 @@
 }
 
 .item-title a:hover {
-    color: var(--accent, #eab308);
+    color: #2563eb;
 }
 
 .item-price-each {
@@ -379,11 +379,24 @@
     border: 1px solid var(--border, #3f3f46);
 }
 
-.cart-empty i {
+.cart-empty > i {
     font-size: 4rem;
     color: var(--accent, #eab308);
     margin-bottom: 1.5rem;
     opacity: 0.5;
+}
+
+.cart-empty .btn i {
+    font-size: 1rem;
+    line-height: 1;
+}
+
+.cart-empty .btn-checkout:hover {
+    color: #2563eb;
+}
+
+.cart-empty .btn-checkout:hover i {
+    color: #2563eb;
 }
 
 .cart-empty h2 {

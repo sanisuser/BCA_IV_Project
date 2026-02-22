@@ -11,7 +11,7 @@ if (!is_logged_in()) {
 $user_id = (int)get_user_id();
 
 $orders = [];
-$stmt = $conn->prepare('SELECT * FROM orders WHERE user_id = ? ORDER BY created_at DESC LIMIT 1');
+$stmt = $conn->prepare('SELECT * FROM orders WHERE user_id = ? AND status <> \'delivered\' ORDER BY created_at DESC');
 $stmt->bind_param('i', $user_id);
 $stmt->execute();
 $result = $stmt->get_result();
@@ -74,8 +74,8 @@ function getPaymentIcon($method) {
 
 <div class="orders-container">
     <div class="orders-header">
-        <h1><i class="fas fa-receipt"></i> Current Order</h1>
-        <p class="orders-count"><?php echo count($orders) > 0 ? 'Your most recent order' : 'No active orders'; ?></p>
+        <h1><i class="fas fa-receipt"></i> My Orders</h1>
+        <p class="orders-count"><?php echo count($orders) > 0 ? ('You have ' . count($orders) . ' active order' . (count($orders) !== 1 ? 's' : '')) : 'No active orders'; ?></p>
     </div>
 
     <?php if (isset($_GET['success'])): ?>
@@ -109,12 +109,16 @@ function getPaymentIcon($method) {
                 $items[] = $r;
             }
             $stmt->close();
+
+            $itemCount = count($items);
+            $itemNames = array_slice(array_column($items, 'title'), 0, 2);
+            $itemText = implode(', ', $itemNames) . ($itemCount > 2 ? ' + ' . ($itemCount - 2) . ' more' : '');
             ?>
 
             <div class="order-card">
                 <div class="order-header">
                     <div>
-                        <div class="order-id">Order #<?php echo (int)$order['order_id']; ?></div>
+                        <div class="order-id"><?php echo htmlspecialchars($itemText !== '' ? $itemText : 'Order'); ?></div>
                         <div class="order-date"><i class="far fa-calendar-alt"></i> <?php echo date('F d, Y \a\t h:i A', strtotime($order['created_at'])); ?></div>
                     </div>
                     <span class="order-status <?php echo getStatusClass($order['status']); ?>">
@@ -170,10 +174,40 @@ function getPaymentIcon($method) {
                         <?php endforeach; ?>
                     </div>
 
-                    <?php if (!empty($order['shipping_address'])): ?>
+                    <?php
+                    $shipping_to_show = '';
+                    if (!empty($order['address_id'])) {
+                        $addr_stmt = $conn->prepare('SELECT * FROM user_addresses WHERE address_id = ? AND user_id = ?');
+                        $aid = (int)$order['address_id'];
+                        $addr_stmt->bind_param('ii', $aid, $user_id);
+                        $addr_stmt->execute();
+                        $saved_address = $addr_stmt->get_result()->fetch_assoc();
+                        $addr_stmt->close();
+
+                        if ($saved_address) {
+                            $shipping_to_show = sprintf(
+                                "%s\n%s\n%s\n%s, %s %s\n%s\nPhone: %s",
+                                $saved_address['full_name'],
+                                $saved_address['address_line1'],
+                                $saved_address['address_line2'] ?? '',
+                                $saved_address['city'],
+                                $saved_address['state'] ?? '',
+                                $saved_address['postal_code'],
+                                $saved_address['country'],
+                                $saved_address['phone'] ?? ''
+                            );
+                        }
+                    }
+
+                    if ($shipping_to_show === '' && !empty($order['ship_address'])) {
+                        $shipping_to_show = (string)$order['ship_address'];
+                    }
+                    ?>
+
+                    <?php if ($shipping_to_show !== ''): ?>
                         <div class="shipping-info">
                             <div class="shipping-label"><i class="fas fa-map-marker-alt"></i> Shipping Address</div>
-                            <div class="shipping-address"><?php echo nl2br(htmlspecialchars($order['shipping_address'])); ?></div>
+                            <div class="shipping-address"><?php echo nl2br(htmlspecialchars($shipping_to_show)); ?></div>
                         </div>
                     <?php endif; ?>
                 </div>

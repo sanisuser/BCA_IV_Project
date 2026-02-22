@@ -88,7 +88,7 @@ a {
 }
 
 a:hover {
-    color: var(--accent-hover);
+    color: #2563eb;
 }
 
 /* Layout Container */

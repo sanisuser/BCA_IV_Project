@@ -139,8 +139,8 @@ if ($action === 'edit' && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST[
 
 // Get user for editing
 $user = null;
-if ($action === 'edit' && $user_id > 0) {
-    $stmt = $conn->prepare("SELECT user_id, username, email, role, created_at FROM users WHERE user_id = ?");
+if (($action === 'edit' || $action === 'view') && $user_id > 0) {
+    $stmt = $conn->prepare("SELECT user_id, username, email, role, created_at, full_name, profile_image, ship_address, phone, location, bio FROM users WHERE user_id = ?");
     $stmt->bind_param('i', $user_id);
     $stmt->execute();
     $res = $stmt->get_result();
@@ -300,7 +300,7 @@ $active_page = 'users';
                                 </td>
                                 <td><?php echo date('M d, Y', strtotime($u['created_at'])); ?></td>
                                 <td class="actions" style="display: flex; gap: 0.5rem; flex-wrap: nowrap;">
-                                    <a href="<?php echo SITE_URL; ?>/admin/manage_users.php?action=edit&id=<?php echo (int)$u['user_id']; ?>&sort=<?php echo urlencode($sort); ?>&order=<?php echo urlencode($order); ?>&q=<?php echo urlencode($q); ?>&column=<?php echo urlencode($search_column); ?>&page=<?php echo $page; ?>" class="btn btn-primary btn-small"><i class="fas fa-edit"></i> Edit</a>
+                                    <a href="<?php echo SITE_URL; ?>/admin/manage_users.php?action=view&id=<?php echo (int)$u['user_id']; ?>&sort=<?php echo urlencode($sort); ?>&order=<?php echo urlencode($order); ?>&q=<?php echo urlencode($q); ?>&column=<?php echo urlencode($search_column); ?>&page=<?php echo $page; ?>" class="btn btn-primary btn-small"><i class="fas fa-eye"></i> View</a>
                                     <?php if ((int)$u['user_id'] !== (int)$_SESSION['user_id']): ?>
                                         <a href="<?php echo SITE_URL; ?>/admin/manage_users.php?action=delete&id=<?php echo (int)$u['user_id']; ?>&sort=<?php echo urlencode($sort); ?>&order=<?php echo urlencode($order); ?>&q=<?php echo urlencode($q); ?>&column=<?php echo urlencode($search_column); ?>&page=<?php echo $page; ?>" class="btn btn-danger btn-small" onclick="return confirm('Delete this user?')"><i class="fas fa-trash"></i> Delete</a>
                                     <?php endif; ?>
@@ -321,53 +321,152 @@ $active_page = 'users';
                 <?php if ($total_pages > 1): ?>
                     <div class="pagination">
                         <?php if ($page > 1): ?>
-                            <a class="btn btn-secondary" href="<?php echo SITE_URL; ?>/admin/manage_users.php?q=<?php echo urlencode($q); ?>&column=<?php echo urlencode($search_column); ?>&page=<?php echo (int)($page - 1); ?>&sort=<?php echo urlencode($sort); ?>&order=<?php echo urlencode($order); ?>">← Prev</a>
+                            <a class="btn btn-secondary pagination-prev" href="<?php echo SITE_URL; ?>/admin/manage_users.php?q=<?php echo urlencode($q); ?>&column=<?php echo urlencode($search_column); ?>&page=<?php echo (int)($page - 1); ?>&sort=<?php echo urlencode($sort); ?>&order=<?php echo urlencode($order); ?>">← Prev</a>
                         <?php endif; ?>
                         <span style="color: #6c757d;">Page <?php echo (int)$page; ?> of <?php echo (int)$total_pages; ?></span>
                         <?php if ($page < $total_pages): ?>
-                            <a class="btn btn-secondary" href="<?php echo SITE_URL; ?>/admin/manage_users.php?q=<?php echo urlencode($q); ?>&column=<?php echo urlencode($search_column); ?>&page=<?php echo (int)($page + 1); ?>&sort=<?php echo urlencode($sort); ?>&order=<?php echo urlencode($order); ?>">Next →</a>
+                            <a class="btn btn-secondary pagination-next" href="<?php echo SITE_URL; ?>/admin/manage_users.php?q=<?php echo urlencode($q); ?>&column=<?php echo urlencode($search_column); ?>&page=<?php echo (int)($page + 1); ?>&sort=<?php echo urlencode($sort); ?>&order=<?php echo urlencode($order); ?>">Next →</a>
                         <?php endif; ?>
                     </div>
                 <?php endif; ?>
 
-<?php elseif ($action === 'edit' && $user): ?>
+<?php elseif ($action === 'view' && $user): ?>
                 <div class="admin-header">
-                    <h1>Edit User #<?php echo (int)$user['user_id']; ?></h1>
+                    <h1>User Details</h1>
                     <a href="<?php echo SITE_URL; ?>/admin/manage_users.php" class="btn btn-secondary">← Back to List</a>
                 </div>
 
-                <div class="edit-form">
-                    <form method="POST" action="<?php echo SITE_URL; ?>/admin/manage_users.php?action=edit&id=<?php echo (int)$user['user_id']; ?>">
-                        <input type="hidden" name="user_id" value="<?php echo (int)$user['user_id']; ?>" />
-                        
-                        <div class="form-group">
-                            <label>Username *</label>
-                            <input type="text" name="username" value="<?php echo htmlspecialchars($user['username']); ?>" required />
+                <div class="edit-form" style="max-width: none; width: 100%;">
+                    <?php
+                        $profile_src = '';
+                        if (!empty($user['profile_image'])) {
+                            $profile_src = SITE_URL . '/' . ltrim((string)$user['profile_image'], '/');
+                        } else {
+                            $profile_src = SITE_URL . '/assets/images/default-user.png';
+                        }
+
+                        $user_orders = [];
+                        $stmt = $conn->prepare('SELECT order_id, total_amount, status, payment_method, created_at, admin_remark FROM orders WHERE user_id = ? ORDER BY created_at DESC LIMIT 10');
+                        if ($stmt) {
+                            $uid_view = (int)$user['user_id'];
+                            $stmt->bind_param('i', $uid_view);
+                            $stmt->execute();
+                            $res = $stmt->get_result();
+                            while ($row = $res->fetch_assoc()) {
+                                $row['items'] = [];
+                                $user_orders[] = $row;
+                            }
+                            $stmt->close();
+                        }
+
+                        foreach ($user_orders as &$uo) {
+                            $uo['item_text'] = '';
+                            $items = [];
+                            $stmt = $conn->prepare('SELECT oi.quantity, oi.price_at_time, b.title FROM order_items oi JOIN books b ON oi.book_id = b.book_id WHERE oi.order_id = ?');
+                            if ($stmt) {
+                                $oid = (int)($uo['order_id'] ?? 0);
+                                $stmt->bind_param('i', $oid);
+                                $stmt->execute();
+                                $res = $stmt->get_result();
+                                while ($r = $res->fetch_assoc()) {
+                                    $items[] = $r;
+                                }
+                                $stmt->close();
+                            }
+
+                            $uo['items'] = $items;
+                            $itemCount = count($items);
+                            $itemNames = array_slice(array_column($items, 'title'), 0, 2);
+                            $uo['item_text'] = implode(', ', $itemNames) . ($itemCount > 2 ? ' + ' . ($itemCount - 2) . ' more' : '');
+                        }
+                        unset($uo);
+                    ?>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1.2fr; gap: 1.25rem; align-items: start;">
+                        <div>
+                            <div style="display: flex; gap: 1rem; align-items: flex-start; flex-wrap: wrap;">
+                                <img src="<?php echo htmlspecialchars($profile_src); ?>" alt="Profile" style="width: 110px; height: 110px; border-radius: 12px; object-fit: cover; border: 1px solid #e9ecef;" onerror="this.src='<?php echo SITE_URL; ?>/assets/images/default-user.png'" />
+                                <div style="flex: 1; min-width: 220px;">
+                                    <div style="font-weight: 700; font-size: 1.1rem; color: #2c3e50;">
+                                        <?php echo htmlspecialchars($user['full_name'] ?? $user['username']); ?>
+                                    </div>
+                                    <div style="color: #6c757d; margin-top: 0.25rem;">
+                                        <?php echo htmlspecialchars($user['email'] ?? ''); ?>
+                                    </div>
+                                    <div style="margin-top: 0.5rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                        <span class="badge badge-<?php echo htmlspecialchars($user['role'] ?? 'user'); ?>"><?php echo htmlspecialchars(($user['role'] ?? 'user') === 'admin' ? 'Admin' : 'Normal'); ?></span>
+                                        <span class="badge" style="background: #f8f9fa; color: #495057; border: 1px solid #e9ecef;">Joined: <?php echo htmlspecialchars(date('M d, Y', strtotime((string)($user['created_at'] ?? '')))); ?></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div style="margin-top: 1.25rem; display: grid; gap: 0.75rem;">
+                                <div style="border: 1px solid #e9ecef; border-radius: 8px; padding: 0.75rem; background: #ffffff;">
+                                    <div style="font-weight: 700; color: #495057; margin-bottom: 0.25rem;">Phone</div>
+                                    <div style="color: #212529;"><?php echo htmlspecialchars($user['phone'] ?? ''); ?></div>
+                                </div>
+
+                                <div style="border: 1px solid #e9ecef; border-radius: 8px; padding: 0.75rem; background: #ffffff;">
+                                    <div style="font-weight: 700; color: #495057; margin-bottom: 0.25rem;">Location</div>
+                                    <div style="color: #212529; white-space: pre-line;"><?php echo htmlspecialchars($user['location'] ?? ''); ?></div>
+                                </div>
+
+                                <div style="border: 1px solid #e9ecef; border-radius: 8px; padding: 0.75rem; background: #ffffff;">
+                                    <div style="font-weight: 700; color: #495057; margin-bottom: 0.25rem;">Shipping Address</div>
+                                    <div style="color: #212529; white-space: pre-line;"><?php echo htmlspecialchars($user['ship_address'] ?? ''); ?></div>
+                                </div>
+
+                                <div style="border: 1px solid #e9ecef; border-radius: 8px; padding: 0.75rem; background: #ffffff;">
+                                    <div style="font-weight: 700; color: #495057; margin-bottom: 0.25rem;">Bio</div>
+                                    <div style="color: #212529; white-space: pre-line;"><?php echo htmlspecialchars($user['bio'] ?? ''); ?></div>
+                                </div>
+                            </div>
                         </div>
-                        
-                        <div class="form-group">
-                            <label>Email *</label>
-                            <input type="email" name="email" value="<?php echo htmlspecialchars($user['email']); ?>" required />
+
+                        <div style="border: 1px solid #e9ecef; border-radius: 8px; background: #ffffff; overflow: hidden;">
+                            <div style="padding: 0.9rem 1rem; border-bottom: 1px solid #e9ecef; display: flex; justify-content: space-between; align-items: center;">
+                                <div style="font-weight: 800; color: #2c3e50;">Order History</div>
+                                <div style="color: #6c757d; font-size: 0.9rem;">Recent 10</div>
+                            </div>
+                            <div style="padding: 1rem; overflow: auto;">
+                                <?php if (count($user_orders) === 0): ?>
+                                    <div style="color: #6c757d;">No orders found for this user.</div>
+                                <?php else: ?>
+                                    <table class="data-table" style="width: 100%; min-width: 620px; box-shadow: none; border: 1px solid #eef1f4;">
+                                        <thead>
+                                            <tr>
+                                                <th>Items</th>
+                                                <!-- <th>Total</th> -->
+                                                <!-- <th>Status</th> -->
+                                                <th>Date</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <?php foreach ($user_orders as $uo): ?>
+                                                <tr>
+                                                    <td style="font-weight: 700; color: #2c3e50;">
+                                                        <?php echo htmlspecialchars($uo['item_text'] !== '' ? $uo['item_text'] : 'Order items'); ?>
+                                                        <?php if (!empty($uo['admin_remark'])): ?>
+                                                            <div style="margin-top: 0.35rem; font-size: 0.85rem; color: #e53e3e; background: #fff5f5; padding: 0.4rem 0.5rem; border-radius: 6px; border-left: 3px solid #e53e3e;">
+                                                                <strong>Remark:</strong> <?php echo htmlspecialchars((string)$uo['admin_remark']); ?>
+                                                            </div>
+                                                        <?php endif; ?>
+                                                    </td>
+                                                    <!-- <td><?php echo format_price((float)($uo['total_amount'] ?? 0)); ?></td> -->
+                                                    <!-- <td style="text-transform: capitalize;">
+                                                        <?php echo htmlspecialchars((string)($uo['status'] ?? '')); ?>
+                                                    </td> -->
+                                                    <td>
+                                                        <?php echo htmlspecialchars(date('M d, Y h:i A', strtotime((string)($uo['created_at'] ?? '')))); ?>
+                                                    </td>
+                                                </tr>
+                                            <?php endforeach; ?>
+                                        </tbody>
+                                    </table>
+                                <?php endif; ?>
+                            </div>
                         </div>
-                        
-                        <div class="form-group">
-                            <label>Role</label>
-                            <select name="role" class="role-select">
-                                <option value="user" <?php echo $user['role'] === 'user' ? 'selected' : ''; ?>>Normal</option>
-                                <option value="admin" <?php echo $user['role'] === 'admin' ? 'selected' : ''; ?>>Admin</option>
-                            </select>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label>New Password (leave blank to keep current)</label>
-                            <input type="password" name="new_password" placeholder="Enter new password" />
-                        </div>
-                        
-                        <div style="display: flex; gap: 0.5rem;">
-                            <button type="submit" name="save_user" class="btn btn-success">Save Changes</button>
-                            <a href="<?php echo SITE_URL; ?>/admin/manage_users.php" class="btn btn-secondary">Cancel</a>
-                        </div>
-                    </form>
+                    </div>
                 </div>
             <?php endif; ?>
 <?php require_once __DIR__ . '/partials/footer.php'; ?>

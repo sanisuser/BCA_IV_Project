@@ -148,9 +148,12 @@ $stmt->close();
     <?php else: ?>
         
         <div class="cart-empty">
-            <i class="fas fa-shopping-basket"></i>
-            <h2>Your cart is empty</h2>
-            <p>Browse our collection and add some amazing books!</p>
+            <i class="fas fa-heart-broken"></i>
+            <h2>Your wishlist is empty</h2>
+            <p>Browse our collection and save your favorite books!</p>
+            <a href="<?php echo SITE_URL; ?>/page/booklist.php" class="btn btn-cart">
+                <i class="fas fa-search"></i> Browse Books
+            </a>
             
         </div>
         

@@ -77,7 +77,7 @@ if ($action === 'edit' && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST[
     $genre = clean_input($_POST['genre'] ?? '');
     $price = (float)($_POST['price'] ?? 0);
     $stock = (int)($_POST['stock'] ?? 0);
-    $cover_image = clean_input($_POST['cover_image'] ?? '');
+    $cover_image = clean_input($_POST['current_cover_image'] ?? '');
     $published_year = (int)($_POST['published_year'] ?? 0);
     $condition_status = clean_input($_POST['condition_status'] ?? 'new');
 
@@ -89,6 +89,45 @@ if ($action === 'edit' && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST[
         $allowed = ['new', 'used', 'rare'];
         if (!in_array($condition_status, $allowed, true)) {
             $condition_status = 'new';
+        }
+
+        if (isset($_FILES['cover_image']) && is_array($_FILES['cover_image']) && ($_FILES['cover_image']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE) {
+            if (($_FILES['cover_image']['error'] ?? UPLOAD_ERR_OK) !== UPLOAD_ERR_OK) {
+                $error = 'Cover image upload failed.';
+            } else {
+                $tmp = (string)($_FILES['cover_image']['tmp_name'] ?? '');
+                $orig = (string)($_FILES['cover_image']['name'] ?? '');
+                $ext = strtolower(pathinfo($orig, PATHINFO_EXTENSION));
+                $allowed_ext = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+                if (!in_array($ext, $allowed_ext, true)) {
+                    $error = 'Cover image must be jpg, jpeg, png, webp, or gif.';
+                } else {
+                    $assets_images_dir = realpath(__DIR__ . '/../assets/images');
+                    if ($assets_images_dir === false) {
+                        $error = 'Upload directory not found.';
+                    } else {
+                        $upload_dir = $assets_images_dir . DIRECTORY_SEPARATOR . 'books';
+                        if (!is_dir($upload_dir)) {
+                            @mkdir($upload_dir, 0777, true);
+                        }
+                        if (!is_dir($upload_dir)) {
+                            $error = 'Failed to create upload directory.';
+                        } else {
+                            $filename = safe_filename($orig);
+                            $dest = $upload_dir . DIRECTORY_SEPARATOR . $filename;
+                            if (!move_uploaded_file($tmp, $dest)) {
+                                $error = 'Failed to save uploaded cover image.';
+                            } else {
+                                $cover_image = 'assets/images/books/' . $filename;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if ($error !== '') {
+            redirect(SITE_URL . '/admin/manage_books.php?success=' . urlencode($success) . '&error=' . urlencode($error));
         }
         $stmt = $conn->prepare(
             "UPDATE books SET title=?, author=?, description=?, genre=?, price=?, stock=?, cover_image=?, published_year=?, condition_status=? WHERE book_id=?"
@@ -221,25 +260,32 @@ $active_page = 'books';
                     <div style="color: #6c757d;">Total: <?php echo (int)$total_books; ?> books</div>
                 </div>
 
-                <div class="filter-bar">
-                    <form method="GET" style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
-                        <select name="column" class="admin-input" style="min-width: 120px;">
-                            <option value="all" <?php echo $search_column === 'all' ? 'selected' : ''; ?>>All Columns</option>
-                            <option value="title" <?php echo $search_column === 'title' ? 'selected' : ''; ?>>Title</option>
-                            <option value="author" <?php echo $search_column === 'author' ? 'selected' : ''; ?>>Author</option>
-                            <option value="genre" <?php echo $search_column === 'genre' ? 'selected' : ''; ?>>Genre</option>
-                            <option value="price" <?php echo $search_column === 'price' ? 'selected' : ''; ?>>Price</option>
-                            <option value="stock" <?php echo $search_column === 'stock' ? 'selected' : ''; ?>>Stock</option>
-                            <option value="published_year" <?php echo $search_column === 'published_year' ? 'selected' : ''; ?>>Year</option>
-                        </select>
-                        <input type="text" name="q" value="<?php echo htmlspecialchars($q); ?>" placeholder="Search..." style="min-width: 200px;" />
-                        <input type="hidden" name="sort" value="<?php echo htmlspecialchars($sort); ?>" />
-                        <input type="hidden" name="order" value="<?php echo htmlspecialchars($order); ?>" />
-                        <input type="hidden" name="page" value="1" />
-                        <button type="submit" class="btn btn-primary"><i class="fas fa-filter"></i> Filter</button>
-                        <a href="<?php echo SITE_URL; ?>/admin/manage_books.php" class="btn btn-secondary">Clear</a>
-                    </form>
-                </div>
+                <div class="filter-bar" style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+                <!-- Form -->
+                <form method="GET" style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; flex: 1;">
+                    <select name="column" class="admin-input" style="min-width: 120px;">
+                        <option value="all" <?php echo $search_column === 'all' ? 'selected' : ''; ?>>All Columns</option>
+                        <option value="title" <?php echo $search_column === 'title' ? 'selected' : ''; ?>>Title</option>
+                        <option value="author" <?php echo $search_column === 'author' ? 'selected' : ''; ?>>Author</option>
+                        <option value="genre" <?php echo $search_column === 'genre' ? 'selected' : ''; ?>>Genre</option>
+                        <option value="price" <?php echo $search_column === 'price' ? 'selected' : ''; ?>>Price</option>
+                        <option value="stock" <?php echo $search_column === 'stock' ? 'selected' : ''; ?>>Stock</option>
+                        <option value="published_year" <?php echo $search_column === 'published_year' ? 'selected' : ''; ?>>Year</option>
+                    </select>
+                    <input type="text" name="q" value="<?php echo htmlspecialchars($q); ?>" placeholder="Search..." style="min-width: 200px;" />
+                    <input type="hidden" name="sort" value="<?php echo htmlspecialchars($sort); ?>" />
+                    <input type="hidden" name="order" value="<?php echo htmlspecialchars($order); ?>" />
+                    <input type="hidden" name="page" value="1" />
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-filter"></i> Filter</button>
+                    <a href="<?php echo SITE_URL; ?>/admin/manage_books.php" class="btn btn-secondary">Clear</a>
+                </form>
+
+                <!-- Add Book button -->
+                <a href="<?php echo SITE_URL; ?>/admin/add_book.php" 
+                class="btn btn-secondary" style="margin-left: auto;">
+                    <i class="fa-solid fa-circle-plus"></i> Add Book
+                </a>
+            </div>
 
                 <?php if (!empty($success)): ?>
                     <div style="background: #d4edda; color: #155724; padding: 0.75rem; border-radius: 4px; margin-bottom: 1rem;"><?php echo htmlspecialchars($success); ?></div>
@@ -268,7 +314,17 @@ $active_page = 'books';
                             <?php foreach ($books as $b): ?>
                             <tr>
                                 <td><?php echo (int)$b['book_id']; ?></td>
-                                <td><?php echo !empty($b['cover_image']) ? '<i class="fas fa-image" style="color: #28a745;"></i>' : '<i class="fas fa-times" style="color: #dc3545;"></i>'; ?></td>
+                                <td>
+                                    <?php if (!empty($b['cover_image'])): ?>
+                                        <img
+                                            src="<?php echo SITE_URL . '/' . htmlspecialchars(ltrim($b['cover_image'], '/')); ?>"
+                                            alt="Cover"
+                                            style="width: 42px; height: 60px; object-fit: cover; border-radius: 6px; border: 1px solid #e9ecef;"
+                                        />
+                                    <?php else: ?>
+                                        <i class="fas fa-times" style="color: #dc3545;"></i>
+                                    <?php endif; ?>
+                                </td>
                                 <td><?php echo htmlspecialchars($b['title']); ?></td>
                                 <td><?php echo htmlspecialchars($b['author']); ?></td>
                                 <td><?php echo htmlspecialchars($b['genre'] ?? '-'); ?></td>
@@ -279,9 +335,11 @@ $active_page = 'books';
                                     <span class="badge badge-<?php echo $cond; ?>"><?php echo ucfirst($cond); ?></span>
                                 </td>
                                 <td><?php echo (int)($b['published_year'] ?? 0) ?: '-'; ?></td>
-                                <td class="actions" style="display: flex; gap: 0.5rem; flex-wrap: nowrap;">
-                                    <a href="<?php echo SITE_URL; ?>/admin/manage_books.php?action=edit&id=<?php echo (int)$b['book_id']; ?>&sort=<?php echo urlencode($sort); ?>&order=<?php echo urlencode($order); ?>&q=<?php echo urlencode($q); ?>&column=<?php echo urlencode($search_column); ?>&page=<?php echo $page; ?>" class="btn btn-primary btn-small"><i class="fas fa-edit"></i> Edit</a>
-                                    <a href="<?php echo SITE_URL; ?>/admin/manage_books.php?action=delete&id=<?php echo (int)$b['book_id']; ?>&sort=<?php echo urlencode($sort); ?>&order=<?php echo urlencode($order); ?>&q=<?php echo urlencode($q); ?>&column=<?php echo urlencode($search_column); ?>&page=<?php echo $page; ?>" class="btn btn-danger btn-small" onclick="return confirm('Delete this book?')"><i class="fas fa-trash"></i> Delete</a>
+                                <td class="actions" style="white-space: nowrap; vertical-align: middle;">
+                                    <div style="display: flex; gap: 0.5rem; flex-wrap: nowrap; align-items: center; justify-content: center;">
+                                        <a href="<?php echo SITE_URL; ?>/admin/manage_books.php?action=edit&id=<?php echo (int)$b['book_id']; ?>&sort=<?php echo urlencode($sort); ?>&order=<?php echo urlencode($order); ?>&q=<?php echo urlencode($q); ?>&column=<?php echo urlencode($search_column); ?>&page=<?php echo $page; ?>" class="btn btn-primary btn-small"><i class="fas fa-edit"></i> Edit</a>
+                                        <a href="<?php echo SITE_URL; ?>/admin/manage_books.php?action=delete&id=<?php echo (int)$b['book_id']; ?>&sort=<?php echo urlencode($sort); ?>&order=<?php echo urlencode($order); ?>&q=<?php echo urlencode($q); ?>&column=<?php echo urlencode($search_column); ?>&page=<?php echo $page; ?>" class="btn btn-danger btn-small" onclick="return confirm('Delete this book?')"><i class="fas fa-trash"></i> Delete</a>
+                                    </div>
                                 </td>
                             </tr>
                             <?php endforeach; ?>
@@ -299,11 +357,11 @@ $active_page = 'books';
                 <?php if ($total_pages > 1): ?>
                     <div class="pagination">
                         <?php if ($page > 1): ?>
-                            <a class="btn btn-secondary" href="<?php echo SITE_URL; ?>/admin/manage_books.php?q=<?php echo urlencode($q); ?>&column=<?php echo urlencode($search_column); ?>&page=<?php echo (int)($page - 1); ?>&sort=<?php echo urlencode($sort); ?>&order=<?php echo urlencode($order); ?>">← Prev</a>
+                            <a class="btn btn-secondary pagination-prev" href="<?php echo SITE_URL; ?>/admin/manage_books.php?q=<?php echo urlencode($q); ?>&column=<?php echo urlencode($search_column); ?>&page=<?php echo (int)($page - 1); ?>&sort=<?php echo urlencode($sort); ?>&order=<?php echo urlencode($order); ?>">← Prev</a>
                         <?php endif; ?>
                         <span style="color: #6c757d;">Page <?php echo (int)$page; ?> of <?php echo (int)$total_pages; ?></span>
                         <?php if ($page < $total_pages): ?>
-                            <a class="btn btn-secondary" href="<?php echo SITE_URL; ?>/admin/manage_books.php?q=<?php echo urlencode($q); ?>&column=<?php echo urlencode($search_column); ?>&page=<?php echo (int)($page + 1); ?>&sort=<?php echo urlencode($sort); ?>&order=<?php echo urlencode($order); ?>">Next →</a>
+                            <a class="btn btn-secondary pagination-next" href="<?php echo SITE_URL; ?>/admin/manage_books.php?q=<?php echo urlencode($q); ?>&column=<?php echo urlencode($search_column); ?>&page=<?php echo (int)($page + 1); ?>&sort=<?php echo urlencode($sort); ?>&order=<?php echo urlencode($order); ?>">Next →</a>
                         <?php endif; ?>
                     </div>
                 <?php endif; ?>
@@ -315,8 +373,9 @@ $active_page = 'books';
                 </div>
 
                 <div class="edit-form">
-                    <form method="POST" action="<?php echo SITE_URL; ?>/admin/manage_books.php?action=edit&id=<?php echo (int)$book['book_id']; ?>">
+                    <form method="POST" action="<?php echo SITE_URL; ?>/admin/manage_books.php?action=edit&id=<?php echo (int)$book['book_id']; ?>" enctype="multipart/form-data">
                         <input type="hidden" name="book_id" value="<?php echo (int)$book['book_id']; ?>" />
+                        <input type="hidden" name="current_cover_image" value="<?php echo htmlspecialchars($book['cover_image'] ?? ''); ?>" />
                         
                         <div class="form-group">
                             <label>Title *</label>
@@ -350,10 +409,27 @@ $active_page = 'books';
                                 <input type="number" name="published_year" value="<?php echo htmlspecialchars((string)($book['published_year'] ?? 0)); ?>" />
                             </div>
                         </div>
-                        
+
                         <div class="form-group">
-                            <label>Cover Image Filename</label>
-                            <input type="text" name="cover_image" value="<?php echo htmlspecialchars($book['cover_image'] ?? ''); ?>" placeholder="e.g., book-cover.jpg" />
+                            <label>Cover Image</label>
+                            <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+                                <?php if (!empty($book['cover_image'])): ?>
+                                    <img
+                                        id="editCoverPreview"
+                                        src="<?php echo SITE_URL . '/' . htmlspecialchars(ltrim($book['cover_image'], '/')); ?>"
+                                        alt="Cover"
+                                        style="width: 90px; height: 130px; object-fit: cover; border-radius: 8px; border: 1px solid #e9ecef;"
+                                    />
+                                <?php else: ?>
+                                    <img
+                                        id="editCoverPreview"
+                                        src=""
+                                        alt="Cover"
+                                        style="width: 90px; height: 130px; object-fit: cover; border-radius: 8px; border: 1px solid #e9ecef; display: none;"
+                                    />
+                                <?php endif; ?>
+                                <input type="file" name="cover_image" id="editCoverInput" accept="image/*" />
+                            </div>
                         </div>
                         
                         <div class="form-group">
@@ -376,5 +452,18 @@ $active_page = 'books';
                         </div>
                     </form>
                 </div>
+                <script>
+                    (function () {
+                        var input = document.getElementById('editCoverInput');
+                        var img = document.getElementById('editCoverPreview');
+                        if (!input || !img) return;
+                        input.addEventListener('change', function () {
+                            var file = input.files && input.files[0];
+                            if (!file) return;
+                            img.style.display = 'block';
+                            img.src = URL.createObjectURL(file);
+                        });
+                    })();
+                </script>
             <?php endif; ?>
 <?php require_once __DIR__ . '/partials/footer.php'; ?>

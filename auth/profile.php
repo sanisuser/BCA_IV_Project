@@ -421,7 +421,7 @@ require_once __DIR__ . '/../includes/header_navbar.php';
                                     <div class="order-item-card">
                                         <div class="order-item-main">
                                             <div class="order-item-header">
-                                                <span class="order-id">#<?php echo str_pad((string)$order['order_id'], 4, '0', STR_PAD_LEFT); ?></span>
+                                                <span class="order-id"><?php echo htmlspecialchars($itemText ?: 'Order items'); ?></span>
                                                 <span class="<?php echo $statusClass; ?>"><?php echo htmlspecialchars($statusLabel); ?></span>
                                             </div>
                                             <p class="order-items-text"><?php echo htmlspecialchars($itemText ?: 'Order items'); ?></p>

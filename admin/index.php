@@ -104,7 +104,7 @@ $active_page = 'dashboard';
                 </div>
                 <div class="dash-top-actions">
                     <div class="dash-pill"><i class="fa-regular fa-calendar"></i> <?php echo date('M d, Y'); ?></div>
-                    <a class="btn btn-secondary" href="<?php echo SITE_URL; ?>/admin/manage_books.php"><i class="fa-solid fa-list"></i> View Lists</a>
+                    <!-- <a class="btn btn-secondary" href="<?php echo SITE_URL; ?>/admin/manage_books.php"><i class="fa-solid fa-list"></i> View Lists</a> -->
                 </div>
             </div>
 
@@ -192,7 +192,7 @@ $active_page = 'dashboard';
                 </div>
                 <div class="dash-quick-actions">
                     <a href="<?php echo SITE_URL; ?>/admin/manage_books.php" class="btn btn-primary"><i class="fa-solid fa-book"></i> Book List</a>
-                    <a href="<?php echo SITE_URL; ?>/admin/manage_books.php?action=edit&id=0" class="btn btn-secondary"><i class="fa-solid fa-circle-plus"></i> Add Book</a>
+                    <a href="<?php echo SITE_URL; ?>/admin/add_book.php" class="btn btn-secondary"><i class="fa-solid fa-circle-plus"></i> Add Book</a>
                     <a href="<?php echo SITE_URL; ?>/admin/manage_users.php" class="btn btn-secondary"><i class="fa-solid fa-users"></i> User List</a>
                     <a href="<?php echo SITE_URL; ?>/admin/manage_orders.php" class="btn btn-secondary"><i class="fa-solid fa-shopping-bag"></i> Orders</a>
                 </div>

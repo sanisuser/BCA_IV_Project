@@ -23,7 +23,7 @@
 }
 
 .book-breadcrumb a:hover {
-    color: var(--accent-hover, #facc15);
+    color: #2563eb;
 }
 
 .book-breadcrumb .separator {

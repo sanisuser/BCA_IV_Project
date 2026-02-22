@@ -215,15 +215,35 @@ $stmt->close();
     </div>
 
     <div style="overflow:auto;">
-        <table class="admin-table" style="min-width: 980px;">
-            <thead>
+        <table class="admin-table" style="min-width: 980px; border-collapse: collapse; width: 100%;">
+            <thead style="background-color: #f5f5f5; border-bottom: 2px solid #ccc;">
                 <tr>
-                    <th><a href="<?php echo sort_url('order_id', $sort, $order, $status_filter, $q, $search_column); ?>" style="text-decoration: none; color: inherit;">Order<?php echo sort_icon('order_id', $sort, $order); ?></a></th>
-                    <th>User</th>
-                    <th><a href="<?php echo sort_url('created_at', $sort, $order, $status_filter, $q, $search_column); ?>" style="text-decoration: none; color: inherit;">Date<?php echo sort_icon('created_at', $sort, $order); ?></a></th>
-                    <th><a href="<?php echo sort_url('status', $sort, $order, $status_filter, $q, $search_column); ?>" style="text-decoration: none; color: inherit;">Status<?php echo sort_icon('status', $sort, $order); ?></a></th>
-                    <th><a href="<?php echo sort_url('total_amount', $sort, $order, $status_filter, $q, $search_column); ?>" style="text-decoration: none; color: inherit;">Total<?php echo sort_icon('total_amount', $sort, $order); ?></a></th>
-                    <th style="width: 260px;">Update</th>
+                    <th style="padding: 10px; text-align: center; cursor: pointer;" class="order-id-divider">
+                        <a href="<?php echo sort_url('order_id', $sort, $order, $status_filter, $q, $search_column); ?>" 
+                        style="text-decoration: none; color: #333; display: inline-flex; align-items: center; gap: 0.25rem;">
+                            Order <?php echo sort_icon('order_id', $sort, $order); ?>
+                        </a>
+                    </th>
+                    <th style="padding: 10px; text-align: left;">User</th>
+                    <th style="padding: 10px; text-align: center; cursor: pointer;">
+                        <a href="<?php echo sort_url('created_at', $sort, $order, $status_filter, $q, $search_column); ?>" 
+                        style="text-decoration: none; color: #333; display: inline-flex; align-items: center; gap: 0.25rem;">
+                            Date <?php echo sort_icon('created_at', $sort, $order); ?>
+                        </a>
+                    </th>
+                    <th style="padding: 10px; text-align: center; cursor: pointer;">
+                        <a href="<?php echo sort_url('status', $sort, $order, $status_filter, $q, $search_column); ?>" 
+                        style="text-decoration: none; color: #333; display: inline-flex; align-items: center; gap: 0.25rem;">
+                            Status <?php echo sort_icon('status', $sort, $order); ?>
+                        </a>
+                    </th>
+                    <th style="padding: 10px; text-align: center; cursor: pointer;">
+                        <a href="<?php echo sort_url('total_amount', $sort, $order, $status_filter, $q, $search_column); ?>" 
+                        style="text-decoration: none; color: #333; display: inline-flex; align-items: center; gap: 0.25rem;">
+                            Total <?php echo sort_icon('total_amount', $sort, $order); ?>
+                        </a>
+                    </th>
+                    <th style="width: 260px; padding: 10px; text-align: center;">Update</th>
                 </tr>
             </thead>
             <tbody>
@@ -232,7 +252,7 @@ $stmt->close();
                 <?php else: ?>
                     <?php foreach ($orders as $o): ?>
                         <tr class="order-row">
-                            <td>#<?php echo (int)$o['order_id']; ?></td>
+                            <td class="order-id-divider">#<?php echo (int)$o['order_id']; ?></td>
                             <td>
                                 <div style="font-weight:600;"><?php echo htmlspecialchars($o['full_name'] ?? $o['username']); ?></div>
                                 <div style="color:#6c757d; font-size:0.85rem;"><?php echo htmlspecialchars($o['email'] ?? ''); ?></div>
@@ -245,39 +265,22 @@ $stmt->close();
                             </td>
                             <td><?php echo format_price((float)($o['total_amount'] ?? 0)); ?></td>
                             <td>
-                                <form method="POST" action="" style="display:flex; gap:0.5rem; align-items:center; flex-wrap: wrap;">
+                                <form method="POST" action="" class="order-update-form">
                                     <input type="hidden" name="action" value="update_status">
                                     <input type="hidden" name="order_id" value="<?php echo (int)$o['order_id']; ?>">
                                     <?php if (($o['status'] ?? '') === 'pending'): ?>
-                                        <select name="status" class="admin-input" style="min-width: 140px;" onchange="toggleRemarkField(this, <?php echo (int)$o['order_id']; ?>)">
-                                            <option value="pending" selected disabled>Pending</option>
-                                            <option value="shipped">Dispatched</option>
-                                            <option value="cancelled">Cancel</option>
-                                        </select>
-                                        <div id="remark-field-<?php echo (int)$o['order_id']; ?>" style="display: none; width: 100%; margin-top: 0.5rem;">
-                                            <input type="text" name="admin_remark" class="admin-input" placeholder="Enter remark (required for cancellation) *" style="width: 100%;" required>
-                                        </div>
-                                        <button type="submit" class="btn btn-primary" id="btn-update-<?php echo (int)$o['order_id']; ?>"><i class="fa-solid fa-truck"></i> Dispatch</button>
+                                        <input type="hidden" name="status" value="shipped">
+                                        <button type="submit" class="btn btn-primary"><i class="fa-solid fa-truck"></i> Dispatch</button>
                                     <?php elseif (($o['status'] ?? '') === 'shipped'): ?>
-                                        <select class="admin-input" style="min-width: 160px;" disabled>
-                                            <option selected>Dispatched (locked)</option>
-                                        </select>
-                                        <button type="button" class="btn btn-secondary" disabled><i class="fa-solid fa-lock"></i> Locked</button>
+                                        <div class="order-update-pill order-update-dispatched">Dispatched</div>
                                     <?php elseif (($o['status'] ?? '') === 'delivered'): ?>
-                                        <select class="admin-input" style="min-width: 160px;" disabled>
-                                            <option selected>Delivered</option>
-                                        </select>
-                                        <button type="button" class="btn btn-secondary" disabled><i class="fa-solid fa-lock"></i> Locked</button>
+                                        <div class="order-update-pill order-update-delivered">Delivered</div>
                                     <?php elseif (($o['status'] ?? '') === 'cancelled'): ?>
-                                        <select class="admin-input" style="min-width: 160px;" disabled>
-                                            <option selected>Cancelled</option>
-                                        </select>
-                                        <button type="button" class="btn btn-secondary" disabled><i class="fa-solid fa-lock"></i> Locked</button>
+                                        <div class="order-update-pill order-update-cancelled">Cancelled</div>
                                     <?php else: ?>
-                                        <select class="admin-input" style="min-width: 160px;" disabled>
-                                            <option selected><?php echo htmlspecialchars(admin_status_label((string)($o['status'] ?? ''))); ?></option>
-                                        </select>
-                                        <button type="button" class="btn btn-secondary" disabled><i class="fa-solid fa-lock"></i> Locked</button>
+                                        <div class="order-update-pill order-update-default">
+                                            <?php echo htmlspecialchars(admin_status_label((string)($o['status'] ?? ''))); ?>
+                                        </div>
                                     <?php endif; ?>
                                 </form>
                                 <?php if (!empty($o['admin_remark'])): ?>
@@ -341,8 +344,8 @@ $stmt->close();
                                                     } else {
                                                         echo 'Address not found';
                                                     }
-                                                } elseif (!empty($o['shipping_address'])) {
-                                                    echo htmlspecialchars($o['shipping_address']);
+                                                } elseif (!empty($o['ship_address'])) {
+                                                    echo htmlspecialchars($o['ship_address']);
                                                 } else {
                                                     echo 'No address information';
                                                 }
@@ -410,31 +413,6 @@ $stmt->close();
 </section>
 
 <script>
-function toggleRemarkField(selectElement, orderId) {
-    const remarkField = document.getElementById('remark-field-' + orderId);
-    const btnUpdate = document.getElementById('btn-update-' + orderId);
-    const remarkInput = remarkField.querySelector('input[name="admin_remark"]');
-    
-    if (selectElement.value === 'cancelled') {
-        remarkField.style.display = 'block';
-        remarkInput.required = true;
-        btnUpdate.innerHTML = '<i class="fa-solid fa-ban"></i> Cancel Order';
-        btnUpdate.className = 'btn btn-danger';
-    } else if (selectElement.value === 'shipped') {
-        remarkField.style.display = 'none';
-        remarkInput.required = false;
-        remarkInput.value = '';
-        btnUpdate.innerHTML = '<i class="fa-solid fa-truck"></i> Dispatch';
-        btnUpdate.className = 'btn btn-primary';
-    } else {
-        remarkField.style.display = 'none';
-        remarkInput.required = false;
-        remarkInput.value = '';
-        btnUpdate.innerHTML = '<i class="fa-solid fa-truck"></i> Dispatch';
-        btnUpdate.className = 'btn btn-primary';
-    }
-}
-
 function toggleOrderDetails(orderId) {
     const detailsRow = document.getElementById('details-' + orderId);
     if (detailsRow.style.display === 'none') {
