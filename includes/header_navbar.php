@@ -40,7 +40,7 @@ if (is_logged_in()) {
 $current_page = basename($_SERVER['PHP_SELF'] ?? '');
 $is_book_view_page = ($current_page === 'book.php');
 $is_home_page = ($current_page === 'index.php');
-$hide_search_bar_pages = ['profile.php', 'cart.php', 'checkout.php', 'orders.php'];
+$hide_search_bar_pages = ['profile.php', 'cart.php', 'checkout.php', 'orders.php', 'wishlist.php'];
 $hide_search_bar = in_array($current_page, $hide_search_bar_pages, true);
 $navbar_page_class = ($is_book_view_page ? ' is-book-view' : '') . ($is_home_page ? ' is-home' : '');
 

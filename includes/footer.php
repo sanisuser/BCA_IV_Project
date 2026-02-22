@@ -39,8 +39,8 @@
             <div class="footer-section">
                 <h4>Contact</h4>
                 <ul>
-                    <li><i class="fas fa-envelope"></i> support@bookhub.com</li>
-                    <li><i class="fas fa-phone"></i> +1 234 567 890</li>
+                    <li><i class="fas fa-envelope"></i> crm.bookhub@gmail.com</li>
+                    <li><i class="fas fa-phone"></i> +977 98XXXXXXXX</li>
                 </ul>
             </div>
         </div>
