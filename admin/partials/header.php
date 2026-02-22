@@ -36,12 +36,11 @@ if (is_logged_in()) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?php echo $page_title; ?> - <?php echo SITE_NAME; ?></title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/png" href="<?php echo SITE_URL; ?>/assets/logo.png">
+    <!-- Fonts loaded via local CSS -->
     <link rel="stylesheet" href="<?php echo SITE_URL; ?>/includes/css/header.css">
     <link rel="stylesheet" href="<?php echo SITE_URL; ?>/admin/css/admin.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="<?php echo SITE_URL; ?>/assets/fontawesome/css/all.min.css">
 </head>
 <body>
     <!-- Navigation Bar -->

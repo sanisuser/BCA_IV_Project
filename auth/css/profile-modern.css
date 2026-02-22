@@ -1,8 +1,9 @@
 /**
  * Profile Page Modern Dark Theme - Custom CSS (No Tailwind)
+ * OFFLINE VERSION - uses local fonts
  */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@700&display=swap');
+@import url('../../assets/css/fonts.css');
 
 * {
     margin: 0;
@@ -60,7 +61,7 @@ body {
 }
 
 .profile-title {
-    font-family: 'Playfair Display', sans-serif;
+    font-family: 'Heading Font', 'Inter', sans-serif;
     font-size: 2.25rem;
     font-weight: 700;
     letter-spacing: -0.025em;
@@ -186,7 +187,7 @@ body {
 .profile-upload-btn:hover { background: var(--accent-hover); }
 
 .profile-name {
-    font-family: 'Playfair Display', sans-serif;
+    font-family: 'Heading Font', 'Inter', sans-serif;
     font-size: 1.875rem;
     font-weight: 700;
     margin-bottom: 0.25rem;

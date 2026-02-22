@@ -1,0 +1,64 @@
+/**
+ * Local Fonts Configuration
+ * Inter: 400, 500, 600, 700
+ * OFFLINE VERSION - No external dependencies
+ */
+
+/* Inter Regular (400) */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../fonts/inter/inter-v13-latin-regular.woff2') format('woff2'),
+       url('../fonts/inter/static/Inter_28pt-Regular.ttf') format('truetype');
+}
+
+/* Inter Medium (500) */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('../fonts/inter/inter-v13-latin-500.woff2') format('woff2'),
+       url('../fonts/inter/static/Inter_28pt-Medium.ttf') format('truetype');
+}
+
+/* Inter SemiBold (600) */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('../fonts/inter/inter-v13-latin-600.woff2') format('woff2'),
+       url('../fonts/inter/static/Inter_28pt-SemiBold.ttf') format('truetype');
+}
+
+/* Inter Bold (700) */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('../fonts/inter/inter-v13-latin-700.woff2') format('woff2'),
+       url('../fonts/inter/static/Inter_28pt-Bold.ttf') format('truetype');
+}
+
+/* Variable Font Fallback - includes all weights */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('../fonts/inter/Inter-VariableFont_opsz,wght.ttf') format('truetype-variations');
+}
+
+/* Heading Font - Using Inter Bold instead of Playfair Display for offline compatibility */
+@font-face {
+  font-family: 'Heading Font';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('../fonts/inter/inter-v13-latin-700.woff2') format('woff2'),
+       url('../fonts/inter/static/Inter_28pt-Bold.ttf') format('truetype');
+}

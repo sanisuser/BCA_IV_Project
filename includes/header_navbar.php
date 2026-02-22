@@ -40,6 +40,8 @@ if (is_logged_in()) {
 $current_page = basename($_SERVER['PHP_SELF'] ?? '');
 $is_book_view_page = ($current_page === 'book.php');
 $is_home_page = ($current_page === 'index.php');
+$hide_search_bar_pages = ['profile.php', 'cart.php', 'checkout.php', 'orders.php'];
+$hide_search_bar = in_array($current_page, $hide_search_bar_pages, true);
 $navbar_page_class = ($is_book_view_page ? ' is-book-view' : '') . ($is_home_page ? ' is-home' : '');
 
 ?>
@@ -59,8 +61,8 @@ $navbar_page_class = ($is_book_view_page ? ' is-book-view' : '') . ($is_home_pag
     <!-- Global Dark Theme -->
     <link rel="stylesheet" href="<?php echo SITE_URL; ?>/assets/css/theme.css">
     
-    <!-- Font Awesome for icons (CDN) -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Font Awesome for icons (LOCAL - Offline) -->
+    <link rel="stylesheet" href="<?php echo SITE_URL; ?>/assets/fontawesome/css/all.min.css">
     <!-- Search Suggestions Styles -->
     <link rel="stylesheet" href="<?php echo SITE_URL; ?>/includes/css/search-suggestions.css">
 </head>
@@ -75,6 +77,7 @@ $navbar_page_class = ($is_book_view_page ? ' is-book-view' : '') . ($is_home_pag
             <?php echo SITE_NAME; ?>
         </a>
         
+        <?php if (!$hide_search_bar): ?>
         <!-- Search Bar -->
         <form class="search-form" action="<?php echo SITE_URL; ?>/page/booklist.php" method="GET" style="position: relative;">
             <input type="text" id="search-input" name="search" class="search-input" placeholder="Search books..." value="<?php echo isset($_GET['search']) ? htmlspecialchars($_GET['search']) : ''; ?>" autocomplete="off">
@@ -82,6 +85,7 @@ $navbar_page_class = ($is_book_view_page ? ' is-book-view' : '') . ($is_home_pag
             <!-- Search Suggestions Dropdown -->
             <div id="search-suggestions" class="search-suggestions"></div>
         </form>
+        <?php endif; ?>
         
         <!-- Navigation Links -->
         <ul class="nav-links">

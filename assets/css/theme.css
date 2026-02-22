@@ -2,9 +2,10 @@
  * Global Dark Theme - BookHub
  * Applies dark theme across entire website
  * Based on profile-modern.css theme
+ * OFFLINE VERSION - uses local fonts
  */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@700&display=swap');
+@import url('fonts.css');
 
 :root {
     /* Core Colors */
