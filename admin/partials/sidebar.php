@@ -4,7 +4,6 @@ if (!isset($active_page)) {
 }
 ?>
 <aside class="admin-sidebar">
-    <!-- <h2><i class="fas fa-cog"></i> Admin Panel</h2> -->
     <nav>
         <a href="<?php echo SITE_URL; ?>/admin/index.php" class="<?php echo $active_page === 'dashboard' ? 'active' : ''; ?>"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
         <a href="<?php echo SITE_URL; ?>/admin/manage_books.php" class="<?php echo $active_page === 'books' ? 'active' : ''; ?>"><i class="fas fa-book"></i> Manage Books</a>

@@ -106,7 +106,6 @@ $active_page = 'dashboard';
                 </div>
                 <div class="dash-top-actions">
                     <div class="dash-pill"><i class="fa-regular fa-calendar"></i> <?php echo date('M d, Y'); ?></div>
-                    <!-- <a class="btn btn-secondary" href="<?php echo SITE_URL; ?>/admin/manage_books.php"><i class="fa-solid fa-list"></i> View Lists</a> -->
                 </div>
             </div>
 
@@ -139,7 +138,7 @@ $active_page = 'dashboard';
                             </div>
                         </div>
                         <div class="dash-progress">
-                            <div class="dash-progress-bar dash-progress-green" style="width: <?php echo (int)$coverPct; ?>>%"></div>
+                            <div class="dash-progress-bar dash-progress-green" style="width: <?php echo (int)$coverPct; ?>%"></div>
                         </div>
                         <div class="dash-progress-meta"><span>Coverage</span><strong><?php echo (int)$coverPct; ?>%</strong></div>
                     </article>

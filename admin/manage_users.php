@@ -436,8 +436,6 @@ $active_page = 'users';
                                         <thead>
                                             <tr>
                                                 <th>Items</th>
-                                                <!-- <th>Total</th> -->
-                                                <!-- <th>Status</th> -->
                                                 <th>Date</th>
                                             </tr>
                                         </thead>
@@ -452,10 +450,6 @@ $active_page = 'users';
                                                             </div>
                                                         <?php endif; ?>
                                                     </td>
-                                                    <!-- <td><?php echo format_price((float)($uo['total_amount'] ?? 0)); ?></td> -->
-                                                    <!-- <td style="text-transform: capitalize;">
-                                                        <?php echo htmlspecialchars((string)($uo['status'] ?? '')); ?>
-                                                    </td> -->
                                                     <td>
                                                         <?php echo htmlspecialchars(date('M d, Y h:i A', strtotime((string)($uo['created_at'] ?? '')))); ?>
                                                     </td>

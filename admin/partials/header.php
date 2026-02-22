@@ -132,6 +132,6 @@ if (is_logged_in()) {
         <?php require __DIR__ . '/sidebar.php'; ?>
         <main class="admin-main">
             <!-- Mobile Sidebar Toggle -->
-            <button type="button" class="mobile-sidebar-toggle" onclick="toggleAdminSidebar()" style="display: none;">
+            <button type="button" class="mobile-sidebar-toggle" onclick="toggleAdminSidebar()">
                 <i class="fas fa-bars"></i> Menu
             </button>
