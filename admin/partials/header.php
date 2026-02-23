@@ -46,6 +46,10 @@ if (is_logged_in()) {
     <!-- Navigation Bar -->
     <nav class="navbar">
         <div class="container nav-container">
+            <!-- Admin Sidebar Toggle (mobile) -->
+            <button type="button" class="mobile-sidebar-toggle" onclick="toggleAdminSidebar()" aria-label="Toggle sidebar">
+                <i class="fas fa-bars"></i>
+            </button>
             <!-- Logo -->
             <a href="<?php echo SITE_URL; ?>/admin/index.php" class="logo">
                 <img src="<?php echo SITE_URL; ?>/assets/logo.png" alt="<?php echo SITE_NAME; ?> Logo" class="logo-img">
@@ -83,31 +87,8 @@ if (is_logged_in()) {
                     <li><a href="<?php echo SITE_URL; ?>/auth/login.php"><i class="fas fa-sign-in-alt"></i> Login</a></li>
                 <?php endif; ?>
             </ul>
-
-            <!-- Mobile Menu Toggle -->
-            <button class="mobile-toggle" onclick="toggleMenu()">
-                <i class="fas fa-bars"></i>
-            </button>
         </div>
     </nav>
-
-    <!-- Mobile Navigation (hidden by default) -->
-    <div id="mobile-menu" class="mobile-menu">
-        <a href="<?php echo SITE_URL; ?>/admin/index.php"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
-        <a href="<?php echo SITE_URL; ?>/admin/manage_books.php"><i class="fas fa-book"></i> Manage Books</a>
-        <a href="<?php echo SITE_URL; ?>/admin/manage_users.php"><i class="fas fa-users"></i> Manage Users</a>
-        <a href="<?php echo SITE_URL; ?>/admin/manage_orders.php"><i class="fas fa-shopping-bag"></i> Orders</a>
-        <a href="<?php echo SITE_URL; ?>/index.php"><i class="fas fa-home"></i> Back to Site</a>
-        <?php if (is_logged_in()): ?>
-            <a href="<?php echo SITE_URL; ?>/auth/profile.php"><i class="fas fa-id-card"></i> My Profile</a>
-            <a href="<?php echo SITE_URL; ?>/auth/logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a>
-        <?php else: ?>
-            <a href="<?php echo SITE_URL; ?>/auth/login.php"><i class="fas fa-sign-in-alt"></i> Login</a>
-        <?php endif; ?>
-    </div>
-
-    <!-- Navbar JS for mobile menu toggle -->
-    <script src="<?php echo SITE_URL; ?>/includes/js/navbar.js"></script>
     
     <!-- Admin Sidebar Toggle Script -->
     <script>
@@ -131,7 +112,8 @@ if (is_logged_in()) {
     <div class="admin-container">
         <?php require __DIR__ . '/sidebar.php'; ?>
         <main class="admin-main">
-            <!-- Mobile Sidebar Toggle -->
-            <button type="button" class="mobile-sidebar-toggle" onclick="toggleAdminSidebar()">
-                <i class="fas fa-bars"></i> Menu
-            </button>
+            <?php if (!empty($error)): ?>
+                <div class="alert-mini">
+                    <i class="fa-solid fa-circle-exclamation"></i> <?php echo htmlspecialchars($error); ?>
+                </div>
+            <?php endif; ?>

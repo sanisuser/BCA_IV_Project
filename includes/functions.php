@@ -16,7 +16,22 @@ if (!defined('SITE_NAME')) {
 }
 
 if (!defined('SITE_URL')) {
-    define('SITE_URL', '');
+    $siteUrl = '';
+    if (!empty($_SERVER['DOCUMENT_ROOT'])) {
+        $docRoot = str_replace('\\', '/', realpath($_SERVER['DOCUMENT_ROOT']));
+        $projectRoot = str_replace('\\', '/', realpath(__DIR__ . '/..'));
+        if ($docRoot !== false && $projectRoot !== false) {
+            if (strpos($projectRoot, $docRoot) === 0) {
+                $base = substr($projectRoot, strlen($docRoot));
+                $base = '/' . ltrim((string)$base, '/');
+                $siteUrl = rtrim($base, '/');
+                if ($siteUrl === '/') {
+                    $siteUrl = '';
+                }
+            }
+        }
+    }
+    define('SITE_URL', $siteUrl);
 }
 
 // Start session if not already started
