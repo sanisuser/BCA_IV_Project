@@ -14,6 +14,8 @@ require_once __DIR__ . '/../includes/db.php';
 $search = isset($_GET['search']) ? clean_input($_GET['search']) : '';
 $genre = isset($_GET['genre']) ? clean_input($_GET['genre']) : '';
 
+$year = isset($_GET['year']) ? (int)$_GET['year'] : 0;
+
 $year_from = isset($_GET['year_from']) ? (int)$_GET['year_from'] : 0;
 $year_to = isset($_GET['year_to']) ? (int)$_GET['year_to'] : 0;
 $condition = isset($_GET['condition']) ? clean_input($_GET['condition']) : '';
@@ -47,7 +49,11 @@ if (!empty($genre)) {
     $types .= 's';
 }
 
-if ($year_from > 0 && $year_to > 0) {
+if ($year > 0) {
+    $where[] = "published_year = ?";
+    $params[] = $year;
+    $types .= 'i';
+} elseif ($year_from > 0 && $year_to > 0) {
     $where[] = "published_year BETWEEN ? AND ?";
     $params[] = $year_from;
     $params[] = $year_to;
@@ -240,6 +246,15 @@ $conditions = ['new', 'used'];
                     <span class="separator">/</span>
                     <span class="current"><?php echo htmlspecialchars(ucfirst($genre)); ?></span>
                 </nav>
+            <?php elseif ($year > 0): ?>
+                <h1>Books from <?php echo (int)$year; ?></h1>
+                <nav class="breadcrumb-nav">
+                    <a href="<?php echo SITE_URL; ?>/index.php">Home</a> 
+                    <span class="separator">/</span>
+                    <a href="<?php echo SITE_URL; ?>/page/booklist.php">Books</a>
+                    <span class="separator">/</span>
+                    <span class="current"><?php echo (int)$year; ?></span>
+                </nav>
             <?php else: ?>
                 <h1>Browse Books</h1>
                 <nav class="breadcrumb-nav">
@@ -307,7 +322,7 @@ $conditions = ['new', 'used'];
         <?php if ($total_pages > 1): ?>
             <div class="pagination">
                 <?php if ($page > 1): ?>
-                    <a href="<?php echo SITE_URL; ?>/page/booklist.php?page=<?php echo $page - 1; ?><?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?><?php echo $year_from > 0 ? '&year_from=' . $year_from : ''; ?><?php echo $year_to > 0 ? '&year_to=' . $year_to : ''; ?><?php echo !empty($genre) ? '&genre=' . urlencode($genre) : ''; ?><?php echo !empty($condition) ? '&condition=' . urlencode($condition) : ''; ?><?php echo !empty($sort) ? '&sort=' . urlencode($sort) : ''; ?>" class="pagination-btn">
+                    <a href="<?php echo SITE_URL; ?>/page/booklist.php?page=<?php echo $page - 1; ?><?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?><?php echo $year > 0 ? '&year=' . (int)$year : ''; ?><?php echo $year_from > 0 ? '&year_from=' . $year_from : ''; ?><?php echo $year_to > 0 ? '&year_to=' . $year_to : ''; ?><?php echo !empty($genre) ? '&genre=' . urlencode($genre) : ''; ?><?php echo !empty($condition) ? '&condition=' . urlencode($condition) : ''; ?><?php echo !empty($sort) ? '&sort=' . urlencode($sort) : ''; ?>" class="pagination-btn">
                         <i class="fas fa-chevron-left"></i>
                     </a>
                 <?php endif; ?>
@@ -316,12 +331,12 @@ $conditions = ['new', 'used'];
                     <?php if ($i == $page): ?>
                         <span class="pagination-btn active"><?php echo $i; ?></span>
                     <?php else: ?>
-                        <a href="<?php echo SITE_URL; ?>/page/booklist.php?page=<?php echo $i; ?><?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?><?php echo $year_from > 0 ? '&year_from=' . $year_from : ''; ?><?php echo $year_to > 0 ? '&year_to=' . $year_to : ''; ?><?php echo !empty($genre) ? '&genre=' . urlencode($genre) : ''; ?><?php echo !empty($condition) ? '&condition=' . urlencode($condition) : ''; ?><?php echo !empty($sort) ? '&sort=' . urlencode($sort) : ''; ?>" class="pagination-btn"><?php echo $i; ?></a>
+                        <a href="<?php echo SITE_URL; ?>/page/booklist.php?page=<?php echo $i; ?><?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?><?php echo $year > 0 ? '&year=' . (int)$year : ''; ?><?php echo $year_from > 0 ? '&year_from=' . $year_from : ''; ?><?php echo $year_to > 0 ? '&year_to=' . $year_to : ''; ?><?php echo !empty($genre) ? '&genre=' . urlencode($genre) : ''; ?><?php echo !empty($condition) ? '&condition=' . urlencode($condition) : ''; ?><?php echo !empty($sort) ? '&sort=' . urlencode($sort) : ''; ?>" class="pagination-btn"><?php echo $i; ?></a>
                     <?php endif; ?>
                 <?php endfor; ?>
                 
                 <?php if ($page < $total_pages): ?>
-                    <a href="<?php echo SITE_URL; ?>/page/booklist.php?page=<?php echo $page + 1; ?><?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?><?php echo $year_from > 0 ? '&year_from=' . $year_from : ''; ?><?php echo $year_to > 0 ? '&year_to=' . $year_to : ''; ?><?php echo !empty($genre) ? '&genre=' . urlencode($genre) : ''; ?><?php echo !empty($condition) ? '&condition=' . urlencode($condition) : ''; ?><?php echo !empty($sort) ? '&sort=' . urlencode($sort) : ''; ?>" class="pagination-btn">
+                    <a href="<?php echo SITE_URL; ?>/page/booklist.php?page=<?php echo $page + 1; ?><?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?><?php echo $year > 0 ? '&year=' . (int)$year : ''; ?><?php echo $year_from > 0 ? '&year_from=' . $year_from : ''; ?><?php echo $year_to > 0 ? '&year_to=' . $year_to : ''; ?><?php echo !empty($genre) ? '&genre=' . urlencode($genre) : ''; ?><?php echo !empty($condition) ? '&condition=' . urlencode($condition) : ''; ?><?php echo !empty($sort) ? '&sort=' . urlencode($sort) : ''; ?>" class="pagination-btn">
                         <i class="fas fa-chevron-right"></i>
                     </a>
                 <?php endif; ?>

@@ -137,6 +137,13 @@
 /* Hide mobile-only admin sidebar toggle on desktop */
 .mobile-sidebar-toggle { display: none; }
 
+@media (min-width: 769px) {
+    .navbar .mobile-sidebar-toggle,
+    .mobile-sidebar-toggle {
+        display: none !important;
+    }
+}
+
 @media (max-width: 768px) {
     .admin-sidebar { display: none; position: fixed; top: 60px; left: 0; right: 0; bottom: 0; width: 100%; height: calc(100vh - 60px); flex-direction: column; overflow-y: auto; z-index: 1000; }
     .admin-sidebar.active { display: flex; }

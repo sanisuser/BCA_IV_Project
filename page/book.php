@@ -253,11 +253,27 @@ if (isset($_GET['review_success']) && $_GET['review_success'] == '1') {
                 <table class="book-details-table">
                     <tr>
                         <td class="label">Genre</td>
-                        <td class="value"><?php echo htmlspecialchars($book['genre'] ?? 'N/A'); ?></td>
+                        <td class="value">
+                            <?php if (!empty($book['genre'])): ?>
+                                <a href="<?php echo SITE_URL; ?>/page/booklist.php?genre=<?php echo urlencode($book['genre']); ?>">
+                                    <?php echo htmlspecialchars($book['genre']); ?>
+                                </a>
+                            <?php else: ?>
+                                <?php echo htmlspecialchars('N/A'); ?>
+                            <?php endif; ?>
+                        </td>
                     </tr>
                     <tr>
                         <td class="label">Published</td>
-                        <td class="value"><?php echo $book['published_year'] ?? 'N/A'; ?></td>
+                        <td class="value">
+                            <?php if (!empty($book['published_year'])): ?>
+                                <a href="<?php echo SITE_URL; ?>/page/booklist.php?year=<?php echo (int)$book['published_year']; ?>">
+                                    <?php echo (int)$book['published_year']; ?>
+                                </a>
+                            <?php else: ?>
+                                <?php echo htmlspecialchars('N/A'); ?>
+                            <?php endif; ?>
+                        </td>
                     </tr>
                     <tr>
                         <td class="label">Condition</td>
