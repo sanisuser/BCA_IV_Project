@@ -134,6 +134,9 @@
     .filter-bar input { min-width: 100%; }
 }
 
+/* Hide mobile-only admin sidebar toggle on desktop */
+.mobile-sidebar-toggle { display: none; }
+
 @media (max-width: 768px) {
     .admin-sidebar { display: none; position: fixed; top: 60px; left: 0; right: 0; bottom: 0; width: 100%; height: calc(100vh - 60px); flex-direction: column; overflow-y: auto; z-index: 1000; }
     .admin-sidebar.active { display: flex; }
@@ -157,6 +160,19 @@
         cursor: pointer;
         font-size: 1.2rem;
         margin-bottom: 1rem;
+        padding: 0;
+        line-height: 1;
+    }
+
+    /* When the toggle is in the navbar, keep it compact (no extra spacing) */
+    .navbar .mobile-sidebar-toggle {
+        margin-bottom: 0;
+        background: transparent;
+        border: none;
+        border-radius: 6px;
+        width: 44px;
+        height: 44px;
+        font-size: 1.4rem;
     }
     
     .admin-main { padding: 0.75rem; }
@@ -246,7 +262,7 @@
 
 .dash-metrics {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 1rem;
     margin-bottom: 1.5rem;
 }
@@ -257,6 +273,15 @@
     border-radius: 12px;
     padding: 1.25rem;
     box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    height: 100%;
+}
+
+@media (max-width: 1200px) {
+    .dash-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 768px) {
+    .dash-metrics { grid-template-columns: 1fr; }
 }
 
 .dash-card-row {
