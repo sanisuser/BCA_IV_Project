@@ -10,13 +10,15 @@ if (!is_logged_in()) {
 
 $user_id = (int)get_user_id();
 
-$orders = [];
-$stmt = $conn->prepare('SELECT * FROM orders WHERE user_id = ? AND status <> \'delivered\' ORDER BY created_at DESC');
+$active_orders = [];
+
+// Active orders: pending / shipped
+$stmt = $conn->prepare("SELECT * FROM orders WHERE user_id = ? AND status NOT IN ('delivered','cancelled') ORDER BY created_at DESC");
 $stmt->bind_param('i', $user_id);
 $stmt->execute();
 $result = $stmt->get_result();
 while ($row = $result->fetch_assoc()) {
-    $orders[] = $row;
+    $active_orders[] = $row;
 }
 $stmt->close();
 
@@ -70,12 +72,10 @@ function getPaymentIcon($method) {
 }
 ?>
 
-<link rel="stylesheet" href="<?php echo SITE_URL; ?>/order_cart_process/css/orders.css">
-
 <div class="orders-container">
     <div class="orders-header">
         <h1><i class="fas fa-receipt"></i> My Orders</h1>
-        <p class="orders-count"><?php echo count($orders) > 0 ? ('You have ' . count($orders) . ' active order' . (count($orders) !== 1 ? 's' : '')) : 'No active orders'; ?></p>
+        <p class="orders-count"><?php echo count($active_orders) > 0 ? ('You have ' . count($active_orders) . ' active order' . (count($active_orders) !== 1 ? 's' : '')) : 'No active orders'; ?></p>
     </div>
 
     <?php if (isset($_GET['success'])): ?>
@@ -90,8 +90,8 @@ function getPaymentIcon($method) {
         </div>
     <?php endif; ?>
 
-    <?php if (count($orders) > 0): ?>
-        <?php foreach ($orders as $order): ?>
+    <?php if (count($active_orders) > 0): ?>
+        <?php foreach ($active_orders as $order): ?>
             <?php
             // Get order items with book details
             $items = [];
@@ -187,6 +187,23 @@ function getPaymentIcon($method) {
                             <div class="shipping-address"><?php echo nl2br(htmlspecialchars($shipping_to_show)); ?></div>
                         </div>
                     <?php endif; ?>
+
+                    <?php if (!empty($order['admin_remark'])): ?>
+                        <div class="admin-remark">
+                            <div class="admin-remark-label">
+                                <i class="fas fa-exclamation-circle"></i> Admin Note
+                            </div>
+                            <div class="admin-remark-text"><?php echo nl2br(htmlspecialchars($order['admin_remark'])); ?></div>
+                        </div>
+                    <?php endif; ?>
+                    <?php if (!empty($order['user_note']) && in_array($order['status'], ['delivered', 'cancelled'])): ?>
+                        <div class="user-note">
+                            <div class="user-note-label">
+                                <i class="fas fa-comment"></i> Your Note
+                            </div>
+                            <div class="user-note-text"><?php echo nl2br(htmlspecialchars($order['user_note'])); ?></div>
+                        </div>
+                    <?php endif; ?>
                 </div>
 
                 <div class="order-footer">
@@ -200,11 +217,15 @@ function getPaymentIcon($method) {
                     </div>
                     <?php if (($order['status'] ?? '') === 'shipped'): ?>
                         <div class="order-actions">
-                            <a href="<?php echo SITE_URL; ?>/order_cart_process/process/order_receive.php?order_id=<?php echo (int)$order['order_id']; ?>" 
-                               class="btn btn-primary btn-small"
-                               onclick="return confirm('Confirm you have received this order?');">
-                                <i class="fas fa-check"></i> Received
-                            </a>
+                            <form method="POST" action="<?php echo SITE_URL; ?>/order_cart_process/process/order_receive.php" class="user-note-form">
+                                <input type="hidden" name="order_id" value="<?php echo (int)$order['order_id']; ?>">
+                                <textarea name="user_note" rows="2" placeholder="Add a note about this order (optional)..." 
+                                          class="user-note-input"></textarea>
+                                <button type="submit" class="btn btn-primary btn-small"
+                                        onclick="return confirm('Confirm you have received this order?');">
+                                    <i class="fas fa-check"></i> Mark as Received
+                                </button>
+                            </form>
                         </div>
                     <?php endif; ?>
                 </div>
@@ -213,8 +234,8 @@ function getPaymentIcon($method) {
     <?php else: ?>
         <div class="orders-empty">
             <i class="fas fa-shopping-bag"></i>
-            <h2>No orders yet</h2>
-            <p>Once you place an order, it will appear here.</p>
+            <h2>No active orders</h2>
+            <p>Your delivered/cancelled orders are available in your profile order history.</p>
             <a href="<?php echo SITE_URL; ?>/page/booklist.php" class="btn btn-primary">
                 <i class="fas fa-search"></i> Start Shopping
             </a>

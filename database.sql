@@ -125,6 +125,7 @@ CREATE TABLE orders (
   status ENUM('pending','shipped','delivered','cancelled') DEFAULT 'pending',
   payment_method VARCHAR(50) DEFAULT NULL,
   admin_remark TEXT DEFAULT NULL,
+  user_note TEXT DEFAULT NULL,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (order_id),

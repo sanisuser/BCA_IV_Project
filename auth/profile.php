@@ -156,7 +156,7 @@ if (!$user) {
 
 // Fetch real order history
 $orders = [];
-$stmt = $conn->prepare('SELECT order_id, total_amount, status, payment_method, created_at, admin_remark FROM orders WHERE user_id = ? ORDER BY created_at DESC LIMIT 10');
+$stmt = $conn->prepare("SELECT order_id, total_amount, status, payment_method, created_at, admin_remark, user_note FROM orders WHERE user_id = ? AND status IN ('delivered','cancelled') ORDER BY created_at DESC LIMIT 10");
 if ($stmt) {
     $stmt->bind_param('i', $user_id);
     $stmt->execute();
@@ -315,11 +315,7 @@ require_once __DIR__ . '/../includes/header_navbar.php';
                             <input id="shippingInput" name="ship_address" type="text" value="<?php echo htmlspecialchars($display_ship); ?>"
                                    placeholder="Enter shipping address"
                                    class="form-input">
-                            <label style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.5rem; font-size: 0.875rem; color: var(--text-secondary); cursor: pointer;">
-                                <input type="checkbox" id="setAsLocation" name="set_as_location" style="cursor: pointer;">
-                                <span>Set shipping address as my location</span>
-                            </label>
-                        </div>
+                                                   </div>
                     </div>
 
                     <div class="form-group">
@@ -432,10 +428,13 @@ require_once __DIR__ . '/../includes/header_navbar.php';
                                                 <strong>Remark:</strong> <?php echo htmlspecialchars($order['admin_remark']); ?>
                                             </p>
                                             <?php endif; ?>
+                                            <?php if (!empty($order['user_note'])): ?>
+                                            <p class="order-remark" style="margin-top: 0.5rem; padding: 0.5rem; background: rgba(34, 197, 94, 0.1); border-left: 3px solid #22c55e; border-radius: 0 4px 4px 0; font-size: 0.875rem; color: #86efac;">
+                                                <i class="fa-solid fa-comment" style="margin-right: 0.5rem; color: #22c55e;"></i>
+                                                <strong>Your Note:</strong> <?php echo htmlspecialchars($order['user_note']); ?>
+                                            </p>
+                                            <?php endif; ?>
                                         </div>
-                                        <a href="<?php echo SITE_URL; ?>/order_cart_process/orders.php" class="btn-view-order">
-                                            VIEW DETAILS
-                                        </a>
                                     </div>
                                 <?php endforeach; ?>
                             </div>
@@ -485,13 +484,8 @@ document.getElementById('setAsLocation').addEventListener('change', function() {
 document.getElementById('setShippingAsLocation').addEventListener('change', function() {
     const locationInput = document.getElementById('locationInput');
     const shippingInput = document.getElementById('shippingInput');
-    const setAsLocation = document.getElementById('setAsLocation');
     
     if (this.checked) {
-        // Uncheck the other checkbox
-        setAsLocation.checked = false;
-        locationInput.readOnly = false;
-        locationInput.style.opacity = '1';
         // Copy location to shipping address
         shippingInput.value = locationInput.value;
         shippingInput.readOnly = true;
@@ -499,16 +493,6 @@ document.getElementById('setShippingAsLocation').addEventListener('change', func
     } else {
         shippingInput.readOnly = false;
         shippingInput.style.opacity = '1';
-    }
-});
-
-// Update location when shipping address changes if checkbox is checked
-document.getElementById('shippingInput').addEventListener('input', function() {
-    const setAsLocationCheckbox = document.getElementById('setAsLocation');
-    const locationInput = document.getElementById('locationInput');
-    
-    if (setAsLocationCheckbox.checked) {
-        locationInput.value = this.value;
     }
 });
 
@@ -522,16 +506,12 @@ document.getElementById('locationInput').addEventListener('input', function() {
     }
 });
 
-// Before form submit, sync values based on checkboxes
+// Before form submit, ensure shipping address is synced if checkbox is checked
 document.getElementById('profileForm').addEventListener('submit', function() {
-    const setAsLocationCheckbox = document.getElementById('setAsLocation');
     const setShippingAsLocationCheckbox = document.getElementById('setShippingAsLocation');
     const locationInput = document.getElementById('locationInput');
     const shippingInput = document.getElementById('shippingInput');
     
-    if (setAsLocationCheckbox.checked) {
-        locationInput.value = shippingInput.value;
-    }
     if (setShippingAsLocationCheckbox.checked) {
         shippingInput.value = locationInput.value;
     }

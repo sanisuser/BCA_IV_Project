@@ -90,8 +90,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'updat
     $allowed_statuses = ['shipped', 'cancelled'];
     if ($order_id <= 0 || !in_array($new_status, $allowed_statuses, true)) {
         $error = 'Invalid status update request.';
-    } elseif ($new_status === 'cancelled' && empty($admin_remark)) {
-        $error = 'Remark is required when cancelling an order.';
+    } elseif (empty($admin_remark)) {
+        $error = 'Remark is required when updating order status.';
     } else {
         $stmt = $conn->prepare('SELECT status FROM orders WHERE order_id = ? LIMIT 1');
         $stmt->bind_param('i', $order_id);
@@ -109,17 +109,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'updat
         } elseif ($current === 'shipped' && $new_status === 'cancelled') {
             $error = 'Shipped orders cannot be cancelled.';
         } else {
-            $stmt = $conn->prepare('UPDATE orders SET status = ?, admin_remark = ?, updated_at = NOW() WHERE order_id = ?');
-            $stmt->bind_param('ssi', $new_status, $admin_remark, $order_id);
-            if ($stmt->execute()) {
-                $msg = $new_status === 'cancelled' ? 'cancelled' : 'dispatched';
+            $conn->begin_transaction();
+            try {
+                // If cancelling, restore stock first
+                if ($new_status === 'cancelled') {
+                    $items_stmt = $conn->prepare('SELECT book_id, quantity FROM order_items WHERE order_id = ?');
+                    $items_stmt->bind_param('i', $order_id);
+                    $items_stmt->execute();
+                    $items_result = $items_stmt->get_result();
+                    $order_items = $items_result->fetch_all(MYSQLI_ASSOC);
+                    $items_stmt->close();
+
+                    $restore_stmt = $conn->prepare('UPDATE books SET stock = stock + ? WHERE book_id = ?');
+                    foreach ($order_items as $item) {
+                        $restore_stmt->bind_param('ii', $item['quantity'], $item['book_id']);
+                        $restore_stmt->execute();
+                    }
+                    $restore_stmt->close();
+                }
+
+                $stmt = $conn->prepare('UPDATE orders SET status = ?, admin_remark = ?, updated_at = NOW() WHERE order_id = ?');
+                $stmt->bind_param('ssi', $new_status, $admin_remark, $order_id);
+                $stmt->execute();
                 $stmt->close();
+
+                $conn->commit();
+                $msg = $new_status === 'cancelled' ? 'cancelled' : 'dispatched';
                 header('Location: ' . $_SERVER['PHP_SELF'] . '?success=' . $msg);
                 exit;
-            } else {
-                $error = 'Failed to update order status.';
+            } catch (Exception $e) {
+                $conn->rollback();
+                $error = 'Failed to update order status: ' . $e->getMessage();
             }
-            $stmt->close();
         }
     }
 }
@@ -273,27 +294,42 @@ $stmt->close();
                             </td>
                             <td><?php echo format_price((float)($o['total_amount'] ?? 0)); ?></td>
                             <td>
-                                <form method="POST" action="" class="order-update-form">
-                                    <input type="hidden" name="action" value="update_status">
-                                    <input type="hidden" name="order_id" value="<?php echo (int)$o['order_id']; ?>">
-                                    <?php if (($o['status'] ?? '') === 'pending'): ?>
-                                        <input type="hidden" name="status" value="shipped">
-                                        <button type="submit" class="btn btn-primary"><i class="fa-solid fa-truck"></i> Dispatch</button>
-                                    <?php elseif (($o['status'] ?? '') === 'shipped'): ?>
-                                        <div class="order-update-pill order-update-dispatched">Dispatched</div>
-                                    <?php elseif (($o['status'] ?? '') === 'delivered'): ?>
-                                        <div class="order-update-pill order-update-delivered">Delivered</div>
-                                    <?php elseif (($o['status'] ?? '') === 'cancelled'): ?>
-                                        <div class="order-update-pill order-update-cancelled">Cancelled</div>
-                                    <?php else: ?>
-                                        <div class="order-update-pill order-update-default">
-                                            <?php echo htmlspecialchars(admin_status_label((string)($o['status'] ?? ''))); ?>
+                                <?php if (($o['status'] ?? '') === 'pending'): ?>
+                                    <form method="POST" action="" class="order-update-form" onsubmit="return validateRemark(this)">
+                                        <input type="hidden" name="action" value="update_status">
+                                        <input type="hidden" name="order_id" value="<?php echo (int)$o['order_id']; ?>">
+                                        <div style="margin-bottom: 0.5rem;">
+                                            <select name="status" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; font-size: 0.85rem;" required>
+                                                <option value="">Select action...</option>
+                                                <option value="shipped">Dispatch</option>
+                                                <option value="cancelled">Cancel</option>
+                                            </select>
                                         </div>
-                                    <?php endif; ?>
-                                </form>
+                                        <div style="margin-bottom: 0.5rem;">
+                                            <input type="text" name="admin_remark" placeholder="Enter remark (required)" 
+                                                   style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; font-size: 0.85rem;" required>
+                                        </div>
+                                        <button type="submit" class="btn btn-primary" style="width: 100%;"><i class="fa-solid fa-check"></i> Update Status</button>
+                                    </form>
+                                <?php elseif (($o['status'] ?? '') === 'shipped'): ?>
+                                    <div class="order-update-pill order-update-dispatched">Dispatched</div>
+                                <?php elseif (($o['status'] ?? '') === 'delivered'): ?>
+                                    <div class="order-update-pill order-update-delivered">Delivered</div>
+                                <?php elseif (($o['status'] ?? '') === 'cancelled'): ?>
+                                    <div class="order-update-pill order-update-cancelled">Cancelled</div>
+                                <?php else: ?>
+                                    <div class="order-update-pill order-update-default">
+                                        <?php echo htmlspecialchars(admin_status_label((string)($o['status'] ?? ''))); ?>
+                                    </div>
+                                <?php endif; ?>
                                 <?php if (!empty($o['admin_remark'])): ?>
                                     <div style="margin-top: 0.5rem; font-size: 0.85rem; color: #e53e3e; background: #fff5f5; padding: 0.5rem; border-radius: 4px; border-left: 3px solid #e53e3e;">
-                                        <i class="fa-solid fa-sticky-note"></i> <strong>Remark:</strong> <?php echo htmlspecialchars($o['admin_remark']); ?>
+                                        <i class="fa-solid fa-sticky-note"></i> <strong>Admin Remark:</strong> <?php echo htmlspecialchars($o['admin_remark']); ?>
+                                    </div>
+                                <?php endif; ?>
+                                <?php if (!empty($o['user_note']) && in_array($o['status'], ['delivered', 'cancelled'])): ?>
+                                    <div style="margin-top: 0.5rem; font-size: 0.85rem; color: #155724; background: #d4edda; padding: 0.5rem; border-radius: 4px; border-left: 3px solid #28a745;">
+                                        <i class="fa-solid fa-comment"></i> <strong>User Note:</strong> <?php echo htmlspecialchars($o['user_note']); ?>
                                     </div>
                                 <?php endif; ?>
                             </td>
@@ -409,6 +445,16 @@ function toggleOrderDetails(orderId) {
     } else {
         detailsRow.style.display = 'none';
     }
+}
+
+function validateRemark(form) {
+    const remarkInput = form.querySelector('input[name="admin_remark"]');
+    if (remarkInput && !remarkInput.value.trim()) {
+        alert('Please enter a remark before updating the order status.');
+        remarkInput.focus();
+        return false;
+    }
+    return true;
 }
 
 // Make order rows clickable

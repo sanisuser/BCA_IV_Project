@@ -51,19 +51,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_book'])) {
                 if ($assets_images_dir === false) {
                     $error = 'Upload directory not found.';
                 } else {
-                    $upload_dir = $assets_images_dir . DIRECTORY_SEPARATOR . 'books';
+                    // Create genre-specific subfolder
+                    $genre_folder = !empty($genre) ? preg_replace('/[^a-zA-Z0-9_-]/', '_', $genre) : 'Uncategorized';
+                    $upload_dir = $assets_images_dir . DIRECTORY_SEPARATOR . 'books' . DIRECTORY_SEPARATOR . $genre_folder;
                     if (!is_dir($upload_dir)) {
                         @mkdir($upload_dir, 0777, true);
                     }
                     if (!is_dir($upload_dir)) {
                         $error = 'Failed to create upload directory.';
                     } else {
-                        $filename = safe_filename($orig);
+                        $filename = safe_filename(preg_replace('/[^a-zA-Z0-9_-]/', '_', $title) . '.' . $ext);
                         $dest = $upload_dir . DIRECTORY_SEPARATOR . $filename;
                         if (!move_uploaded_file($tmp, $dest)) {
                             $error = 'Failed to save uploaded cover image.';
                         } else {
-                            $cover_image = 'assets/images/books/' . $filename;
+                            $cover_image = 'assets/images/books/' . $genre_folder . '/' . $filename;
                         }
                     }
                 }
@@ -79,7 +81,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_book'])) {
             $error = 'Failed to prepare insert statement.';
         } else {
             $stmt->bind_param(
-                'sssssdiss',
+                'sssssdissi',
                 $title,
                 $author,
                 $isbn,
@@ -175,10 +177,9 @@ $active_page = 'books';
                     <div class="form-group">
                         <label>Condition</label>
                         <select name="condition_status">
-                            <?php $cs = $_POST['condition_status'] ?? 'new'; ?>
+                            <?php $cs = $condition_status ?? 'new'; ?>
                             <option value="new" <?php echo $cs === 'new' ? 'selected' : ''; ?>>New</option>
                             <option value="used" <?php echo $cs === 'used' ? 'selected' : ''; ?>>Used</option>
-                            
                         </select>
                     </div>
 

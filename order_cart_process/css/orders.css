@@ -343,6 +343,95 @@
     font-size: 0.95rem;
 }
 
+/* User Note */
+.user-note {
+    margin-top: 1rem;
+    padding: 1rem 1.25rem;
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(34, 197, 94, 0.05) 100%);
+    border-left: 4px solid #22c55e;
+    border-radius: 12px;
+    border: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+.user-note-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    color: #86efac;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
+.user-note-label i {
+    color: #22c55e;
+}
+
+.user-note-text {
+    color: #bbf7d0;
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+/* Admin Remark */
+.admin-remark {
+    margin-top: 1rem;
+    padding: 1rem 1.25rem;
+    background: linear-gradient(135deg, rgba(234, 179, 8, 0.1) 0%, rgba(234, 179, 8, 0.05) 100%);
+    border-left: 4px solid #eab308;
+    border-radius: 12px;
+    border: 1px solid rgba(234, 179, 8, 0.2);
+}
+
+.admin-remark-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    color: #fde047;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
+.admin-remark-label i {
+    color: #eab308;
+}
+
+.admin-remark-text {
+    color: #fef08a;
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+/* User Note Form */
+.user-note-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.user-note-input {
+    padding: 0.75rem;
+    border: 1px solid var(--border, #3f3f46);
+    border-radius: 10px;
+    font-size: 0.9rem;
+    background: var(--bg-input, #27272a);
+    color: var(--text-primary, #fafafa);
+    resize: vertical;
+    min-width: 220px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.user-note-input:focus {
+    outline: none;
+    border-color: var(--accent, #eab308);
+    box-shadow: 0 0 0 3px rgba(234, 179, 8, 0.1);
+}
+
+.user-note-input::placeholder {
+    color: var(--text-muted, #71717a);
+}
+
 /* Payment Method */
 .payment-method {
     display: inline-flex;

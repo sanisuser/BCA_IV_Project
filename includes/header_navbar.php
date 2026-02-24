@@ -77,6 +77,11 @@ $navbar_page_class = ($is_book_view_page ? ' is-book-view' : '') . ($is_home_pag
     <!-- Search Suggestions Styles -->
     <link rel="stylesheet" href="<?php echo SITE_URL; ?>/includes/css/search-suggestions.css">
     
+    <!-- Orders Page Styles -->
+    <?php if ($current_page === 'orders.php'): ?>
+    <link rel="stylesheet" href="<?php echo SITE_URL; ?>/order_cart_process/css/orders.css">
+    <?php endif; ?>
+    
     <!-- Mobile Hide Search Bar Styles -->
     <style>
         @media (max-width: 768px) {

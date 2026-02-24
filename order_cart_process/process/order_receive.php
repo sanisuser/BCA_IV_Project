@@ -7,7 +7,8 @@ if (!is_logged_in()) {
 }
 
 $user_id = (int)get_user_id();
-$order_id = isset($_GET['order_id']) ? (int)$_GET['order_id'] : 0;
+$order_id = isset($_POST['order_id']) ? (int)$_POST['order_id'] : 0;
+$user_note = isset($_POST['user_note']) ? clean_input($_POST['user_note']) : '';
 
 if ($order_id <= 0) {
     redirect(SITE_URL . '/order_cart_process/orders.php?error=' . urlencode('Invalid order'));
@@ -30,11 +31,11 @@ if ($current !== 'shipped') {
     redirect(SITE_URL . '/order_cart_process/orders.php?error=' . urlencode('Order is not dispatched yet'));
 }
 
-$stmt = $conn->prepare('UPDATE orders SET status = \'delivered\', updated_at = NOW() WHERE order_id = ? AND user_id = ? AND status = \'shipped\'');
-$stmt->bind_param('ii', $order_id, $user_id);
+$stmt = $conn->prepare('UPDATE orders SET status = \'delivered\', user_note = ?, updated_at = NOW() WHERE order_id = ? AND user_id = ? AND status = \'shipped\'');
+$stmt->bind_param('sii', $user_note, $order_id, $user_id);
 if ($stmt->execute() && $stmt->affected_rows > 0) {
     $stmt->close();
-    redirect(SITE_URL . '/order_cart_process/orders.php?success=' . urlencode('Marked as received'));
+    redirect(SITE_URL . '/order_cart_process/orders.php?success=' . urlencode('Order marked as received. Thank you for your feedback!'));
 }
 $stmt->close();
 
