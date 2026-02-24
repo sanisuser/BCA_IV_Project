@@ -78,7 +78,7 @@ Open in browser:
 - For image paths, ensure the `assets/` folder structure is intact.
 
 ## Screenshots (Optional)
-Add screenshots here for documentation/academic submission:
+Some screenshots here for documentation/academic submission:
 - Home page
 - Book list + filters
 - Book details
