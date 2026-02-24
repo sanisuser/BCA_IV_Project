@@ -30,10 +30,6 @@ if (!preg_match('/^[a-zA-Z0-9_]+$/', $username)) {
     $errors[] = 'Username can only contain letters, numbers, and underscores';
 }
 
-if (!preg_match('/[a-zA-Z]/', $username) || !preg_match('/[0-9]/', $username)) {
-    $errors[] = 'Username must contain at least one letter and one number';
-}
-
 if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
     $errors[] = 'Please enter a valid email address';
 }
@@ -83,8 +79,11 @@ $stmt->bind_param('sss', $username, $email, $hashed_password);
 
 if ($stmt->execute()) {
     $stmt->close();
-    // Registration successful - redirect to login with success message
-    redirect(SITE_URL . '/auth/login.php?success=' . urlencode('Registration successful! Please sign in.'));
+    // Registration successful - auto-login and redirect to homepage
+    $new_user_id = $conn->insert_id;
+    $_SESSION['user_id'] = $new_user_id;
+    $_SESSION['username'] = $username;
+    redirect(SITE_URL . '/index.php?success=' . urlencode('Welcome! Your account has been created.'));
 } else {
     $stmt->close();
     redirect(SITE_URL . '/auth/register.php?error=' . urlencode('Registration failed. Please try again.'));

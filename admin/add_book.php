@@ -17,6 +17,7 @@ $error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_book'])) {
     $title = clean_input($_POST['title'] ?? '');
     $author = clean_input($_POST['author'] ?? '');
+    $isbn = clean_input($_POST['isbn'] ?? '');
     $description = clean_input($_POST['description'] ?? '');
     $genre = clean_input($_POST['genre'] ?? '');
     $price = (float)($_POST['price'] ?? 0);
@@ -28,7 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_book'])) {
         $error = 'Title and author are required.';
     }
 
-    $allowed = ['new', 'used', 'rare'];
+    $allowed = ['new', 'used'];
     if (!in_array($condition_status, $allowed, true)) {
         $condition_status = 'new';
     }
@@ -72,15 +73,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_book'])) {
 
     if ($error === '') {
         $stmt = $conn->prepare(
-            "INSERT INTO books (title, author, description, genre, price, stock, cover_image, published_year, condition_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+            "INSERT INTO books (title, author, isbn, description, genre, price, stock, cover_image, published_year, condition_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
         );
         if (!$stmt) {
             $error = 'Failed to prepare insert statement.';
         } else {
             $stmt->bind_param(
-                'ssssdisis',
+                'sssssdiss',
                 $title,
                 $author,
+                $isbn,
                 $description,
                 $genre,
                 $price,
@@ -131,6 +133,11 @@ $active_page = 'books';
                     </div>
 
                     <div class="form-group">
+                        <label>ISBN</label>
+                        <input type="text" name="isbn" value="<?php echo htmlspecialchars($_POST['isbn'] ?? ''); ?>" />
+                    </div>
+
+                    <div class="form-group">
                         <label>Genre</label>
                         <input type="text" name="genre" value="<?php echo htmlspecialchars($_POST['genre'] ?? ''); ?>" />
                     </div>
@@ -171,7 +178,7 @@ $active_page = 'books';
                             <?php $cs = $_POST['condition_status'] ?? 'new'; ?>
                             <option value="new" <?php echo $cs === 'new' ? 'selected' : ''; ?>>New</option>
                             <option value="used" <?php echo $cs === 'used' ? 'selected' : ''; ?>>Used</option>
-                            <option value="rare" <?php echo $cs === 'rare' ? 'selected' : ''; ?>>Rare</option>
+                            
                         </select>
                     </div>
 

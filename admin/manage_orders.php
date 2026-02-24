@@ -333,26 +333,7 @@ $stmt->close();
                                             <h5 style="margin: 0 0 0.75rem 0; color: #2c3e50; border-bottom: 2px solid #007bff; padding-bottom: 0.25rem;">Shipping Address</h5>
                                             <div style="font-size: 0.9rem; white-space: pre-line;">
                                                 <?php
-                                                // Try to get address from user_addresses if address_id exists
-                                                if (!empty($o['address_id'])) {
-                                                    $addr_stmt = $conn->prepare('SELECT * FROM user_addresses WHERE address_id = ?');
-                                                    $addr_stmt->bind_param('i', $o['address_id']);
-                                                    $addr_stmt->execute();
-                                                    $address = $addr_stmt->get_result()->fetch_assoc();
-                                                    $addr_stmt->close();
-                                                    
-                                                    if ($address) {
-                                                        echo htmlspecialchars($address['full_name']) . "\n";
-                                                        echo htmlspecialchars($address['address_line1']) . "\n";
-                                                        if (!empty($address['address_line2'])) {
-                                                            echo htmlspecialchars($address['address_line2']) . "\n";
-                                                        }
-                                                        echo htmlspecialchars($address['city']) . ", " . htmlspecialchars($address['state'] ?? '') . " " . htmlspecialchars($address['postal_code']) . "\n";
-                                                        echo htmlspecialchars($address['country']);
-                                                    } else {
-                                                        echo 'Address not found';
-                                                    }
-                                                } elseif (!empty($o['ship_address'])) {
+                                                if (!empty($o['ship_address'])) {
                                                     echo htmlspecialchars($o['ship_address']);
                                                 } else {
                                                     echo 'No address information';

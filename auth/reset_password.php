@@ -20,23 +20,24 @@ $error = '';
 $token_valid = false;
 $token = '';
 
-// Step 1: Validate token from URL
-if (isset($_GET['token']) && !empty($_GET['token'])) {
-    $token = $_GET['token'];
-    
-    // Check token in database
+if (isset($_POST['token']) && !empty($_POST['token'])) {
+    $token = (string)$_POST['token'];
+} elseif (isset($_GET['token']) && !empty($_GET['token'])) {
+    $token = (string)$_GET['token'];
+}
+
+if (!empty($token)) {
     $stmt = $conn->prepare("SELECT user_id, username, email, password_reset_expires FROM users WHERE password_reset_token = ?");
     $stmt->bind_param('s', $token);
     $stmt->execute();
     $result = $stmt->get_result();
     $user = $result->fetch_assoc();
     $stmt->close();
-    
+
     if ($user) {
-        // Check if token expired
         $expiry_time = strtotime($user['password_reset_expires']);
         $current_time = time();
-        
+
         if ($current_time > $expiry_time) {
             $error = 'Reset link has expired. Please request a new one.';
         } else {
@@ -49,12 +50,14 @@ if (isset($_GET['token']) && !empty($_GET['token'])) {
     $error = 'No reset token provided.';
 }
 
-// Step 2: Process new password submission
 if ($token_valid && isset($_POST['new_password']) && !empty($_POST['new_password'])) {
     $new_password = $_POST['new_password'];
+    $confirm_password = $_POST['confirm_password'] ?? '';
     
-    // Validate password strength
-    if (strlen($new_password) < 6) {
+    // Validate password match
+    if ($new_password !== $confirm_password) {
+        $error = 'Passwords do not match. Please try again.';
+    } elseif (strlen($new_password) < 6) {
         $error = 'Password must be at least 6 characters.';
     } else {
         // Hash password
@@ -65,7 +68,11 @@ if ($token_valid && isset($_POST['new_password']) && !empty($_POST['new_password
         $stmt->bind_param('ss', $hashed, $token);
         
         if ($stmt->execute()) {
-            redirect(SITE_URL . '/auth/login.php?success=' . urlencode('Password updated successfully! Please login with your new password.'));
+            // Build absolute redirect URL for mobile compatibility
+            $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+            $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+            $redirect_url = $scheme . '://' . $host . SITE_URL . '/auth/login.php?success=' . urlencode('Password updated successfully! Please login with your new password.');
+            redirect($redirect_url);
         } else {
             $error = 'Failed to update password. Please try again.';
         }
@@ -100,8 +107,30 @@ echo '<link rel="stylesheet" href="' . SITE_URL . '/auth/css/auth.css">';
 
                 <div class="form-group">
                     <label class="form-label" for="new_password">New Password</label>
-                    <input type="password" id="new_password" name="new_password" class="form-input"
-                           placeholder="Enter new password (min 6 characters)" required minlength="6">
+                    <div style="position: relative;">
+                        <input type="password" id="new_password" name="new_password" class="form-input" required minlength="6"
+                               placeholder="Enter new password (min 6 characters)" autocomplete="new-password" style="padding-right: 45px;">
+                        <button type="button" onclick="togglePassword('new_password')" 
+                                style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); 
+                                       background: none; border: none; color: #6c757d; cursor: pointer; 
+                                       padding: 5px; font-size: 16px;">
+                            <i class="fas fa-eye" id="new_password-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="confirm_password">Confirm Password</label>
+                    <div style="position: relative;">
+                        <input type="password" id="confirm_password" name="confirm_password" class="form-input" required minlength="6"
+                               placeholder="Re-enter your password" autocomplete="new-password" style="padding-right: 45px;">
+                        <button type="button" onclick="togglePassword('confirm_password')" 
+                                style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); 
+                                       background: none; border: none; color: #6c757d; cursor: pointer; 
+                                       padding: 5px; font-size: 16px;">
+                            <i class="fas fa-eye" id="confirm_password-eye"></i>
+                        </button>
+                    </div>
                 </div>
 
                 <button type="submit" class="auth-btn">
@@ -116,3 +145,20 @@ echo '<link rel="stylesheet" href="' . SITE_URL . '/auth/css/auth.css">';
 <?php
 require_once __DIR__ . '/../includes/footer.php';
 ?>
+
+<script>
+function togglePassword(fieldId) {
+    const passwordField = document.getElementById(fieldId);
+    const eyeIcon = document.getElementById(fieldId + '-eye');
+    
+    if (passwordField.type === 'password') {
+        passwordField.type = 'text';
+        eyeIcon.classList.remove('fa-eye');
+        eyeIcon.classList.add('fa-eye-slash');
+    } else {
+        passwordField.type = 'password';
+        eyeIcon.classList.remove('fa-eye-slash');
+        eyeIcon.classList.add('fa-eye');
+    }
+}
+</script>

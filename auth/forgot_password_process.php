@@ -8,6 +8,15 @@
 require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/../includes/db.php';
 
+// PHPMailer classes
+require_once __DIR__ . '/../phpmailer/PHPMailer-6.9.1/src/PHPMailer.php';
+require_once __DIR__ . '/../phpmailer/PHPMailer-6.9.1/src/SMTP.php';
+require_once __DIR__ . '/../phpmailer/PHPMailer-6.9.1/src/Exception.php';
+
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\SMTP;
+use PHPMailer\PHPMailer\Exception;
+
 // Only process POST requests
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     redirect(SITE_URL . '/auth/forgot_password.php');
@@ -40,7 +49,7 @@ if (!$user) {
 
 // Generate secure token
 $token = bin2hex(random_bytes(32));
-$expires = date('Y-m-d H:i:s', strtotime('+1 hour'));
+$expires = date('Y-m-d H:i:s', strtotime('+3 minutes'));
 
 // Store token in database
 $stmt = $conn->prepare("UPDATE users SET password_reset_token = ?, password_reset_expires = ? WHERE user_id = ?");
@@ -52,43 +61,69 @@ if (!$success) {
     redirect(SITE_URL . '/auth/forgot_password.php?error=' . urlencode('Something went wrong. Please try again later.'));
 }
 
-// Build reset URL
-$reset_url = SITE_URL . '/auth/reset_password.php?token=' . $token;
+// Build reset URL (absolute)
+$scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+$host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+$reset_url = $scheme . '://' . $host . SITE_URL . '/auth/reset_password.php?token=' . $token;
 
-// For development: Save token to file instead of sending email
-// In production, you would use mail() or PHPMailer
-$email_content = "Password Reset Request\n\n";
-$email_content .= "Username: " . $user['username'] . "\n";
-$email_content .= "Reset Link: " . $reset_url . "\n";
-$email_content .= "Expires: " . $expires . "\n\n";
-$email_content .= "If you didn't request this, please ignore this email.\n";
+// Email content
+$email_subject = "Password Reset Request - " . SITE_NAME;
+$email_body = "<h2>Password Reset Request</h2>";
+$email_body .= "<p><strong>Username:</strong> " . htmlspecialchars($user['username']) . "</p>";
+$email_body .= "<p><strong>Click the link below to reset your password:</strong></p>";
+$email_body .= "<p><a href='" . $reset_url . "' style='display:inline-block;padding:10px 20px;background:#007bff;color:white;text-decoration:none;border-radius:5px;'>Reset Password</a></p>";
+$email_body .= "<p>Or copy this link: " . $reset_url . "</p>";
+$email_body .= "<p><strong>Expires:</strong> " . $expires . "</p>";
+$email_body .= "<p>If you didn't request this, please ignore this email.</p>";
 
-// Save to temp file for development
+$email_text = "Password Reset Request\n\n";
+$email_text .= "Username: " . $user['username'] . "\n";
+$email_text .= "Reset Link: " . $reset_url . "\n";
+$email_text .= "Expires: " . $expires . "\n\n";
+$email_text .= "If you didn't request this, please ignore this email.\n";
+
+// Save to temp file for development backup
 $temp_file = sys_get_temp_dir() . '/password_reset_' . $user['username'] . '_' . time() . '.txt';
-file_put_contents($temp_file, $email_content);
+file_put_contents($temp_file, $email_text);
 
-// Try to send email
+// Send email using PHPMailer with Gmail SMTP
 $mail_sent = false;
 $mail_error = '';
 
 try {
-    $subject = "Password Reset Request - " . SITE_NAME;
-    $headers = "From: noreply@" . $_SERVER['HTTP_HOST'] . "\r\n";
-    $headers .= "Content-Type: text/plain; charset=UTF-8\r\n";
-    $mail_sent = @mail($email, $subject, $email_content, $headers);
+    $mail = new PHPMailer(true);
+    
+    // Server settings
+    $mail->SMTPDebug = 0;                      // Disable debug output (set to 2 for debugging)
+    $mail->isSMTP();                           // Use SMTP
+    $mail->Host       = 'smtp.gmail.com';      // Gmail SMTP server
+    $mail->SMTPAuth   = true;                  // Enable authentication
+    $mail->Username   = SMTP_USERNAME;         // Gmail address (from config)
+    $mail->Password   = SMTP_PASSWORD;         // Gmail app password (from config)
+    $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+    $mail->Port       = 587;
+    
+    // Recipients
+    $mail->setFrom(SMTP_USERNAME, SMTP_FROM_NAME);
+    $mail->addReplyTo(SMTP_USERNAME, SMTP_FROM_NAME);
+    $mail->addAddress($email, $user['username']);
+    
+    // Content
+    $mail->isHTML(true);
+    $mail->Subject = $email_subject;
+    $mail->Body    = $email_body;
+    $mail->AltBody = $email_text;
+    
+    $mail_sent = $mail->send();
     
     if (!$mail_sent) {
-        $mail_error = error_get_last()['message'] ?? 'Unknown mail error';
-        error_log("Failed to send password reset email to: " . $email . " - Error: " . $mail_error);
+        error_log("Failed to send password reset email to: " . $email);
     }
 } catch (Exception $e) {
-    $mail_error = $e->getMessage();
-    error_log("Mail exception: " . $mail_error);
+    $mail_sent = false;
+    $mail_error = $mail->ErrorInfo;
+    error_log("PHPMailer Error: " . $mail_error);
 }
-
-// Save to temp file as backup
-$temp_file = sys_get_temp_dir() . '/password_reset_' . $user['username'] . '_' . time() . '.txt';
-file_put_contents($temp_file, $email_content);
 
 // Show success with the reset link (always show link in case email fails)
 $success_msg = $mail_sent 

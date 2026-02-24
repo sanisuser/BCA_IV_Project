@@ -26,7 +26,6 @@ BookHub is a PHP + MySQL web application for browsing and managing books online.
 ## Project Structure
 - `admin/` – Admin panel pages, partials, and assets
 - `assets/` – Images, icons, fonts, and static assets
-- `backups/` – Database backups (`.sql`)
 - `frontend/` – Home and landing UI sections
 - `includes/` – Shared PHP utilities (DB connection, helper functions, navbar/header)
 - `order_cart_process/` – Cart, checkout, and order processing
@@ -47,7 +46,7 @@ Copy the project folder into your XAMPP web root, e.g.
 3. Create a database (example):
    - `bookhub`
 4. Import the SQL file:
-   - Use the latest file inside `backups/` (example: `backups/backup_bookhub_*.sql`)
+   - Import your database schema/data SQL dump
 
 ### 4) Configure Database Credentials
 Update your DB connection in:

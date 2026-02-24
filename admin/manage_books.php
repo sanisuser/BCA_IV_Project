@@ -86,7 +86,7 @@ if ($action === 'edit' && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST[
     } elseif ($title === '' || $author === '') {
         $error = 'Title and author are required.';
     } else {
-        $allowed = ['new', 'used', 'rare'];
+        $allowed = ['new', 'used'];
         if (!in_array($condition_status, $allowed, true)) {
             $condition_status = 'new';
         }
@@ -437,7 +437,7 @@ $active_page = 'books';
                             <select name="condition_status">
                                 <option value="new" <?php echo (($book['condition_status'] ?? '') === 'new') ? 'selected' : ''; ?>>New</option>
                                 <option value="used" <?php echo (($book['condition_status'] ?? '') === 'used') ? 'selected' : ''; ?>>Used</option>
-                                <option value="rare" <?php echo (($book['condition_status'] ?? '') === 'rare') ? 'selected' : ''; ?>>Rare</option>
+                                
                             </select>
                         </div>
                         

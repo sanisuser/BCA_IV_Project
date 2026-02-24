@@ -47,7 +47,7 @@ $error = isset($_GET['error']) ? $_GET['error'] : '';
                 <label for="username" class="form-label">Username</label>
                 <input type="text" id="username" name="username" class="form-input" required 
                        placeholder="Choose a username" minlength="3" maxlength="20">
-                <small class="form-help">3-20 characters, letters and numbers only</small>
+                <small class="form-help">3-20 characters, letters, numbers and underscores only</small>
             </div>
             
             <div class="form-group">

@@ -91,9 +91,6 @@ function initSlider() {
     
     if (slides.length === 0) return;
     
-    // Start auto-rotation - DISABLED
-    // startAutoSlide();
-    
     // Add click handlers to dots
     dots.forEach((dot, index) => {
         dot.addEventListener('click', () => {

@@ -176,30 +176,7 @@ function getPaymentIcon($method) {
 
                     <?php
                     $shipping_to_show = '';
-                    if (!empty($order['address_id'])) {
-                        $addr_stmt = $conn->prepare('SELECT * FROM user_addresses WHERE address_id = ? AND user_id = ?');
-                        $aid = (int)$order['address_id'];
-                        $addr_stmt->bind_param('ii', $aid, $user_id);
-                        $addr_stmt->execute();
-                        $saved_address = $addr_stmt->get_result()->fetch_assoc();
-                        $addr_stmt->close();
-
-                        if ($saved_address) {
-                            $shipping_to_show = sprintf(
-                                "%s\n%s\n%s\n%s, %s %s\n%s\nPhone: %s",
-                                $saved_address['full_name'],
-                                $saved_address['address_line1'],
-                                $saved_address['address_line2'] ?? '',
-                                $saved_address['city'],
-                                $saved_address['state'] ?? '',
-                                $saved_address['postal_code'],
-                                $saved_address['country'],
-                                $saved_address['phone'] ?? ''
-                            );
-                        }
-                    }
-
-                    if ($shipping_to_show === '' && !empty($order['ship_address'])) {
+                    if (!empty($order['ship_address'])) {
                         $shipping_to_show = (string)$order['ship_address'];
                     }
                     ?>

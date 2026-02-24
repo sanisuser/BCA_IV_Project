@@ -40,8 +40,19 @@ if (is_logged_in()) {
 $current_page = basename($_SERVER['PHP_SELF'] ?? '');
 $is_book_view_page = ($current_page === 'book.php');
 $is_home_page = ($current_page === 'index.php');
+
+// Pages where search bar should be hidden on MOBILE only
+$mobile_hide_search_pages = [
+    'login.php', 'register.php', 'cart.php', 'booklist.php', 
+    'reset_password.php', 'forgot_password.php', 'profile.php', 
+    'wishlist.php', 'orders.php', 'checkout.php', 'book.php'
+];
+$hide_search_on_mobile = in_array($current_page, $mobile_hide_search_pages, true);
+
+// Desktop: hide on these pages completely (existing behavior)
 $hide_search_bar_pages = ['profile.php', 'cart.php', 'checkout.php', 'orders.php', 'wishlist.php'];
 $hide_search_bar = in_array($current_page, $hide_search_bar_pages, true);
+
 $navbar_page_class = ($is_book_view_page ? ' is-book-view' : '') . ($is_home_page ? ' is-home' : '');
 
 ?>
@@ -65,6 +76,15 @@ $navbar_page_class = ($is_book_view_page ? ' is-book-view' : '') . ($is_home_pag
     <link rel="stylesheet" href="<?php echo SITE_URL; ?>/assets/fontawesome/css/all.min.css">
     <!-- Search Suggestions Styles -->
     <link rel="stylesheet" href="<?php echo SITE_URL; ?>/includes/css/search-suggestions.css">
+    
+    <!-- Mobile Hide Search Bar Styles -->
+    <style>
+        @media (max-width: 768px) {
+            .search-form.mobile-hide-search {
+                display: none !important;
+            }
+        }
+    </style>
 </head>
 <body>
 
@@ -79,7 +99,7 @@ $navbar_page_class = ($is_book_view_page ? ' is-book-view' : '') . ($is_home_pag
         
         <?php if (!$hide_search_bar): ?>
         <!-- Search Bar -->
-        <form class="search-form" action="<?php echo SITE_URL; ?>/page/booklist.php" method="GET" style="position: relative;">
+        <form class="search-form<?php echo $hide_search_on_mobile ? ' mobile-hide-search' : ''; ?>" action="<?php echo SITE_URL; ?>/page/booklist.php" method="GET" style="position: relative;">
             <input type="text" id="search-input" name="search" class="search-input" placeholder="Search books..." value="<?php echo isset($_GET['search']) ? htmlspecialchars($_GET['search']) : ''; ?>" autocomplete="off">
             <button type="submit" class="search-btn"><i class="fas fa-search"></i></button>
             <!-- Search Suggestions Dropdown -->

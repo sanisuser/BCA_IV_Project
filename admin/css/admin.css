@@ -24,9 +24,8 @@
 .badge { padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 500; }
 .badge-new { background: #d4edda; color: #155724; }
 .badge-used { background: #fff3cd; color: #856404; }
-.badge-rare { background: #f8d7da; color: #721c24; }
 .badge-user { background: #e2e3e5; color: #383d41; }
-.badge-admin { background: #cce5ff; color: #004085; }
+.badge-admin { background: #cce5ff; color: #25313d; }
 .edit-form { max-width: 600px; background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
 .form-group { margin-bottom: 1rem; }
 .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 500; color: #495057; }

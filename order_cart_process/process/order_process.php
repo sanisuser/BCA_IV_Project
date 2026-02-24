@@ -37,31 +37,8 @@ if ($selected_address === 'custom') {
     }
     
     $ship_address = (string)$profile['ship_address'];
-} elseif ($selected_address !== '' && is_numeric($selected_address)) {
-    // Use saved address from user_addresses table
-    $address_id = (int)$selected_address;
-    $addr_stmt = $conn->prepare("SELECT * FROM user_addresses WHERE address_id = ? AND user_id = ?");
-    $addr_stmt->bind_param('ii', $address_id, $user_id);
-    $addr_stmt->execute();
-    $addr_result = $addr_stmt->get_result();
-    $saved_address = $addr_result->fetch_assoc();
-    $addr_stmt->close();
-    
-    if (!$saved_address) {
-        redirect(SITE_URL . '/order_cart_process/checkout.php?error=' . urlencode('Invalid address selected'));
-    }
-    
-    // Format saved address as shipping address
-    $ship_address = sprintf(
-        "%s\n%s\n%s, %s %s\n%s\nPhone: %s",
-        $saved_address['full_name'],
-        $saved_address['address_line1'],
-        $saved_address['city'],
-        $saved_address['state'] ?? '',
-        $saved_address['postal_code'],
-        $saved_address['country'],
-        $saved_address['phone'] ?? ''
-    );
+} elseif ($selected_address === 'saved' && !empty($ship_address)) {
+    // Use the saved custom address (already set from POST)
 } else {
     // No address selected (fallback to custom)
     if (trim($ship_address) === '') {
@@ -112,28 +89,9 @@ try {
     $vat_amount = $total * 0.13;
     $total_with_vat = $total * 1.13;
 
-    // Determine if we should store address_id or shipping_address
-    $address_id_to_store = null;
-    if ($selected_address !== 'custom' && is_numeric($selected_address)) {
-        $address_id_to_store = (int)$selected_address;
-    }
-
-    // If this order will store ship_address, we must ensure users.ship_address exists first
-    // due to FK constraint: orders.ship_address -> users.ship_address
-    if (!$address_id_to_store && !empty($ship_address)) {
-        $update_stmt = $conn->prepare('UPDATE users SET ship_address = ? WHERE user_id = ?');
-        $update_stmt->bind_param('si', $ship_address, $user_id);
-        $update_stmt->execute();
-        $update_stmt->close();
-    }
-    
-    if ($address_id_to_store) {
-        $stmt = $conn->prepare('INSERT INTO orders (user_id, address_id, total_amount, status, payment_method, created_at) VALUES (?, ?, ?, \'pending\', ?, NOW())');
-        $stmt->bind_param('iids', $user_id, $address_id_to_store, $total_with_vat, $payment_method);
-    } else {
-        $stmt = $conn->prepare('INSERT INTO orders (user_id, total_amount, status, ship_address, payment_method, created_at) VALUES (?, ?, \'pending\', ?, ?, NOW())');
-        $stmt->bind_param('idss', $user_id, $total_with_vat, $ship_address, $payment_method);
-    }
+    // Store shipping address directly in orders table
+    $stmt = $conn->prepare('INSERT INTO orders (user_id, total_amount, status, ship_address, payment_method, created_at) VALUES (?, ?, \'pending\', ?, ?, NOW())');
+    $stmt->bind_param('idss', $user_id, $total_with_vat, $ship_address, $payment_method);
     $stmt->execute();
     $order_id = (int)$stmt->insert_id;
     $stmt->close();
