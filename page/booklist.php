@@ -298,9 +298,9 @@ $conditions = ['new', 'used'];
                     <div class="book-card-body">
                         <h3 class="book-card-title"><?php echo truncate(htmlspecialchars($book['title']), 40); ?></h3>
                         <p class="book-card-author"><?php echo htmlspecialchars($book['author'] ?? 'Unknown Author'); ?></p>
-                        <?php if (!empty($book['genre'])): ?>
+                        <!-- <?php if (!empty($book['genre'])): ?>
                             <span class="book-card-genre"><?php echo htmlspecialchars($book['genre']); ?></span>
-                        <?php endif; ?>
+                        <?php endif; ?> -->
                         <div class="book-card-price"><?php echo format_price($book['price'] ?? 0); ?></div>
                         <div class="book-card-actions">
                             <a href="<?php echo SITE_URL; ?>/page/book.php?id=<?php echo $book['book_id']; ?>" class="btn btn-primary btn-small">View</a>

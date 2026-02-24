@@ -174,4 +174,6 @@ $active_page = 'dashboard';
                     </div>
                 <?php endif; ?>
             </section>
-<?php require_once __DIR__ . '/partials/footer.php'; ?>
+
+</body>
+</html>

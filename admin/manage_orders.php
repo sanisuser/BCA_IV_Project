@@ -119,11 +119,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'updat
                     $items_result = $items_stmt->get_result();
                     $order_items = $items_result->fetch_all(MYSQLI_ASSOC);
                     $items_stmt->close();
+                    
+                    error_log("Cancelling order #$order_id, restoring stock for " . count($order_items) . " items");
 
                     $restore_stmt = $conn->prepare('UPDATE books SET stock = stock + ? WHERE book_id = ?');
                     foreach ($order_items as $item) {
                         $restore_stmt->bind_param('ii', $item['quantity'], $item['book_id']);
                         $restore_stmt->execute();
+                        error_log("Restored stock for book_id={$item['book_id']}, quantity={$item['quantity']}, affected_rows=" . $restore_stmt->affected_rows);
                     }
                     $restore_stmt->close();
                 }
@@ -151,7 +154,9 @@ if (isset($_GET['success'])) {
 }
 
 $orders = [];
-$query_base = "SELECT o.*, u.username, u.full_name, u.email, u.phone as user_phone FROM orders o JOIN users u ON o.user_id = u.user_id";
+$query_base = "SELECT o.*, u.username, u.full_name, u.email, u.phone as user_phone, 
+              (SELECT COALESCE(SUM(quantity), 0) FROM order_items WHERE order_id = o.order_id) as item_qty 
+              FROM orders o JOIN users u ON o.user_id = u.user_id";
 $where_clause = '';
 $params = [];
 $types = '';
@@ -260,6 +265,7 @@ $stmt->close();
                             Date <?php echo sort_icon('created_at', $sort, $order); ?>
                         </a>
                     </th>
+                    <th style="padding: 10px; text-align: center;">Qty</th>
                     <th style="padding: 10px; text-align: center; cursor: pointer;">
                         <a href="<?php echo sort_url('status', $sort, $order, $status_filter, $q, $search_column); ?>" 
                         style="text-decoration: none; color: #333; display: inline-flex; align-items: center; gap: 0.25rem;">
@@ -287,6 +293,7 @@ $stmt->close();
                                 <div style="color:#6c757d; font-size:0.85rem;"><?php echo htmlspecialchars($o['email'] ?? ''); ?></div>
                             </td>
                             <td><?php echo htmlspecialchars(date('M d, Y h:i A', strtotime((string)$o['created_at']))); ?></td>
+                            <td style="text-align: center;"><strong><?php echo (int)($o['item_qty'] ?? 0); ?></strong></td>
                             <td>
                                 <span class="badge" style="text-transform:capitalize;">
                                     <?php echo htmlspecialchars(admin_status_label((string)($o['status'] ?? 'pending'))); ?>
@@ -312,23 +319,46 @@ $stmt->close();
                                         <button type="submit" class="btn btn-primary" style="width: 100%;"><i class="fa-solid fa-check"></i> Update Status</button>
                                     </form>
                                 <?php elseif (($o['status'] ?? '') === 'shipped'): ?>
-                                    <div class="order-update-pill order-update-dispatched">Dispatched</div>
+                                    <div class="order-update-pill order-update-dispatched" onclick="toggleRemarks(<?php echo (int)$o['order_id']; ?>); event.stopPropagation();">Dispatched</div>
                                 <?php elseif (($o['status'] ?? '') === 'delivered'): ?>
-                                    <div class="order-update-pill order-update-delivered">Delivered</div>
+                                    <div class="order-update-pill order-update-delivered" onclick="toggleRemarks(<?php echo (int)$o['order_id']; ?>); event.stopPropagation();">Delivered</div>
                                 <?php elseif (($o['status'] ?? '') === 'cancelled'): ?>
-                                    <div class="order-update-pill order-update-cancelled">Cancelled</div>
+                                    <div class="order-update-pill order-update-cancelled" onclick="toggleRemarks(<?php echo (int)$o['order_id']; ?>); event.stopPropagation();">Cancelled</div>
                                 <?php else: ?>
-                                    <div class="order-update-pill order-update-default">
+                                    <div class="order-update-pill order-update-default" onclick="toggleRemarks(<?php echo (int)$o['order_id']; ?>); event.stopPropagation();">
                                         <?php echo htmlspecialchars(admin_status_label((string)($o['status'] ?? ''))); ?>
                                     </div>
                                 <?php endif; ?>
+                                <?php
+                                $remark_color = '#2d3748';
+                                $remark_bg = '#edf2f7';
+                                $remark_border = '#a0aec0';
+                                $status_for_color = (string)($o['status'] ?? '');
+                                if ($status_for_color === 'cancelled') {
+                                    $remark_color = '#e53e3e';
+                                    $remark_bg = '#fff5f5';
+                                    $remark_border = '#e53e3e';
+                                } elseif ($status_for_color === 'delivered') {
+                                    $remark_color = '#155724';
+                                    $remark_bg = '#d4edda';
+                                    $remark_border = '#28a745';
+                                } elseif ($status_for_color === 'shipped') {
+                                    $remark_color = '#5a67d8';
+                                    $remark_bg = '#ebf4ff';
+                                    $remark_border = '#5a67d8';
+                                } elseif ($status_for_color === 'pending') {
+                                    $remark_color = '#b7791f';
+                                    $remark_bg = '#fefcbf';
+                                    $remark_border = '#d69e2e';
+                                }
+                                ?>
                                 <?php if (!empty($o['admin_remark'])): ?>
-                                    <div style="margin-top: 0.5rem; font-size: 0.85rem; color: #e53e3e; background: #fff5f5; padding: 0.5rem; border-radius: 4px; border-left: 3px solid #e53e3e;">
+                                    <div id="remarks-<?php echo (int)$o['order_id']; ?>" style="display: none; margin-top: 0.5rem; font-size: 0.85rem; color: <?php echo $remark_color; ?>; background: <?php echo $remark_bg; ?>; padding: 0.5rem; border-radius: 4px; border-left: 3px solid <?php echo $remark_border; ?>;">
                                         <i class="fa-solid fa-sticky-note"></i> <strong>Admin Remark:</strong> <?php echo htmlspecialchars($o['admin_remark']); ?>
                                     </div>
                                 <?php endif; ?>
-                                <?php if (!empty($o['user_note']) && in_array($o['status'], ['delivered', 'cancelled'])): ?>
-                                    <div style="margin-top: 0.5rem; font-size: 0.85rem; color: #155724; background: #d4edda; padding: 0.5rem; border-radius: 4px; border-left: 3px solid #28a745;">
+                                <?php if (!empty($o['user_note']) && in_array($o['status'], ['delivered', 'cancelled'], true)): ?>
+                                    <div id="user-note-<?php echo (int)$o['order_id']; ?>" style="display: none; margin-top: 0.5rem; font-size: 0.85rem; color: <?php echo $remark_color; ?>; background: <?php echo $remark_bg; ?>; padding: 0.5rem; border-radius: 4px; border-left: 3px solid <?php echo $remark_border; ?>;">
                                         <i class="fa-solid fa-comment"></i> <strong>User Note:</strong> <?php echo htmlspecialchars($o['user_note']); ?>
                                     </div>
                                 <?php endif; ?>
@@ -447,6 +477,18 @@ function toggleOrderDetails(orderId) {
     }
 }
 
+function toggleRemarks(orderId) {
+    const adminRemark = document.getElementById('remarks-' + orderId);
+    const userNote = document.getElementById('user-note-' + orderId);
+
+    if (adminRemark) {
+        adminRemark.style.display = adminRemark.style.display === 'none' ? 'block' : 'none';
+    }
+    if (userNote) {
+        userNote.style.display = userNote.style.display === 'none' ? 'block' : 'none';
+    }
+}
+
 function validateRemark(form) {
     const remarkInput = form.querySelector('input[name="admin_remark"]');
     if (remarkInput && !remarkInput.value.trim()) {
@@ -474,5 +516,6 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-<?php require_once __DIR__ . '/partials/footer.php'; ?>
+</body>
+</html>
 
