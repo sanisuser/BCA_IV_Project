@@ -77,6 +77,14 @@ Open in browser:
 - If you see errors related to missing tables, re-check that the correct `.sql` file was imported.
 - For image paths, ensure the `assets/` folder structure is intact.
 
+## Screenshots (Optional)
+Add screenshots here for documentation/academic submission:
+- Home page
+- Book list + filters
+- Book details
+- Cart
+- Checkout
+- Admin dashboard
 
 ## License
 Educational / academic project.
