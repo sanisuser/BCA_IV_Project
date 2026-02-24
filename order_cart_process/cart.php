@@ -19,6 +19,7 @@ if (!is_logged_in()) {
 $user_id = get_user_id();
 $cart_items = [];
 $total = 0;
+$has_out_of_stock = false;
 
 $stmt = $conn->prepare("
     SELECT c.cart_id, c.quantity, c.book_id, b.title, b.price, b.cover_image, b.stock 
@@ -32,6 +33,9 @@ $result = $stmt->get_result();
 while ($row = $result->fetch_assoc()) {
     $cart_items[] = $row;
     $total += ($row['price'] * $row['quantity']);
+    if ((int)$row['stock'] <= 0) {
+        $has_out_of_stock = true;
+    }
 }
 $stmt->close();
 ?>
@@ -100,7 +104,15 @@ $stmt->close();
                                         </a>
                                     </form>
                                 <?php else: ?>
-                                    <span class="stock-unavailable"><i class="fas fa-times-circle"></i> Out of Stock</span>
+                                    <div class="stock-unavailable">
+                                        <span><i class="fas fa-times-circle"></i> Out of Stock</span>
+                                        <a href="<?php echo SITE_URL; ?>/order_cart_process/process/cart_process.php?action=remove&id=<?php echo $item['cart_id']; ?>"
+                                           class="qty-btn btn-delete-item"
+                                           onclick="return confirm('Remove this item from cart?')"
+                                           title="Remove item">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </a>
+                                    </div>
                                 <?php endif; ?>
                             </div>
                         </div>
@@ -136,9 +148,18 @@ $stmt->close();
                     <a href="<?php echo SITE_URL; ?>/page/booklist.php" class="btn btn-continue">
                         <i class="fas fa-arrow-left"></i> Continue
                     </a>
-                    <a href="<?php echo SITE_URL; ?>/order_cart_process/checkout.php" class="btn btn-checkout">
-                        <i class="fas fa-lock"></i> Checkout
-                    </a>
+                    <?php if (!$has_out_of_stock): ?>
+                        <a href="<?php echo SITE_URL; ?>/order_cart_process/checkout.php" class="btn btn-checkout">
+                            <i class="fas fa-lock"></i> Checkout
+                        </a>
+                    <?php else: ?>
+                        <a href="<?php echo SITE_URL; ?>/order_cart_process/checkout.php" class="btn btn-checkout" aria-disabled="true" onclick="return false;" style="opacity: 0.6; cursor: not-allowed;">
+                            <i class="fas fa-lock"></i> Checkout
+                        </a>
+                        <div style="margin-top: 10px; color: #dc3545; font-size: 0.9rem;">
+                            Remove out-of-stock items to proceed to checkout.
+                        </div>
+                    <?php endif; ?>
                     
                 </div>
             </div>

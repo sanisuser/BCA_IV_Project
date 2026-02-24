@@ -94,9 +94,19 @@ switch ($action) {
         if (!$item) {
             redirect(SITE_URL . '/order_cart_process/cart.php?error=' . urlencode('Item not found'));
         }
+
+        // If stock is 0, remove the item from cart
+        if ((int)$item['stock'] <= 0) {
+            $del = $conn->prepare("DELETE FROM cart WHERE cart_id = ? AND user_id = ?");
+            $del->bind_param('ii', $cart_id, $user_id);
+            $del->execute();
+            $del->close();
+            redirect(SITE_URL . '/order_cart_process/cart.php?success=' . urlencode('Out of stock item removed from cart'));
+        }
         
         // Limit to available stock
         $quantity = min($quantity, $item['stock']);
+        $quantity = max(1, (int)$quantity);
         
         $stmt = $conn->prepare("UPDATE cart SET quantity = ? WHERE cart_id = ?");
         $stmt->bind_param('ii', $quantity, $cart_id);
