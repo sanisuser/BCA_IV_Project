@@ -21,6 +21,7 @@ $year = isset($_GET['year']) ? (int)$_GET['year'] : 0;
 $year_from = isset($_GET['year_from']) ? (int)$_GET['year_from'] : 0;
 $year_to = isset($_GET['year_to']) ? (int)$_GET['year_to'] : 0;
 $condition = isset($_GET['condition']) ? clean_input($_GET['condition']) : '';
+$price_range = isset($_GET['price_range']) ? clean_input($_GET['price_range']) : '';
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 if ($page < 1) $page = 1;
 
@@ -80,6 +81,24 @@ if (!empty($condition)) {
     $where[] = "condition_status = ?";
     $params[] = $condition;
     $types .= 's';
+}
+
+// Price range filter
+if (!empty($price_range)) {
+    switch ($price_range) {
+        case 'under_500':
+            $where[] = "price < 500";
+            break;
+        case '500_to_1000':
+            $where[] = "price >= 500 AND price <= 1000";
+            break;
+        case '1000_to_2000':
+            $where[] = "price > 1000 AND price <= 2000";
+            break;
+        case 'above_2000':
+            $where[] = "price > 2000";
+            break;
+    }
 }
 
 $where_sql = !empty($where) ? 'WHERE ' . implode(' AND ', $where) : '';
@@ -231,6 +250,18 @@ $conditions = ['new', 'used'];
                         <option value="<?php echo ucfirst($c); ?>">
                     <?php endforeach; ?>
                 </datalist>
+            </div>
+            
+            <!-- Price Filter -->
+            <div class="filter-group">
+                <label><i class="fas fa-tag"></i> Price Range (Rs.)</label>
+                <select name="price_range" class="filter-select">
+                    <option value="">All Prices</option>
+                    <option value="under_500" <?php echo $price_range === 'under_500' ? 'selected' : ''; ?>>Under Rs. 500</option>
+                    <option value="500_to_1000" <?php echo $price_range === '500_to_1000' ? 'selected' : ''; ?>>Rs. 500 - 1,000</option>
+                    <option value="1000_to_2000" <?php echo $price_range === '1000_to_2000' ? 'selected' : ''; ?>>Rs. 1,000 - 2,000</option>
+                    <option value="above_2000" <?php echo $price_range === 'above_2000' ? 'selected' : ''; ?>>Above Rs. 2,000</option>
+                </select>
             </div>
             
             <div class="filter-actions">

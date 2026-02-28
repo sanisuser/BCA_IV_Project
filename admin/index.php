@@ -26,6 +26,7 @@ $total_orders = 0;
 $total_sales = 0;
 $total_profit = 0;
 $delivered_orders = 0;
+$low_stock_books = [];
 
 try {
     $result = $conn->query("SELECT COUNT(*) as count FROM books");
@@ -33,7 +34,7 @@ try {
         $total_books = $result->fetch_assoc()['count'];
     }
 
-    $result = $conn->query("SELECT COUNT(*) as count FROM books WHERE stock > 0");
+    $result = $conn->query("SELECT COALESCE(SUM(stock), 0) as count FROM books");
     if ($result) {
         $available_books = $result->fetch_assoc()['count'];
     }
@@ -57,6 +58,14 @@ try {
         // Calculate profit as 30% of sales (adjust percentage as needed)
         $total_profit = $total_sales * 0.30;
     }
+    
+    // Get low stock books (stock <= 5)
+    $low_stock_result = $conn->query("SELECT book_id, title, stock FROM books WHERE stock <= 5 ORDER BY stock ASC");
+    if ($low_stock_result) {
+        while ($row = $low_stock_result->fetch_assoc()) {
+            $low_stock_books[] = $row;
+        }
+    }
 } catch (Exception $e) {
     $error = 'Database error: ' . $e->getMessage();
 }
@@ -73,6 +82,17 @@ $active_page = 'dashboard';
             <?php if (!empty($error)): ?>
                 <div class="alert-mini">
                     <i class="fa-solid fa-circle-exclamation"></i> <?php echo htmlspecialchars($error); ?>
+                </div>
+            <?php endif; ?>
+            
+            <?php if (!empty($low_stock_books)): ?>
+                <div class="alert-mini" style="background: #fff3cd; border-color: #ffc107; color: #856404; margin-bottom: 1rem;">
+                    <i class="fa-solid fa-triangle-exclamation" style="color: #ffc107;"></i>
+                    <strong>Low Stock Alert!</strong> 
+                    <?php echo count($low_stock_books); ?> book(s) need re-stocking:
+                    <a href="<?php echo SITE_URL; ?>/admin/restock.php" style="color: #856404; text-decoration: underline; margin-left: 10px;">
+                        <i class="fa-solid fa-boxes-stacked"></i> Re-stock Now
+                    </a>
                 </div>
             <?php endif; ?>
 
@@ -93,7 +113,7 @@ $active_page = 'dashboard';
                             <div class="dash-card-icon"><i class="fa-solid fa-book"></i></div>
                             <div class="dash-card-main">
                                 <div class="dash-card-value"><?php echo (int)$total_books; ?></div>
-                                <div class="dash-card-title">Total Books</div>
+                                <div class="dash-card-title">Books</div>
                             </div>
                         </div>
                     </article>
@@ -105,7 +125,7 @@ $active_page = 'dashboard';
                             <div class="dash-card-icon"><i class="fa-solid fa-boxes-stacked"></i></div>
                             <div class="dash-card-main">
                                 <div class="dash-card-value"><?php echo (int)$available_books; ?></div>
-                                <div class="dash-card-title">Available Books (In Stock)</div>
+                                <div class="dash-card-title">Total Book Quantity</div>
                             </div>
                         </div>
                     </article>

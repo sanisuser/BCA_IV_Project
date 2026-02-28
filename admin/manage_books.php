@@ -285,6 +285,12 @@ $active_page = 'books';
                 class="btn btn-secondary" style="margin-left: auto;">
                     <i class="fa-solid fa-circle-plus"></i> Add Book
                 </a>
+                
+                <!-- Re-stock button -->
+                <a href="<?php echo SITE_URL; ?>/admin/restock.php" 
+                class="btn btn-primary">
+                    <i class="fa-solid fa-boxes-stacked"></i> Re-stock
+                </a>
             </div>
 
                 <?php if (!empty($success)): ?>
