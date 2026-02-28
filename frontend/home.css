@@ -218,6 +218,55 @@
 }
 
 /* ============================================
+   GENRE / AUTHOR CHIPS
+   ============================================ */
+.chip-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 14px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text-primary, #fafafa);
+    text-decoration: none;
+    font-size: 0.95rem;
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.18);
+    transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Ensure homepage chips look like boxes even with global link styles (theme.css) */
+.meta-lists .chip-list .chip {
+    background: var(--bg-card, #18181b);
+    border-color: var(--border, #3f3f46);
+    color: var(--text-primary, #fafafa);
+}
+
+.chip:hover {
+    background: rgba(234, 179, 8, 0.12);
+    border-color: rgba(234, 179, 8, 0.40);
+    transform: translateY(-1px);
+    box-shadow: 0 10px 22px rgba(0, 0, 0, 0.24);
+}
+
+.meta-lists .chip-list .chip:hover {
+    background: rgba(234, 179, 8, 0.14);
+    border-color: rgba(234, 179, 8, 0.45);
+}
+
+.chip-muted {
+    opacity: 0.7;
+    cursor: default;
+}
+
+/* ============================================
    HORIZONTAL SCROLL CONTAINER
    ============================================ */
 .horizontal-scroll {

@@ -14,6 +14,8 @@ require_once __DIR__ . '/../includes/db.php';
 $search = isset($_GET['search']) ? clean_input($_GET['search']) : '';
 $genre = isset($_GET['genre']) ? clean_input($_GET['genre']) : '';
 
+$author = isset($_GET['author']) ? clean_input($_GET['author']) : '';
+
 $year = isset($_GET['year']) ? (int)$_GET['year'] : 0;
 
 $year_from = isset($_GET['year_from']) ? (int)$_GET['year_from'] : 0;
@@ -46,6 +48,12 @@ if (!empty($search)) {
 if (!empty($genre)) {
     $where[] = "genre = ?";
     $params[] = $genre;
+    $types .= 's';
+}
+
+if (!empty($author)) {
+    $where[] = "author = ?";
+    $params[] = $author;
     $types .= 's';
 }
 

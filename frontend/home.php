@@ -41,6 +41,24 @@ if ($result) {
     }
     $result->free();
 }
+
+$available_genres = [];
+$result = $conn->query("SELECT DISTINCT genre FROM books WHERE stock > 0 AND genre IS NOT NULL AND genre <> '' ORDER BY genre ASC");
+if ($result) {
+    while ($row = $result->fetch_assoc()) {
+        $available_genres[] = (string)($row['genre'] ?? '');
+    }
+    $result->free();
+}
+
+$available_authors = [];
+$result = $conn->query("SELECT DISTINCT author FROM books WHERE stock > 0 AND author IS NOT NULL AND author <> '' ORDER BY author ASC");
+if ($result) {
+    while ($row = $result->fetch_assoc()) {
+        $available_authors[] = (string)($row['author'] ?? '');
+    }
+    $result->free();
+}
 ?>
 
 <!-- Homepage CSS -->
@@ -123,6 +141,34 @@ if ($result) {
             </div>
         </div>
         <?php endforeach; ?>
+    </div>
+</section>
+
+<section class="section meta-lists">
+    <div class="section-header">
+        <h2><i class="fas fa-layer-group"></i>Genre</h2>
+    </div>
+    <div class="chip-list" style="padding: 0 20px;">
+        <?php foreach ($available_genres as $g): ?>
+            <a class="chip" href="<?php echo SITE_URL; ?>/page/booklist.php?genre=<?php echo urlencode($g); ?>"><?php echo htmlspecialchars($g); ?></a>
+        <?php endforeach; ?>
+        <?php if (empty($available_genres)): ?>
+            <div class="chip chip-muted">No genres available</div>
+        <?php endif; ?>
+    </div>
+</section>
+
+<section class="section meta-lists" style="padding-top: 0;">
+    <div class="section-header">
+        <h2><i class="fas fa-user-pen"></i>Author</h2>
+    </div>
+    <div class="chip-list" style="padding: 0 20px;">
+        <?php foreach ($available_authors as $a): ?>
+            <a class="chip" href="<?php echo SITE_URL; ?>/page/booklist.php?author=<?php echo urlencode($a); ?>"><?php echo htmlspecialchars($a); ?></a>
+        <?php endforeach; ?>
+        <?php if (empty($available_authors)): ?>
+            <div class="chip chip-muted">No authors available</div>
+        <?php endif; ?>
     </div>
 </section>
 
