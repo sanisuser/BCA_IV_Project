@@ -43,7 +43,7 @@ if ($result) {
 }
 
 $available_genres = [];
-$result = $conn->query("SELECT DISTINCT genre FROM books WHERE stock > 0 AND genre IS NOT NULL AND genre <> '' ORDER BY genre ASC");
+$result = $conn->query("SELECT DISTINCT genre FROM books WHERE stock > 0 AND genre IS NOT NULL AND genre <> '' ORDER BY RAND() LIMIT 7");
 if ($result) {
     while ($row = $result->fetch_assoc()) {
         $available_genres[] = (string)($row['genre'] ?? '');
@@ -52,7 +52,7 @@ if ($result) {
 }
 
 $available_authors = [];
-$result = $conn->query("SELECT DISTINCT author FROM books WHERE stock > 0 AND author IS NOT NULL AND author <> '' ORDER BY author ASC");
+$result = $conn->query("SELECT DISTINCT author FROM books WHERE stock > 0 AND author IS NOT NULL AND author <> '' ORDER BY RAND() LIMIT 7");
 if ($result) {
     while ($row = $result->fetch_assoc()) {
         $available_authors[] = (string)($row['author'] ?? '');

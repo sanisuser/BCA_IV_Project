@@ -81,60 +81,84 @@ if ($token_valid && isset($_POST['new_password']) && !empty($_POST['new_password
 }
 
 require_once __DIR__ . '/../includes/header_navbar.php';
-echo '<link rel="stylesheet" href="' . SITE_URL . '/auth/css/auth.css">';
+echo '<link rel="stylesheet" href="' . SITE_URL . '/auth/css/reset_password.css">';
 ?>
 
-<div class="auth-container">
-    <div class="auth-card">
+<div class="reset-page">
+    <div class="reset-card">
         
-        <div class="auth-header">
-            <h1 class="auth-title">Reset Password</h1>
-            <p class="auth-subtitle"><?php echo $token_valid && isset($user) ? 'Create a new password for ' . htmlspecialchars($user['email']) : 'Reset link error'; ?></p>
+        <!-- Icon -->
+        <div class="reset-icon <?php echo !empty($error) && !$token_valid ? 'error' : ''; ?>">
+            <i class="fas <?php echo !empty($error) && !$token_valid ? 'fa-exclamation-triangle' : 'fa-key'; ?>"></i>
         </div>
         
+        <!-- Header -->
+        <div class="reset-header">
+            <h1 class="reset-title">Reset Password</h1>
+            <p class="reset-subtitle">
+                <?php echo $token_valid && isset($user) 
+                    ? 'Create a new password for ' . htmlspecialchars($user['email']) 
+                    : 'Reset link error'; ?>
+            </p>
+        </div>
+        
+        <!-- Error Message -->
         <?php if (!empty($error)): ?>
-            <div class="auth-message error">
-                <?php echo htmlspecialchars($error); ?>
+            <div class="message error">
+                <i class="fas fa-exclamation-circle"></i>
+                <span><?php echo htmlspecialchars($error); ?></span>
             </div>
-            <div class="auth-footer" style="margin-top: 1rem;">
-                <a href="forgot_password.php" class="auth-link">Request New Reset Link</a>
+            <div class="reset-footer" style="border-top: none; padding-top: 0;">
+                <a href="forgot_password.php" class="request-link-btn">
+                    <i class="fas fa-redo"></i> Request New Reset Link
+                </a>
             </div>
         <?php endif; ?>
         
+        <!-- Form -->
         <?php if ($token_valid): ?>
-            <form class="auth-form" method="POST">
+            <form class="reset-form" method="POST" id="resetForm">
                 <input type="hidden" name="token" value="<?php echo htmlspecialchars($token); ?>">
 
-                <div class="form-group">
-                    <label class="form-label" for="new_password">New Password</label>
-                    <div style="position: relative;">
-                        <input type="password" id="new_password" name="new_password" class="form-input" required minlength="6"
-                               placeholder="Enter new password (min 6 characters)" autocomplete="new-password" style="padding-right: 45px;">
-                        <button type="button" onclick="togglePassword('new_password')" 
-                                style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); 
-                                       background: none; border: none; color: #6c757d; cursor: pointer; 
-                                       padding: 5px; font-size: 16px;">
+                <div class="input-group">
+                    <label class="input-label" for="new_password">New Password</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-lock input-icon"></i>
+                        <input type="password" 
+                               id="new_password" 
+                               name="new_password" 
+                               class="input-field" 
+                               required 
+                               minlength="6"
+                               placeholder="Enter new password (min 6 characters)" 
+                               autocomplete="new-password">
+                        <button type="button" class="toggle-password" onclick="togglePassword('new_password')">
                             <i class="fas fa-eye" id="new_password-eye"></i>
                         </button>
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label class="form-label" for="confirm_password">Confirm Password</label>
-                    <div style="position: relative;">
-                        <input type="password" id="confirm_password" name="confirm_password" class="form-input" required minlength="6"
-                               placeholder="Re-enter your password" autocomplete="new-password" style="padding-right: 45px;">
-                        <button type="button" onclick="togglePassword('confirm_password')" 
-                                style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); 
-                                       background: none; border: none; color: #6c757d; cursor: pointer; 
-                                       padding: 5px; font-size: 16px;">
+                <div class="input-group">
+                    <label class="input-label" for="confirm_password">Confirm Password</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-lock input-icon"></i>
+                        <input type="password" 
+                               id="confirm_password" 
+                               name="confirm_password" 
+                               class="input-field" 
+                               required 
+                               minlength="6"
+                               placeholder="Re-enter your password" 
+                               autocomplete="new-password">
+                        <button type="button" class="toggle-password" onclick="togglePassword('confirm_password')">
                             <i class="fas fa-eye" id="confirm_password-eye"></i>
                         </button>
                     </div>
                 </div>
 
-                <button type="submit" class="auth-btn">
-                    <i class="fas fa-lock"></i> Update Password
+                <button type="submit" class="submit-btn">
+                    <i class="fas fa-check"></i>
+                    <span>Update Password</span>
                 </button>
             </form>
         <?php endif; ?>
@@ -142,11 +166,30 @@ echo '<link rel="stylesheet" href="' . SITE_URL . '/auth/css/auth.css">';
     </div>
 </div>
 
-<?php
-require_once __DIR__ . '/../includes/footer.php';
-?>
+<!-- Loading Overlay -->
+<div class="loader-overlay" id="loader">
+    <div class="loader-spinner"></div>
+    <div class="loader-text">Updating password...</div>
+</div>
 
 <script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('resetForm');
+    const loader = document.getElementById('loader');
+    
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            // Show loader
+            loader.classList.add('active');
+            
+            // Disable submit button
+            const btn = form.querySelector('.submit-btn');
+            btn.disabled = true;
+            btn.style.opacity = '0.7';
+        });
+    }
+});
+
 function togglePassword(fieldId) {
     const passwordField = document.getElementById(fieldId);
     const eyeIcon = document.getElementById(fieldId + '-eye');

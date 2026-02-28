@@ -181,6 +181,35 @@
     background-color: rgba(255,255,255,0.1);
 }
 
+/* Login Nav Link - Match Books/Home style */
+.login-nav-link {
+    color: #fff !important;
+    text-decoration: none;
+    padding: 8px 12px !important;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.login-nav-link:hover {
+    background-color: rgba(255,255,255,0.1) !important;
+}
+
+/* Mobile Login Nav Link */
+@media (max-width: 768px) {
+    .login-nav-link {
+        padding: 10px 15px !important;
+        font-size: 1rem;
+        width: 100%;
+    }
+    
+    .nav-links .nav-item {
+        width: 100%;
+    }
+}
+
 /* Login/Register buttons */
 .btn-login, .btn-register {
     border: 1px solid #3498db;

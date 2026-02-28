@@ -148,13 +148,10 @@ $navbar_page_class = ($is_book_view_page ? ' is-book-view' : '') . ($is_home_pag
                     </ul>
                 </li>
             <?php else: ?>
-                <li class="dropdown">
-                    <a href="#" class="dropdown-toggle">
-                        Login
+                <li class="nav-item">
+                    <a href="<?php echo SITE_URL; ?>/auth/login.php" class="nav-link login-nav-link">
+                        <i class="fas fa-sign-in-alt"></i> Login
                     </a>
-                    <ul class="dropdown-menu">
-                        <li><a href="<?php echo SITE_URL; ?>/auth/login.php"><i class="fas fa-sign-in-alt"></i> Login</a></li>
-                    </ul>
                 </li>
             <?php endif; ?>
         </ul>

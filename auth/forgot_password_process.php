@@ -42,9 +42,8 @@ $user = $result->fetch_assoc();
 $stmt->close();
 
 if (!$user) {
-    // Don't reveal if email exists or not for security
-    // But show same success message
-    redirect(SITE_URL . '/auth/forgot_password.php?success=' . urlencode('If this email is registered, you will receive a password reset link shortly.'));
+    // Email not found - show explicit error
+    redirect(SITE_URL . '/auth/forgot_password.php?error=' . urlencode('Email not found. Please check your email address or register a new account.') . '&email=' . urlencode($email));
 }
 
 // Generate secure token
@@ -125,9 +124,5 @@ try {
     error_log("PHPMailer Error: " . $mail_error);
 }
 
-// Show success with the reset link (always show link in case email fails)
-$success_msg = $mail_sent 
-    ? 'Reset link sent to your email! If you don\'t see it, check the link below:' 
-    : 'Email sending failed (common on local servers). Use this reset link:';
-    
-redirect(SITE_URL . '/auth/forgot_password.php?success=' . urlencode($success_msg) . '&reset_link=' . urlencode($reset_url) . '&email_sent=' . ($mail_sent ? '1' : '0'));
+// Show success message without reset link
+redirect(SITE_URL . '/auth/forgot_password.php?success=' . urlencode('Reset link sent to your email! Please check your inbox and spam folder.'));
