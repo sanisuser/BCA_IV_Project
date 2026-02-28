@@ -150,7 +150,7 @@ $navbar_page_class = ($is_book_view_page ? ' is-book-view' : '') . ($is_home_pag
             <?php else: ?>
                 <li class="dropdown">
                     <a href="#" class="dropdown-toggle">
-                        <i class="fas fa-user-circle"></i> Profile
+                        Login
                     </a>
                     <ul class="dropdown-menu">
                         <li><a href="<?php echo SITE_URL; ?>/auth/login.php"><i class="fas fa-sign-in-alt"></i> Login</a></li>
@@ -174,7 +174,7 @@ $navbar_page_class = ($is_book_view_page ? ' is-book-view' : '') . ($is_home_pag
                     Books
                 </a>
                 <a href="<?php echo SITE_URL; ?>/auth/login.php" class="mobile-profile-link" aria-label="Login">
-                    <div class="mobile-profile-placeholder"><i class="fas fa-sign-in-alt"></i></div>
+                    <span class="mobile-login-text">Login</span>
                 </a>
             <?php endif; ?>
 

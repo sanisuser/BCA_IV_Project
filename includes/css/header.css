@@ -321,6 +321,24 @@
     color: #fff;
 }
 
+/* Mobile login text (replaces icon) */
+.mobile-login-text {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 0.95rem;
+    font-weight: 500;
+    text-decoration: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+}
+
+.mobile-profile-link:hover .mobile-login-text {
+    background-color: rgba(255,255,255,0.1);
+}
+
 /* Mobile nav link (e.g., Books text for guests) */
 .mobile-nav-link {
     display: inline-flex;
