@@ -34,7 +34,17 @@ if (empty($username) || empty($password)) {
 }
 
 // Check if user exists
-$stmt = $conn->prepare("SELECT user_id, username, password, role FROM users WHERE username = ? OR email = ?");
+$has_is_active = false;
+if ($res = $conn->query("SELECT 1 FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'users' AND COLUMN_NAME = 'is_active' LIMIT 1")) {
+    $has_is_active = $res->num_rows > 0;
+    $res->free();
+}
+
+$select = $has_is_active
+    ? "SELECT user_id, username, password, role, is_active FROM users WHERE username = ? OR email = ?"
+    : "SELECT user_id, username, password, role FROM users WHERE username = ? OR email = ?";
+
+$stmt = $conn->prepare($select);
 if (!$stmt) {
     header("Location: " . SITE_URL . "/auth/login.php?error=" . urlencode('Database error. Please try again later.'));
     ob_end_flush();
@@ -51,6 +61,12 @@ $stmt->close();
 if (!$user) {
     // Don't reveal whether username or password was wrong
     header("Location: " . SITE_URL . "/auth/login.php?error=" . urlencode('Invalid username or password') . "&username=" . urlencode($username));
+    ob_end_flush();
+    exit;
+}
+
+if ($has_is_active && (int)($user['is_active'] ?? 1) !== 1) {
+    header("Location: " . SITE_URL . "/auth/login.php?error=" . urlencode('Your account is deactivated. Please contact admin.') . "&username=" . urlencode($username));
     ob_end_flush();
     exit;
 }

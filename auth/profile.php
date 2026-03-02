@@ -53,8 +53,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 throw new Exception('Invalid image type');
             }
 
-            $filename = safe_filename('profile_' . $user_id . '.' . $allowed[$mime]);
-            $destDir = __DIR__ . '/../assets/images/profiles';
+            $filename = safe_filename('user_' . $user_id . '_' . time() . '.' . $allowed[$mime]);
+            $destDir = __DIR__ . '/../uploads/profiles';
             if (!is_dir($destDir)) {
                 mkdir($destDir, 0755, true);
             }
@@ -64,7 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 throw new Exception('Could not save uploaded image');
             }
 
-            $new_profile_path = 'assets/images/profiles/' . $filename;
+            $new_profile_path = 'uploads/profiles/' . $filename;
         }
 
         // Update basic fields

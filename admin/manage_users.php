@@ -22,6 +22,22 @@ $error = '';
 $action = $_GET['action'] ?? 'list';
 $user_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
+// Ensure users table has is_active column (soft enable/disable)
+$has_is_active = false;
+if ($res = $conn->query("SELECT 1 FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'users' AND COLUMN_NAME = 'is_active' LIMIT 1")) {
+    $has_is_active = $res->num_rows > 0;
+    $res->free();
+}
+if (!$has_is_active) {
+    // Attempt a one-time migration for existing databases
+    $conn->query("ALTER TABLE users ADD COLUMN is_active TINYINT(1) NOT NULL DEFAULT 1");
+    $conn->query("ALTER TABLE users ADD INDEX idx_users_is_active (is_active)");
+    if ($res = $conn->query("SELECT 1 FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'users' AND COLUMN_NAME = 'is_active' LIMIT 1")) {
+        $has_is_active = $res->num_rows > 0;
+        $res->free();
+    }
+}
+
 $q = trim($_GET['q'] ?? '');
 $search_column = isset($_GET['column']) ? clean_input($_GET['column']) : 'all';
 $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
@@ -71,24 +87,27 @@ if ($action === 'change_role' && $user_id > 0 && $_SERVER['REQUEST_METHOD'] === 
 }
 
 // Handle delete
-if ($action === 'delete' && $user_id > 0) {
+if ($action === 'toggle_status' && $user_id > 0 && $_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($user_id === $_SESSION['user_id']) {
-        $error = 'You cannot delete your own account.';
+        $error = 'You cannot deactivate your own account.';
+    } elseif (!$has_is_active) {
+        $error = 'Status feature is not available.';
     } else {
-        $stmt = $conn->prepare("DELETE FROM users WHERE user_id = ?");
+        $current = 1;
+        $stmt = $conn->prepare('SELECT is_active FROM users WHERE user_id = ?');
         $stmt->bind_param('i', $user_id);
+        $stmt->execute();
+        $stmt->bind_result($current);
+        $stmt->fetch();
+        $stmt->close();
+
+        $new = ((int)$current === 1) ? 0 : 1;
+        $stmt = $conn->prepare('UPDATE users SET is_active = ? WHERE user_id = ?');
+        $stmt->bind_param('ii', $new, $user_id);
         if ($stmt->execute()) {
-            $success = 'User deleted successfully.';
-            $max_id = 0;
-            if ($r = $conn->query("SELECT MAX(user_id) AS max_id FROM users")) {
-                $row = $r->fetch_assoc();
-                $max_id = (int)($row['max_id'] ?? 0);
-                $r->free();
-            }
-            $next_id = $max_id + 1;
-            $conn->query("ALTER TABLE users AUTO_INCREMENT = " . (int)$next_id);
+            $success = $new === 1 ? 'User activated successfully.' : 'User deactivated successfully.';
         } else {
-            $error = 'Failed to delete user.';
+            $error = 'Failed to update user status.';
         }
         $stmt->close();
     }
@@ -140,7 +159,10 @@ if ($action === 'edit' && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST[
 // Get user for editing
 $user = null;
 if (($action === 'edit' || $action === 'view') && $user_id > 0) {
-    $stmt = $conn->prepare("SELECT user_id, username, email, role, created_at, full_name, profile_image, ship_address, phone, location, bio FROM users WHERE user_id = ?");
+    $select = $has_is_active
+        ? "SELECT user_id, username, email, role, is_active, created_at, full_name, profile_image, ship_address, phone, location, bio FROM users WHERE user_id = ?"
+        : "SELECT user_id, username, email, role, created_at, full_name, profile_image, ship_address, phone, location, bio FROM users WHERE user_id = ?";
+    $stmt = $conn->prepare($select);
     $stmt->bind_param('i', $user_id);
     $stmt->execute();
     $res = $stmt->get_result();
@@ -182,11 +204,17 @@ if ($action === 'list') {
     if ($q !== '') {
         if ($search_column === 'all') {
             $like = '%' . $q . '%';
-            $stmt = $conn->prepare("SELECT user_id, username, email, role, created_at FROM users WHERE username LIKE ? OR email LIKE ? OR role LIKE ? ORDER BY $sort $order LIMIT ? OFFSET ?");
+            $select = $has_is_active
+                ? "SELECT user_id, username, email, role, is_active, created_at FROM users WHERE username LIKE ? OR email LIKE ? OR role LIKE ? ORDER BY $sort $order LIMIT ? OFFSET ?"
+                : "SELECT user_id, username, email, role, created_at FROM users WHERE username LIKE ? OR email LIKE ? OR role LIKE ? ORDER BY $sort $order LIMIT ? OFFSET ?";
+            $stmt = $conn->prepare($select);
             $stmt->bind_param('sssii', $like, $like, $like, $per_page, $offset);
         } else {
             $like = '%' . $q . '%';
-            $stmt = $conn->prepare("SELECT user_id, username, email, role, created_at FROM users WHERE $search_column LIKE ? ORDER BY $sort $order LIMIT ? OFFSET ?");
+            $select = $has_is_active
+                ? "SELECT user_id, username, email, role, is_active, created_at FROM users WHERE $search_column LIKE ? ORDER BY $sort $order LIMIT ? OFFSET ?"
+                : "SELECT user_id, username, email, role, created_at FROM users WHERE $search_column LIKE ? ORDER BY $sort $order LIMIT ? OFFSET ?";
+            $stmt = $conn->prepare($select);
             $stmt->bind_param('sii', $like, $per_page, $offset);
         }
         $stmt->execute();
@@ -194,7 +222,10 @@ if ($action === 'list') {
         while ($row = $res->fetch_assoc()) { $users[] = $row; }
         $stmt->close();
     } else {
-        $stmt = $conn->prepare("SELECT user_id, username, email, role, created_at FROM users ORDER BY $sort $order LIMIT ? OFFSET ?");
+        $select = $has_is_active
+            ? "SELECT user_id, username, email, role, is_active, created_at FROM users ORDER BY $sort $order LIMIT ? OFFSET ?"
+            : "SELECT user_id, username, email, role, created_at FROM users ORDER BY $sort $order LIMIT ? OFFSET ?";
+        $stmt = $conn->prepare($select);
         $stmt->bind_param('ii', $per_page, $offset);
         $stmt->execute();
         $res = $stmt->get_result();
@@ -270,6 +301,9 @@ $active_page = 'users';
                                 <th><a href="<?php echo sort_url('username', $sort, $order, $q, $page, $search_column); ?>" style="text-decoration: none; color: inherit;">Username<?php echo sort_icon('username', $sort, $order); ?></a></th>
                                 <th><a href="<?php echo sort_url('email', $sort, $order, $q, $page, $search_column); ?>" style="text-decoration: none; color: inherit;">Email<?php echo sort_icon('email', $sort, $order); ?></a></th>
                                 <th><a href="<?php echo sort_url('role', $sort, $order, $q, $page, $search_column); ?>" style="text-decoration: none; color: inherit;">Role<?php echo sort_icon('role', $sort, $order); ?></a></th>
+                                <?php if ($has_is_active): ?>
+                                    <th>Status</th>
+                                <?php endif; ?>
                                 <th><a href="<?php echo sort_url('created_at', $sort, $order, $q, $page, $search_column); ?>" style="text-decoration: none; color: inherit;">Joined<?php echo sort_icon('created_at', $sort, $order); ?></a></th>
                                 <th>Actions</th>
                             </tr>
@@ -298,11 +332,27 @@ $active_page = 'users';
                                         <span class="badge badge-<?php echo $role; ?>"><?php echo $is_admin ? 'Admin' : 'Normal'; ?></span>
                                     <?php endif; ?>
                                 </td>
+                                <?php if ($has_is_active): ?>
+                                    <?php $is_active = (int)($u['is_active'] ?? 1) === 1; ?>
+                                    <td>
+                                        <span class="badge" style="background: <?php echo $is_active ? '#d4edda' : '#f8d7da'; ?>; color: <?php echo $is_active ? '#155724' : '#721c24'; ?>; border: 1px solid <?php echo $is_active ? '#c3e6cb' : '#f5c6cb'; ?>;">
+                                            <?php echo $is_active ? 'Active' : 'Deactive'; ?>
+                                        </span>
+                                    </td>
+                                <?php endif; ?>
                                 <td><?php echo date('M d, Y', strtotime($u['created_at'])); ?></td>
                                 <td class="actions" style="display: flex; gap: 0.5rem; flex-wrap: nowrap;">
                                     <a href="<?php echo SITE_URL; ?>/admin/manage_users.php?action=view&id=<?php echo (int)$u['user_id']; ?>&sort=<?php echo urlencode($sort); ?>&order=<?php echo urlencode($order); ?>&q=<?php echo urlencode($q); ?>&column=<?php echo urlencode($search_column); ?>&page=<?php echo $page; ?>" class="btn btn-primary btn-small"><i class="fas fa-eye"></i> View</a>
                                     <?php if ((int)$u['user_id'] !== (int)$_SESSION['user_id']): ?>
-                                        <a href="<?php echo SITE_URL; ?>/admin/manage_users.php?action=delete&id=<?php echo (int)$u['user_id']; ?>&sort=<?php echo urlencode($sort); ?>&order=<?php echo urlencode($order); ?>&q=<?php echo urlencode($q); ?>&column=<?php echo urlencode($search_column); ?>&page=<?php echo $page; ?>" class="btn btn-danger btn-small" onclick="return confirm('Delete this user?')"><i class="fas fa-trash"></i> Delete</a>
+                                        <?php if ($has_is_active): ?>
+                                            <?php $is_active = (int)($u['is_active'] ?? 1) === 1; ?>
+                                            <form method="POST" action="<?php echo SITE_URL; ?>/admin/manage_users.php?action=toggle_status&id=<?php echo (int)$u['user_id']; ?>" style="display: inline;" onsubmit="return confirm('<?php echo $is_active ? 'Deactivate' : 'Activate'; ?> this user?')">
+                                                <button type="submit" class="btn <?php echo $is_active ? 'btn-warning' : 'btn-success'; ?> btn-small">
+                                                    <i class="fas <?php echo $is_active ? 'fa-user-slash' : 'fa-user-check'; ?>"></i>
+                                                    <?php echo $is_active ? 'Deactivate' : 'Activate'; ?>
+                                                </button>
+                                            </form>
+                                        <?php endif; ?>
                                     <?php endif; ?>
                                 </td>
                             </tr>
@@ -342,7 +392,7 @@ $active_page = 'users';
                         if (!empty($user['profile_image'])) {
                             $profile_src = SITE_URL . '/' . ltrim((string)$user['profile_image'], '/');
                         } else {
-                            $profile_src = SITE_URL . '/assets/images/default-user.png';
+                            $profile_src = SITE_URL . '/assets/logo.png';
                         }
 
                         $user_orders = [];
@@ -359,22 +409,38 @@ $active_page = 'users';
                             $stmt->close();
                         }
 
-                        foreach ($user_orders as &$uo) {
-                            $uo['item_text'] = '';
-                            $items = [];
-                            $stmt = $conn->prepare('SELECT oi.quantity, oi.price_at_time, b.title FROM order_items oi JOIN books b ON oi.book_id = b.book_id WHERE oi.order_id = ?');
+                        // Fetch all order items for these orders in one query (avoid N+1)
+                        $order_items_map = [];
+                        $order_ids = array_values(array_filter(array_map(function($o) {
+                            return (int)($o['order_id'] ?? 0);
+                        }, $user_orders)));
+
+                        if (count($order_ids) > 0) {
+                            $placeholders = implode(',', array_fill(0, count($order_ids), '?'));
+                            $types = str_repeat('i', count($order_ids));
+                            $sql = "SELECT oi.order_id, oi.quantity, oi.price_at_time, b.title FROM order_items oi JOIN books b ON oi.book_id = b.book_id WHERE oi.order_id IN ($placeholders) ORDER BY oi.order_id DESC";
+                            $stmt = $conn->prepare($sql);
                             if ($stmt) {
-                                $oid = (int)($uo['order_id'] ?? 0);
-                                $stmt->bind_param('i', $oid);
+                                $stmt->bind_param($types, ...$order_ids);
                                 $stmt->execute();
                                 $res = $stmt->get_result();
                                 while ($r = $res->fetch_assoc()) {
-                                    $items[] = $r;
+                                    $oid = (int)($r['order_id'] ?? 0);
+                                    if (!isset($order_items_map[$oid])) {
+                                        $order_items_map[$oid] = [];
+                                    }
+                                    $order_items_map[$oid][] = $r;
                                 }
                                 $stmt->close();
                             }
+                        }
 
+                        foreach ($user_orders as &$uo) {
+                            $oid = (int)($uo['order_id'] ?? 0);
+                            $items = $order_items_map[$oid] ?? [];
                             $uo['items'] = $items;
+                            $uo['item_text'] = '';
+
                             $itemCount = count($items);
                             $itemNames = array_slice(array_column($items, 'title'), 0, 2);
                             $uo['item_text'] = implode(', ', $itemNames) . ($itemCount > 2 ? ' + ' . ($itemCount - 2) . ' more' : '');
@@ -426,7 +492,6 @@ $active_page = 'users';
                         <div style="border: 1px solid #e9ecef; border-radius: 8px; background: #ffffff; overflow: hidden;">
                             <div style="padding: 0.9rem 1rem; border-bottom: 1px solid #e9ecef; display: flex; justify-content: space-between; align-items: center;">
                                 <div style="font-weight: 800; color: #2c3e50;">Order History</div>
-                                <div style="color: #6c757d; font-size: 0.9rem;">Recent 10</div>
                             </div>
                             <div style="padding: 1rem; overflow: auto;">
                                 <?php if (count($user_orders) === 0): ?>
@@ -444,11 +509,6 @@ $active_page = 'users';
                                                 <tr>
                                                     <td style="font-weight: 700; color: #2c3e50;">
                                                         <?php echo htmlspecialchars($uo['item_text'] !== '' ? $uo['item_text'] : 'Order items'); ?>
-                                                        <?php if (!empty($uo['admin_remark'])): ?>
-                                                            <div style="margin-top: 0.35rem; font-size: 0.85rem; color: #e53e3e; background: #fff5f5; padding: 0.4rem 0.5rem; border-radius: 6px; border-left: 3px solid #e53e3e;">
-                                                                <strong>Remark:</strong> <?php echo htmlspecialchars((string)$uo['admin_remark']); ?>
-                                                            </div>
-                                                        <?php endif; ?>
                                                     </td>
                                                     <td>
                                                         <?php echo htmlspecialchars(date('M d, Y h:i A', strtotime((string)($uo['created_at'] ?? '')))); ?>
