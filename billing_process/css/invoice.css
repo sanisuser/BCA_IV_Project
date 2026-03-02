@@ -1,0 +1,174 @@
+/**
+ * billing_process/css/invoice.css
+ * 
+ * Invoice styles - clean white design
+ */
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #ffffff;
+  margin: 0;
+  padding: 40px 20px;
+  color: #111111;
+  line-height: 1.6;
+}
+
+.invoice-container {
+  max-width: 800px;
+  margin: 0 auto;
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.header {
+  background: #ffffff;
+  padding: 40px 50px 25px;
+  text-align: center;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.header h1 {
+  margin: 0;
+  font-size: 2.4rem;
+  font-weight: 700;
+  color: #000000;
+}
+
+.header .subtitle {
+  margin: 8px 0 4px;
+  font-size: 1.1rem;
+  color: #444444;
+}
+
+.header .contact {
+  font-size: 0.95rem;
+  color: #666666;
+}
+
+.info-section {
+  display: flex;
+  justify-content: space-between;
+  padding: 30px 50px;
+  flex-wrap: wrap;
+  gap: 30px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.info-block h3 {
+  margin: 0 0 12px;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #000000;
+}
+
+.info-block p {
+  margin: 6px 0;
+  font-size: 1rem;
+}
+
+.table-section {
+  padding: 0 50px 40px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 30px 0 20px;
+}
+
+th, td {
+  padding: 14px 12px;
+  text-align: left;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+th {
+  background: #f9f9f9;
+  color: #333333;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.9rem;
+  letter-spacing: 0.4px;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.totals-table {
+  width: 100%;
+  max-width: 400px;
+  margin: 30px 0 30px auto;
+  border-collapse: separate;
+  border-spacing: 0 6px;
+}
+
+.totals-table td {
+  padding: 10px 14px;
+  border: none;
+  background: #f9f9f9;
+}
+
+.totals-table .label {
+  font-weight: 500;
+  color: #333333;
+}
+
+.totals-table .value {
+  text-align: right;
+  font-weight: 600;
+  color: #000000;
+}
+
+.totals-table .grand-total-row td {
+  background: #f0f0f0;
+  font-size: 1.18rem;
+  font-weight: 700;
+  padding: 14px;
+}
+
+.payment-info {
+  padding: 0 50px 30px;
+  font-size: 1.05rem;
+  color: #222222;
+}
+
+.paid-badge {
+  background: #e0e0e0;
+  color: #000000;
+  padding: 5px 16px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-left: 12px;
+}
+
+.footer {
+  text-align: center;
+  padding: 40px 30px 60px;
+  color: #555555;
+  font-size: 0.95rem;
+  border-top: 1px solid #e0e0e0;
+}
+
+.footer p:first-child {
+  font-size: 1.15rem;
+  color: #000000;
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+
+@media print {
+  body { background: white; padding: 0; }
+  .invoice-container { border: none; box-shadow: none; }
+  .header, .info-section, .table-section, .payment-info { padding: 20px 40px; }
+}
+
+@media (max-width: 640px) {
+  .info-section { flex-direction: column; padding: 25px; }
+  .table-section, .payment-info { padding: 0 25px 30px; }
+  th, td { padding: 12px 10px; font-size: 0.95rem; }
+  .totals-table { max-width: 100%; }
+}

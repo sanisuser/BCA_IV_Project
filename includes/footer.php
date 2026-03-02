@@ -44,18 +44,12 @@
             </div>
 
             <div class="footer-section">
-                <h4>Freebie Signup</h4>
-                <p>Get reading tips and updates. We’ll send you a free reading list.</p>
-                <form class="footer-signup" method="POST" action="#">
-                    <div class="signup-input-wrap">
-                        <i class="fas fa-envelope signup-icon"></i>
-                        <input class="footer-input" type="email" name="email" placeholder="Enter your email" required />
-                    </div>
-                    <button class="footer-btn" type="submit">
-                        <span>Subscribe</span>
-                        <i class="fas fa-arrow-right"></i>
-                    </button>
-                </form>
+                <h4>About Us</h4>
+                <p>Learn more about our mission to connect readers with great books.</p>
+                <a href="<?php echo SITE_URL; ?>/page/about.php" class="footer-btn">
+                    <span>Read More</span>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
             </div>
         </div>
         

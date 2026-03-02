@@ -30,8 +30,13 @@ if ($res = $conn->query("SELECT 1 FROM information_schema.COLUMNS WHERE TABLE_SC
 }
 if (!$has_is_active) {
     // Attempt a one-time migration for existing databases
-    $conn->query("ALTER TABLE users ADD COLUMN is_active TINYINT(1) NOT NULL DEFAULT 1");
-    $conn->query("ALTER TABLE users ADD INDEX idx_users_is_active (is_active)");
+    try {
+        $conn->query("ALTER TABLE users ADD COLUMN is_active TINYINT(1) NOT NULL DEFAULT 1");
+        $conn->query("ALTER TABLE users ADD INDEX idx_users_is_active (is_active)");
+    } catch (mysqli_sql_exception $e) {
+        // Log error but don't crash - column might already exist or DB issue
+        error_log('Failed to add is_active column: ' . $e->getMessage());
+    }
     if ($res = $conn->query("SELECT 1 FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'users' AND COLUMN_NAME = 'is_active' LIMIT 1")) {
         $has_is_active = $res->num_rows > 0;
         $res->free();
