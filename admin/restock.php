@@ -142,7 +142,8 @@ $error = isset($_GET['error']) ? $_GET['error'] : '';
         <div class="restock-card low-stock-card">
             <h2 class="column-title">
                 <i class="fa-solid fa-triangle-exclamation" style="color: #ffc107;"></i> 
-                Low Stock Books <small>(≤ 10)</small>
+                Low Stock Books 
+                <!-- shows book stock <=10 -->
             </h2>
             
             <?php 

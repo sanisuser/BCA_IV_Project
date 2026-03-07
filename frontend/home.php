@@ -23,6 +23,25 @@ if ($result) {
         $slider_books[] = $row;
 
     }
+    $result->free();
+
+}
+
+
+
+// Fetch bestseller books (at least 10 copies sold)
+
+$bestseller_books = [];
+
+$result = $conn->query("SELECT book_id, title, author, cover_image, price, total_sold FROM books WHERE COALESCE(total_sold, 0) >= 10 ORDER BY total_sold DESC, created_at DESC LIMIT 10");
+
+if ($result) {
+
+    while ($row = $result->fetch_assoc()) {
+
+        $bestseller_books[] = $row;
+
+    }
 
     $result->free();
 
@@ -106,8 +125,16 @@ if ($result) {
 
 $available_authors = [];
 
-$result = $conn->query("SELECT DISTINCT author FROM books WHERE stock > 0 AND author IS NOT NULL AND author <> '' ORDER BY author ASC");
-
+// $result = $conn->query("SELECT DISTINCT author FROM books WHERE stock > 0 AND author IS NOT NULL AND author <> '' ORDER BY author ASC");
+$result = $conn->query("
+    SELECT DISTINCT author 
+    FROM books 
+    WHERE stock > 0 
+      AND author IS NOT NULL 
+      AND author <> '' 
+    ORDER BY RAND() 
+    LIMIT 5
+");
 if ($result) {
 
     while ($row = $result->fetch_assoc()) {
@@ -233,6 +260,66 @@ if ($result) {
         </div>
 
         <?php endforeach; ?>
+
+    </div>
+
+</section>
+
+
+
+<!-- Layer 3: Bestsellers -->
+
+<section class="section top-favorites">
+
+    <div class="section-header">
+
+        <h2><i class="fas fa-fire"></i> Bestsellers</h2>
+
+        <a href="<?php echo SITE_URL; ?>/page/booklist.php?sort=bestseller" class="view-all">View All <i class="fas fa-arrow-right"></i></a>
+
+    </div>
+
+    <div class="horizontal-scroll">
+
+        <?php foreach ($bestseller_books as $book): ?>
+
+        <div class="book-card">
+
+            <div class="book-cover">
+
+                <img src="<?php echo !empty($book['cover_image']) ? htmlspecialchars($book['cover_image']) : SITE_URL . '/assets/images/default-book.png'; ?>" alt="<?php echo htmlspecialchars($book['title']); ?>">
+
+                <div class="book-overlay">
+
+                    <a href="<?php echo SITE_URL; ?>/page/book.php?id=<?php echo $book['book_id']; ?>" class="btn-quick">View</a>
+
+                </div>
+
+            </div>
+
+            <div class="book-info">
+
+                <h3 class="book-title"><?php echo htmlspecialchars($book['title']); ?></h3>
+
+                <p class="book-author"><?php echo htmlspecialchars($book['author']); ?></p>
+
+                <div class="book-price"><?php echo format_price($book['price']); ?></div>
+
+            </div>
+
+        </div>
+
+        <?php endforeach; ?>
+
+        <?php if (empty($bestseller_books)): ?>
+
+            <div class="book-card" style="padding: 16px;">
+
+                <div style="color: #6c757d;">No bestsellers yet (needs 10+ sales).</div>
+
+            </div>
+
+        <?php endif; ?>
 
     </div>
 

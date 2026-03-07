@@ -91,7 +91,7 @@ $active_page = 'dashboard';
                     <strong>Low Stock Alert!</strong> 
                     <?php echo count($low_stock_books); ?> book(s) need re-stocking:
                     <a href="<?php echo SITE_URL; ?>/admin/restock.php" style="color: #856404; text-decoration: underline; margin-left: 10px;">
-                        <i class="fa-solid fa-boxes-stacked"></i> Re-stock Now
+                     Re-stock Now
                     </a>
                 </div>
             <?php endif; ?>

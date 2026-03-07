@@ -32,6 +32,7 @@ $stmt->close();
 <div class="wishlist-container">
     <div class="wishlist-header">
         <h1><i class="fas fa-heart"></i> My Wishlist</h1>
+        <i>Add unavailable book to wishlist for future purchase.</i>
         <p class="wishlist-count"><?php echo count($items); ?> book<?php echo count($items) !== 1 ? 's' : ''; ?> saved</p>
     </div>
 
@@ -83,8 +84,7 @@ $stmt->close();
         <div class="wishlist-empty">
             <h2>Your wishlist is empty</h2>
             <p>Browse our collection and save your favorite books!</p>
-            <a href="<?php echo SITE_URL; ?>/page/booklist.php" class="btn btn-cart">
-                <i class="fas fa-search"></i> Browse Books
+            <a href="<?php echo SITE_URL; ?>/page/booklist.php" class="btn btn-cart"> Browse Books
             </a>
             
         </div>

@@ -21,6 +21,7 @@ $success = '';
 $error = '';
 $action = $_GET['action'] ?? 'list';
 $user_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+$current_admin_id = (int)get_user_id();
 
 // Ensure users table has is_active column (soft enable/disable)
 $has_is_active = false;
@@ -70,7 +71,7 @@ if (!in_array($order, $allowed_order, true)) {
 
 // Handle role change from dropdown
 if ($action === 'change_role' && $user_id > 0 && $_SERVER['REQUEST_METHOD'] === 'POST') {
-    if ($user_id === $_SESSION['user_id']) {
+    if ($user_id === $current_admin_id) {
         $error = 'You cannot change your own role.';
     } else {
         $new_role = clean_input($_POST['role'] ?? '');
@@ -93,28 +94,44 @@ if ($action === 'change_role' && $user_id > 0 && $_SERVER['REQUEST_METHOD'] === 
 
 // Handle delete
 if ($action === 'toggle_status' && $user_id > 0 && $_SERVER['REQUEST_METHOD'] === 'POST') {
-    if ($user_id === $_SESSION['user_id']) {
+    if ($user_id === $current_admin_id) {
         $error = 'You cannot deactivate your own account.';
     } elseif (!$has_is_active) {
         $error = 'Status feature is not available.';
     } else {
-        $current = 1;
-        $stmt = $conn->prepare('SELECT is_active FROM users WHERE user_id = ?');
-        $stmt->bind_param('i', $user_id);
-        $stmt->execute();
-        $stmt->bind_result($current);
-        $stmt->fetch();
-        $stmt->close();
-
-        $new = ((int)$current === 1) ? 0 : 1;
-        $stmt = $conn->prepare('UPDATE users SET is_active = ? WHERE user_id = ?');
-        $stmt->bind_param('ii', $new, $user_id);
-        if ($stmt->execute()) {
-            $success = $new === 1 ? 'User activated successfully.' : 'User deactivated successfully.';
+        $current = null;
+        $stmt = $conn->prepare('SELECT is_active FROM users WHERE user_id = ? LIMIT 1');
+        if (!$stmt) {
+            $error = 'Failed to prepare status lookup.';
         } else {
-            $error = 'Failed to update user status.';
+            $stmt->bind_param('i', $user_id);
+            $stmt->execute();
+            $stmt->bind_result($current);
+            $found = $stmt->fetch();
+            $stmt->close();
+
+            if (!$found) {
+                $error = 'User not found.';
+            } else {
+                $new = ((int)$current === 1) ? 0 : 1;
+                $stmt = $conn->prepare('UPDATE users SET is_active = ? WHERE user_id = ?');
+                if (!$stmt) {
+                    $error = 'Failed to prepare status update.';
+                } else {
+                    $stmt->bind_param('ii', $new, $user_id);
+                    if ($stmt->execute()) {
+                        if ($stmt->affected_rows > 0) {
+                            $success = $new === 1 ? 'User activated successfully.' : 'User deactivated successfully.';
+                        } else {
+                            $error = 'No changes were made.';
+                        }
+                    } else {
+                        $error = 'Failed to update user status.';
+                    }
+                    $stmt->close();
+                }
+            }
         }
-        $stmt->close();
     }
     redirect(SITE_URL . '/admin/manage_users.php?success=' . urlencode($success) . '&error=' . urlencode($error));
 }
@@ -319,14 +336,14 @@ $active_page = 'users';
                                 <td><?php echo (int)$u['user_id']; ?></td>
                                 <td>
                                     <?php echo htmlspecialchars($u['username']); ?>
-                                    <?php if ((int)$u['user_id'] === (int)$_SESSION['user_id']): ?>
+                                    <?php if ((int)$u['user_id'] === $current_admin_id): ?>
                                         <span style="font-size: 0.75rem; color: #6c757d; margin-left: 0.5rem;">(You)</span>
                                     <?php endif; ?>
                                 </td>
                                 <td><?php echo htmlspecialchars($u['email']); ?></td>
                                 <td>
                                     <?php $role = $u['role'] ?? 'user'; $is_admin = $role === 'admin'; ?>
-                                    <?php if ((int)$u['user_id'] !== (int)$_SESSION['user_id']): ?>
+                                    <?php if ((int)$u['user_id'] !== $current_admin_id): ?>
                                         <form method="POST" action="<?php echo SITE_URL; ?>/admin/manage_users.php?action=change_role&id=<?php echo (int)$u['user_id']; ?>&sort=<?php echo urlencode($sort); ?>&order=<?php echo urlencode($order); ?>&q=<?php echo urlencode($q); ?>&column=<?php echo urlencode($search_column); ?>&page=<?php echo $page; ?>" style="display: inline;">
                                             <select name="role" onchange="this.form.submit()" class="role-select">
                                                 <option value="user" <?php echo !$is_admin ? 'selected' : ''; ?>>Normal</option>
@@ -348,7 +365,7 @@ $active_page = 'users';
                                 <td><?php echo date('M d, Y', strtotime($u['created_at'])); ?></td>
                                 <td class="actions" style="display: flex; gap: 0.5rem; flex-wrap: nowrap;">
                                     <a href="<?php echo SITE_URL; ?>/admin/manage_users.php?action=view&id=<?php echo (int)$u['user_id']; ?>&sort=<?php echo urlencode($sort); ?>&order=<?php echo urlencode($order); ?>&q=<?php echo urlencode($q); ?>&column=<?php echo urlencode($search_column); ?>&page=<?php echo $page; ?>" class="btn btn-primary btn-small"><i class="fas fa-eye"></i> View</a>
-                                    <?php if ((int)$u['user_id'] !== (int)$_SESSION['user_id']): ?>
+                                    <?php if ((int)$u['user_id'] !== $current_admin_id): ?>
                                         <?php if ($has_is_active): ?>
                                             <?php $is_active = (int)($u['is_active'] ?? 1) === 1; ?>
                                             <form method="POST" action="<?php echo SITE_URL; ?>/admin/manage_users.php?action=toggle_status&id=<?php echo (int)$u['user_id']; ?>" style="display: inline;" onsubmit="return confirm('<?php echo $is_active ? 'Deactivate' : 'Activate'; ?> this user?')">

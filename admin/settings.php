@@ -5,6 +5,10 @@
  * Admin Settings - Manage website details, contact info, and admin profile.
  */
 
+http_response_code(404);
+echo 'Not Found';
+exit;
+
 require_once __DIR__ . '/../includes/functions.php';
 
 // Check admin access

@@ -56,6 +56,7 @@ CREATE TABLE books (
   published_year INT(11) DEFAULT NULL,
   description TEXT DEFAULT NULL,
   condition_status ENUM('new','used') DEFAULT 'new',
+  total_sold INT NOT NULL DEFAULT 0,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (book_id),
@@ -66,6 +67,7 @@ CREATE TABLE books (
   KEY idx_price (price),
   KEY idx_published_year (published_year),
   KEY idx_condition_status (condition_status),
+  KEY idx_total_sold (total_sold),
   FULLTEXT KEY idx_search (title, author, description)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 

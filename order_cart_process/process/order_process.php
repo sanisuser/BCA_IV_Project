@@ -2,6 +2,20 @@
 require_once __DIR__ . '/../../includes/functions.php';
 require_once __DIR__ . '/../../includes/db.php';
 
+$has_total_sold = false;
+if ($res = $conn->query("SELECT 1 FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'books' AND COLUMN_NAME = 'total_sold' LIMIT 1")) {
+    $has_total_sold = $res->num_rows > 0;
+    $res->free();
+}
+if (!$has_total_sold) {
+    try {
+        $conn->query("ALTER TABLE books ADD COLUMN total_sold INT NOT NULL DEFAULT 0 AFTER condition_status");
+        $conn->query("ALTER TABLE books ADD INDEX idx_total_sold (total_sold)");
+    } catch (mysqli_sql_exception $e) {
+        error_log('Failed to add total_sold column: ' . $e->getMessage());
+    }
+}
+
 if (!is_logged_in()) {
     redirect(SITE_URL . '/auth/login.php?error=' . urlencode('Please login to place an order'));
 }
@@ -97,7 +111,7 @@ try {
     $stmt->close();
 
     $stmt_item = $conn->prepare('INSERT INTO order_items (order_id, book_id, quantity, price_at_time) VALUES (?, ?, ?, ?)');
-    $stmt_stock = $conn->prepare('UPDATE books SET stock = stock - ? WHERE book_id = ?');
+    $stmt_stock = $conn->prepare('UPDATE books SET stock = stock - ?, total_sold = total_sold + ? WHERE book_id = ?');
 
     foreach ($items as $it) {
         $book_id = (int)$it['book_id'];
@@ -108,7 +122,7 @@ try {
         $stmt_item->bind_param('iiid', $order_id, $book_id, $qty, $price_with_vat);
         $stmt_item->execute();
 
-        $stmt_stock->bind_param('ii', $qty, $book_id);
+        $stmt_stock->bind_param('iii', $qty, $qty, $book_id);
         $stmt_stock->execute();
     }
 

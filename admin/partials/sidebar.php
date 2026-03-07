@@ -9,6 +9,5 @@ if (!isset($active_page)) {
         <a href="<?php echo SITE_URL; ?>/admin/manage_books.php" class="<?php echo $active_page === 'books' ? 'active' : ''; ?>"><i class="fas fa-book"></i> Manage Books</a>
         <a href="<?php echo SITE_URL; ?>/admin/manage_users.php" class="<?php echo $active_page === 'users' ? 'active' : ''; ?>"><i class="fas fa-users"></i> Manage Users</a>
         <a href="<?php echo SITE_URL; ?>/admin/manage_orders.php" class="<?php echo $active_page === 'orders' ? 'active' : ''; ?>"><i class="fas fa-shopping-bag"></i> Orders</a>
-        <a href="<?php echo SITE_URL; ?>/admin/settings.php" class="<?php echo $active_page === 'settings' ? 'active' : ''; ?>"><i class="fas fa-cog"></i> Admin Settings</a>
     </nav>
 </aside>

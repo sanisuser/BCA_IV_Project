@@ -50,7 +50,7 @@ $mobile_hide_search_pages = [
 $hide_search_on_mobile = in_array($current_page, $mobile_hide_search_pages, true);
 
 // Desktop: hide on these pages completely (existing behavior)
-$hide_search_bar_pages = ['profile.php', 'cart.php', 'checkout.php', 'orders.php', 'wishlist.php'];
+$hide_search_bar_pages = ['profile.php', 'cart.php', 'checkout.php', 'orders.php', 'wishlist.php', 'about.php'];
 $hide_search_bar = in_array($current_page, $hide_search_bar_pages, true);
 
 $navbar_page_class = ($is_book_view_page ? ' is-book-view' : '') . ($is_home_page ? ' is-home' : '');
