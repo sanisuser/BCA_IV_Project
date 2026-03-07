@@ -36,18 +36,23 @@ if (!defined('SITE_URL')) {
 
 // SMTP Configuration for PHPMailer
 // https://myaccount.google.com/apppasswords
+// Load local config (gitignored) if present
+$localConfig = __DIR__ . '/config.local.php';
+if (is_file($localConfig)) {
+    require_once $localConfig;
+}
 
 if (!defined('SMTP_USERNAME')) {
-    define('SMTP_USERNAME', 'crm.bookhub@gmail.com');     // Your Gmail address
+    define('SMTP_USERNAME', '');
 }
 if (!defined('SMTP_PASSWORD')) {
-    define('SMTP_PASSWORD', 'emxs vuls oxhf asvq');      // Gmail App Password (NOT your regular password)
+    define('SMTP_PASSWORD', '');
 }
 if (!defined('SMTP_FROM_EMAIL')) {
-    define('SMTP_FROM_EMAIL', 'noreply@bookhub.com'); // Sender email shown to recipients
+    define('SMTP_FROM_EMAIL', '');
 }
 if (!defined('SMTP_FROM_NAME')) {
-    define('SMTP_FROM_NAME', 'BookHub');               // Sender name shown to recipients
+    define('SMTP_FROM_NAME', SITE_NAME);
 }
 
 // Start session if not already started

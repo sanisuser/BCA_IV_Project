@@ -81,15 +81,6 @@ $navbar_page_class = ($is_book_view_page ? ' is-book-view' : '') . ($is_home_pag
     <?php if ($current_page === 'orders.php'): ?>
     <link rel="stylesheet" href="<?php echo SITE_URL; ?>/order_cart_process/css/orders.css">
     <?php endif; ?>
-    
-    <!-- Mobile Hide Search Bar Styles -->
-    <style>
-        @media (max-width: 768px) {
-            .search-form.mobile-hide-search {
-                display: none !important;
-            }
-        }
-    </style>
 </head>
 <body>
 
@@ -104,7 +95,7 @@ $navbar_page_class = ($is_book_view_page ? ' is-book-view' : '') . ($is_home_pag
         
         <?php if (!$hide_search_bar): ?>
         <!-- Search Bar -->
-        <form class="search-form<?php echo $hide_search_on_mobile ? ' mobile-hide-search' : ''; ?>" action="<?php echo SITE_URL; ?>/page/booklist.php" method="GET" style="position: relative;">
+        <form class="search-form<?php echo $hide_search_on_mobile ? ' mobile-hide-search' : ''; ?>" action="<?php echo SITE_URL; ?>/page/booklist.php" method="GET">
             <input type="text" id="search-input" name="search" class="search-input" placeholder="Search books..." value="<?php echo isset($_GET['search']) ? htmlspecialchars($_GET['search']) : ''; ?>" autocomplete="off">
             <button type="submit" class="search-btn"><i class="fas fa-search"></i></button>
             <!-- Search Suggestions Dropdown -->
@@ -119,7 +110,7 @@ $navbar_page_class = ($is_book_view_page ? ' is-book-view' : '') . ($is_home_pag
 
             <?php if (is_logged_in()): ?>
                 <?php if (is_admin_panel_access()): ?>
-                <li><a href="<?php echo SITE_URL; ?>/admin/index.php" style="color: var(--accent, #eab308);">
+                <li><a href="<?php echo SITE_URL; ?>/admin/index.php" class="admin-link">
                     <i class="fas fa-shield-alt"></i> Admin
                 </a></li>
                 <?php endif; ?>
@@ -342,3 +333,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <!-- Navbar JS for mobile menu toggle -->
 <script src="<?php echo SITE_URL; ?>/includes/js/navbar.js"></script>
+
+<?php if ($current_page === 'index.php'): ?>
+<script src="<?php echo SITE_URL; ?>/includes/js/slider.js"></script>
+<?php endif; ?>

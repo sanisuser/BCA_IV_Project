@@ -89,6 +89,10 @@ file_put_contents($temp_file, $email_text);
 $mail_sent = false;
 $mail_error = '';
 
+if (trim((string)SMTP_USERNAME) === '' || trim((string)SMTP_PASSWORD) === '') {
+    redirect(SITE_URL . '/auth/forgot_password.php?error=' . urlencode('Email system is not configured. Please contact admin or configure SMTP settings.'));
+}
+
 try {
     $mail = new PHPMailer(true);
     
@@ -122,6 +126,10 @@ try {
     $mail_sent = false;
     $mail_error = $mail->ErrorInfo;
     error_log("PHPMailer Error: " . $mail_error);
+}
+
+if (!$mail_sent) {
+    redirect(SITE_URL . '/auth/forgot_password.php?error=' . urlencode('Failed to send reset email. Please try again later.'));
 }
 
 // Show success message without reset link

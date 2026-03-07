@@ -62,6 +62,12 @@
     position: relative;
 }
 
+@media (max-width: 768px) {
+    .search-form.mobile-hide-search {
+        display: none !important;
+    }
+}
+
 .search-input {
     flex: 1;
     padding: 12px 20px;
@@ -179,6 +185,10 @@
 
 .nav-links a:hover {
     background-color: rgba(255,255,255,0.1);
+}
+
+.nav-links a.admin-link {
+    color: var(--accent, #eab308);
 }
 
 /* Login Nav Link - Match Books/Home style */
