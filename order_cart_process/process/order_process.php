@@ -60,6 +60,17 @@ if ($selected_address === 'custom') {
     }
 }
 
+// If user entered a shipping address (custom / direct entry), save it to profile for future
+// (Don't overwrite when using the existing profile address)
+if ($selected_address !== 'profile' && $ship_address !== '') {
+    $upd = $conn->prepare('UPDATE users SET ship_address = ? WHERE user_id = ?');
+    if ($upd) {
+        $upd->bind_param('si', $ship_address, $user_id);
+        $upd->execute();
+        $upd->close();
+    }
+}
+
 if ($payment_method === '') {
     redirect(SITE_URL . '/order_cart_process/checkout.php?error=' . urlencode('Please select a payment method'));
 }
