@@ -197,20 +197,20 @@ if ($action === 'list') {
     if ($q !== '') {
         if ($search_column === 'all') {
             $like = '%' . $q . '%';
-            $stmt = $conn->prepare("SELECT book_id, title, author, genre, price, stock, cover_image, published_year, condition_status, created_at FROM books WHERE title LIKE ? OR author LIKE ? OR genre LIKE ? ORDER BY $sort $order LIMIT ? OFFSET ?");
+            $stmt = $conn->prepare("SELECT book_id, title, author, genre, price, stock, cover_image, published_year, COALESCE(condition_status, 'new') AS condition_status, created_at FROM books WHERE title LIKE ? OR author LIKE ? OR genre LIKE ? ORDER BY $sort $order LIMIT ? OFFSET ?");
             $stmt->bind_param('sssii', $like, $like, $like, $per_page, $offset);
         } elseif ($search_column === 'price') {
-            $stmt = $conn->prepare("SELECT book_id, title, author, genre, price, stock, cover_image, published_year, condition_status, created_at FROM books WHERE price = ? ORDER BY $sort $order LIMIT ? OFFSET ?");
+            $stmt = $conn->prepare("SELECT book_id, title, author, genre, price, stock, cover_image, published_year, COALESCE(condition_status, 'new') AS condition_status, created_at FROM books WHERE price = ? ORDER BY $sort $order LIMIT ? OFFSET ?");
             $stmt->bind_param('dii', (float)$q, $per_page, $offset);
         } elseif ($search_column === 'stock') {
-            $stmt = $conn->prepare("SELECT book_id, title, author, genre, price, stock, cover_image, published_year, condition_status, created_at FROM books WHERE stock = ? ORDER BY $sort $order LIMIT ? OFFSET ?");
+            $stmt = $conn->prepare("SELECT book_id, title, author, genre, price, stock, cover_image, published_year, COALESCE(condition_status, 'new') AS condition_status, created_at FROM books WHERE stock = ? ORDER BY $sort $order LIMIT ? OFFSET ?");
             $stmt->bind_param('iii', (int)$q, $per_page, $offset);
         } elseif ($search_column === 'published_year') {
-            $stmt = $conn->prepare("SELECT book_id, title, author, genre, price, stock, cover_image, published_year, condition_status, created_at FROM books WHERE published_year = ? ORDER BY $sort $order LIMIT ? OFFSET ?");
+            $stmt = $conn->prepare("SELECT book_id, title, author, genre, price, stock, cover_image, published_year, COALESCE(condition_status, 'new') AS condition_status, created_at FROM books WHERE published_year = ? ORDER BY $sort $order LIMIT ? OFFSET ?");
             $stmt->bind_param('iii', (int)$q, $per_page, $offset);
         } else {
             $like = '%' . $q . '%';
-            $stmt = $conn->prepare("SELECT book_id, title, author, genre, price, stock, cover_image, published_year, condition_status, created_at FROM books WHERE $search_column LIKE ? ORDER BY $sort $order LIMIT ? OFFSET ?");
+            $stmt = $conn->prepare("SELECT book_id, title, author, genre, price, stock, cover_image, published_year, COALESCE(condition_status, 'new') AS condition_status, created_at FROM books WHERE $search_column LIKE ? ORDER BY $sort $order LIMIT ? OFFSET ?");
             $stmt->bind_param('sii', $like, $per_page, $offset);
         }
         $stmt->execute();
@@ -218,7 +218,7 @@ if ($action === 'list') {
         while ($row = $res->fetch_assoc()) { $books[] = $row; }
         $stmt->close();
     } else {
-        $stmt = $conn->prepare("SELECT book_id, title, author, genre, price, stock, cover_image, published_year, condition_status, created_at FROM books ORDER BY $sort $order LIMIT ? OFFSET ?");
+        $stmt = $conn->prepare("SELECT book_id, title, author, genre, price, stock, cover_image, published_year, COALESCE(condition_status, 'new') AS condition_status, created_at FROM books ORDER BY $sort $order LIMIT ? OFFSET ?");
         $stmt->bind_param('ii', $per_page, $offset);
         $stmt->execute();
         $res = $stmt->get_result();
@@ -441,8 +441,8 @@ $active_page = 'books';
                         <div class="form-group">
                             <label>Condition</label>
                             <select name="condition_status">
-                                <option value="new" <?php echo (($book['condition_status'] ?? '') === 'new') ? 'selected' : ''; ?>>New</option>
-                                <option value="used" <?php echo (($book['condition_status'] ?? '') === 'used') ? 'selected' : ''; ?>>Used</option>
+                                <option value="new" <?php echo (($book['condition_status'] ?? 'new') === 'new') ? 'selected' : ''; ?>>New</option>
+                                <option value="used" <?php echo (($book['condition_status'] ?? 'new') === 'used') ? 'selected' : ''; ?>>Used</option>
                                 
                             </select>
                         </div>

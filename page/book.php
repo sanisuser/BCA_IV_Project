@@ -276,6 +276,12 @@ if (isset($_GET['review_success']) && $_GET['review_success'] == '1') {
                         </td>
                     </tr>
                     <tr>
+                        <td class="label">ISBN</td>
+                        <td class="value">
+                            <?php echo !empty($book['isbn']) ? htmlspecialchars($book['isbn']) : htmlspecialchars('N/A'); ?>
+                        </td>
+                    </tr>
+                    <tr>
                         <td class="label">Condition</td>
                         <td class="value"><?php echo ucfirst($book['condition_status'] ?? 'new'); ?></td>
                     </tr>

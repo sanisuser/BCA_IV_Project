@@ -11,6 +11,28 @@ if (!is_admin()) {
 
 require_once __DIR__ . '/../includes/db.php';
 
+// Ensure books table has condition_status column
+$has_condition_status = false;
+if ($res = $conn->query("SELECT 1 FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'books' AND COLUMN_NAME = 'condition_status' LIMIT 1")) {
+    $has_condition_status = $res->num_rows > 0;
+    $res->free();
+}
+if (!$has_condition_status) {
+    try {
+        $conn->query("ALTER TABLE books ADD COLUMN condition_status ENUM('new','used') DEFAULT 'new'");
+        $conn->query("ALTER TABLE books ADD INDEX idx_condition_status (condition_status)");
+    } catch (mysqli_sql_exception $e) {
+        error_log('Failed to add condition_status column: ' . $e->getMessage());
+    }
+}
+
+// Normalize any existing rows that have NULL/empty condition_status
+try {
+    $conn->query("UPDATE books SET condition_status = 'new' WHERE condition_status IS NULL OR condition_status = ''");
+} catch (mysqli_sql_exception $e) {
+    error_log('Failed to normalize condition_status: ' . $e->getMessage());
+}
+
 $success = '';
 $error = '';
 
@@ -20,18 +42,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_book'])) {
     $isbn = clean_input($_POST['isbn'] ?? '');
     $description = clean_input($_POST['description'] ?? '');
     $genre = clean_input($_POST['genre'] ?? '');
-    $price = (float)($_POST['price'] ?? 0);
-    $stock = (int)($_POST['stock'] ?? 0);
+    $price_raw = trim((string)($_POST['price'] ?? ''));
+    $stock_raw = trim((string)($_POST['stock'] ?? ''));
+    $price = (float)$price_raw;
+    $stock = (int)$stock_raw;
     $published_year = (int)($_POST['published_year'] ?? 0);
-    $condition_status = clean_input($_POST['condition_status'] ?? 'new');
+    $condition_status = clean_input($_POST['condition_status'] ?? '');
 
     if ($title === '' || $author === '') {
         $error = 'Title and author are required.';
     }
 
+    if ($error === '' && $genre === '') {
+        $error = 'Genre is required.';
+    }
+
+    if ($error === '' && $price_raw === '') {
+        $error = 'Price is required.';
+    }
+
+    if ($error === '' && $stock_raw === '') {
+        $error = 'Stock is required.';
+    }
+
+    if ($error === '' && $description === '') {
+        $error = 'Description is required.';
+    }
+
+    // Prevent duplicate books
+    if ($error === '') {
+        $stmt = $conn->prepare('SELECT book_id FROM books WHERE LOWER(title) = LOWER(?) AND LOWER(author) = LOWER(?) LIMIT 1');
+        if ($stmt) {
+            $stmt->bind_param('ss', $title, $author);
+            $stmt->execute();
+            $res = $stmt->get_result();
+            if ($res && $res->num_rows > 0) {
+                $error = 'The book is already exists. If you wanna restock book please proceed from restock.';
+            }
+            $stmt->close();
+        }
+    }
+
     $allowed = ['new', 'used'];
-    if (!in_array($condition_status, $allowed, true)) {
-        $condition_status = 'new';
+    if ($error === '' && !in_array($condition_status, $allowed, true)) {
+        $error = 'Condition is required.';
     }
 
     $cover_image = '';
@@ -108,6 +162,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_book'])) {
 
 $page_title = 'Add Book';
 $active_page = 'books';
+
+$page_error = $error;
+$error = '';
 ?>
 <?php require_once __DIR__ . '/partials/header.php'; ?>
             <div class="admin-header">
@@ -118,8 +175,8 @@ $active_page = 'books';
             <?php if (!empty($success)): ?>
                 <div style="background: #d4edda; color: #155724; padding: 0.75rem; border-radius: 4px; margin-bottom: 1rem;"><?php echo htmlspecialchars($success); ?></div>
             <?php endif; ?>
-            <?php if (!empty($error)): ?>
-                <div style="background: #f8d7da; color: #721c24; padding: 0.75rem; border-radius: 4px; margin-bottom: 1rem;"><?php echo htmlspecialchars($error); ?></div>
+            <?php if (!empty($page_error)): ?>
+                <div style="background: #f8d7da; color: #721c24; padding: 0.75rem; border-radius: 4px; margin-bottom: 1rem;"><?php echo htmlspecialchars($page_error); ?></div>
             <?php endif; ?>
 
             <div class="edit-form">
@@ -140,18 +197,18 @@ $active_page = 'books';
                     </div>
 
                     <div class="form-group">
-                        <label>Genre</label>
-                        <input type="text" name="genre" value="<?php echo htmlspecialchars($_POST['genre'] ?? ''); ?>" />
+                        <label>Genre *</label>
+                        <input type="text" name="genre" value="<?php echo htmlspecialchars($_POST['genre'] ?? ''); ?>" required />
                     </div>
 
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                         <div class="form-group">
-                            <label>Price (Rs)</label>
-                            <input type="number" name="price" step="0.01" value="<?php echo htmlspecialchars($_POST['price'] ?? '0.00'); ?>" />
+                            <label>Price (Rs) *</label>
+                            <input type="number" name="price" step="0.01" min="0" value="<?php echo htmlspecialchars($_POST['price'] ?? ''); ?>" required />
                         </div>
                         <div class="form-group">
-                            <label>Stock</label>
-                            <input type="number" name="stock" value="<?php echo htmlspecialchars($_POST['stock'] ?? '0'); ?>" />
+                            <label>Stock *</label>
+                            <input type="number" name="stock" min="0" value="<?php echo htmlspecialchars($_POST['stock'] ?? ''); ?>" required />
                         </div>
                     </div>
 
@@ -175,17 +232,18 @@ $active_page = 'books';
                     </div>
 
                     <div class="form-group">
-                        <label>Condition</label>
-                        <select name="condition_status">
-                            <?php $cs = $condition_status ?? 'new'; ?>
+                        <label>Condition *</label>
+                        <select name="condition_status" required>
+                            <?php $cs = $condition_status ?? ''; ?>
+                            <option value="" <?php echo $cs === '' ? 'selected' : ''; ?>>Select condition</option>
                             <option value="new" <?php echo $cs === 'new' ? 'selected' : ''; ?>>New</option>
                             <option value="used" <?php echo $cs === 'used' ? 'selected' : ''; ?>>Used</option>
                         </select>
                     </div>
 
                     <div class="form-group">
-                        <label>Description</label>
-                        <textarea name="description"><?php echo htmlspecialchars($_POST['description'] ?? ''); ?></textarea>
+                        <label>Description *</label>
+                        <textarea name="description" required><?php echo htmlspecialchars($_POST['description'] ?? ''); ?></textarea>
                     </div>
 
                     <div style="display: flex; gap: 0.5rem;">

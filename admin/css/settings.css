@@ -4,9 +4,11 @@
  * Styles for Admin Settings page
  */
 
-.settings-container {
-    max-width: 800px;
-    margin: 2rem auto;
+.settings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
 }
 
 .settings-card {
