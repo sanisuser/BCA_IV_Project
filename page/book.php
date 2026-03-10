@@ -364,7 +364,7 @@ if (isset($_GET['review_success']) && $_GET['review_success'] == '1') {
                         <div class="review-header">
                             <div class="reviewer-info">
                                 <?php if (!empty($review['profile_image'])): ?>
-                                    <img src="<?php echo SITE_URL . '/' . htmlspecialchars($review['profile_image']); ?>" alt="" class="reviewer-avatar">
+                                    <img src="<?php echo SITE_URL . '/' . htmlspecialchars($review['profile_image']); ?>" alt="" class="reviewer-avatar" loading="lazy">
                                 <?php else: ?>
                                     <div class="reviewer-avatar-placeholder"><i class="fas fa-user"></i></div>
                                 <?php endif; ?>
@@ -407,7 +407,7 @@ if (isset($_GET['review_success']) && $_GET['review_success'] == '1') {
                 ?>
                 <div class="book-card">
                     <div class="book-cover">
-                        <img src="<?php echo $cover; ?>" alt="<?php echo $title; ?>" onerror="this.src='<?php echo SITE_URL; ?>/assets/images/default-book.png'">
+                        <img src="<?php echo $cover; ?>" alt="<?php echo $title; ?>" loading="lazy" onerror="this.src='<?php echo SITE_URL; ?>/assets/images/default-book.png'">
                         <div class="book-overlay">
                             <a href="<?php echo SITE_URL; ?>/page/book.php?id=<?php echo $id; ?>" class="btn-quick">View</a>
                         </div>

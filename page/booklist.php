@@ -314,7 +314,8 @@ $conditions = ['new', 'used'];
                     <a href="<?php echo SITE_URL; ?>/page/book.php?id=<?php echo $book['book_id']; ?>">
                         <img src="<?php echo SITE_URL . '/' . get_book_cover($book['cover_image']); ?>" 
                              alt="<?php echo htmlspecialchars($book['title']); ?>" 
-                             class="book-card-image">
+                             class="book-card-image"
+                             loading="lazy">
                     </a>
                     <?php if (is_logged_in()): ?>
                         <?php

@@ -250,7 +250,8 @@ require_once __DIR__ . '/../includes/header_navbar.php';
                     <img id="profileImage"
                          src="<?php echo htmlspecialchars($profile_image_url); ?>"
                          alt="Profile Picture"
-                         class="profile-image">
+                         class="profile-image"
+                         loading="lazy">
                     <?php else: ?>
                     <div id="profileImage" class="profile-image-placeholder" style="width: 120px; height: 120px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 3rem;">
                         <i class="fa-solid fa-user"></i>

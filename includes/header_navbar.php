@@ -64,7 +64,7 @@ $navbar_page_class = ($is_book_view_page ? ' is-book-view' : '') . ($is_home_pag
     <title><?php echo isset($page_title) ? $page_title . ' - ' . SITE_NAME : SITE_NAME; ?></title>
     
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="<?php echo SITE_URL; ?>/assets/logo.png">
+    <link rel="icon" type="image/png" href="<?php echo SITE_URL; ?>/assets/logo.jpeg">
     
     <!-- Main stylesheet -->
     <link rel="stylesheet" href="<?php echo SITE_URL; ?>/includes/css/header.css">
@@ -89,7 +89,7 @@ $navbar_page_class = ($is_book_view_page ? ' is-book-view' : '') . ($is_home_pag
     <div class="container nav-container">
         <!-- Logo -->
         <a href="<?php echo SITE_URL; ?>/index.php" class="logo">
-            <img src="<?php echo SITE_URL; ?>/assets/logo.png" alt="<?php echo SITE_NAME; ?> Logo" class="logo-img">
+            <img src="<?php echo SITE_URL; ?>/assets/logo.jpeg" alt="<?php echo SITE_NAME; ?> Logo" class="logo-img">
             <?php echo SITE_NAME; ?>
         </a>
         

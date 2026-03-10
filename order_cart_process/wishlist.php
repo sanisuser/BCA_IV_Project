@@ -41,7 +41,7 @@ $stmt->close();
             <?php foreach ($items as $item): ?>
                 <div class="wishlist-card">
                     <div class="wishlist-cover">
-                        <img src="<?php echo SITE_URL . '/' . get_book_cover($item['cover_image']); ?>" alt="<?php echo htmlspecialchars($item['title']); ?>">
+                        <img src="<?php echo SITE_URL . '/' . get_book_cover($item['cover_image']); ?>" alt="<?php echo htmlspecialchars($item['title']); ?>" loading="lazy">
                         
                         <?php if (($item['stock'] ?? 0) <= 0): ?>
                             <span class="stock-badge out-of-stock">Out of Stock</span>

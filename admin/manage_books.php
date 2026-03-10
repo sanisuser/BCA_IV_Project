@@ -326,6 +326,7 @@ $active_page = 'books';
                                             src="<?php echo SITE_URL . '/' . htmlspecialchars(ltrim($b['cover_image'], '/')); ?>"
                                             alt="Cover"
                                             style="width: 42px; height: 60px; object-fit: cover; border-radius: 6px; border: 1px solid #e9ecef;"
+                                            loading="lazy"
                                         />
                                     <?php else: ?>
                                         <i class="fas fa-times" style="color: #dc3545;"></i>

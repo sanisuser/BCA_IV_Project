@@ -163,7 +163,7 @@ function getPaymentIcon($method) {
                         <?php foreach ($items as $it): ?>
                             <div class="order-item">
                                 <div class="item-image">
-                                    <img src="<?php echo SITE_URL . '/' . get_book_cover($it['cover_image']); ?>" alt="<?php echo htmlspecialchars($it['title']); ?>">
+                                    <img src="<?php echo SITE_URL . '/' . get_book_cover($it['cover_image']); ?>" alt="<?php echo htmlspecialchars($it['title']); ?>" loading="lazy">
                                 </div>
                                 <div class="item-details">
                                     <div class="item-title"><?php echo htmlspecialchars($it['title']); ?></div>

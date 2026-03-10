@@ -414,7 +414,7 @@ $active_page = 'users';
                         if (!empty($user['profile_image'])) {
                             $profile_src = SITE_URL . '/' . ltrim((string)$user['profile_image'], '/');
                         } else {
-                            $profile_src = SITE_URL . '/assets/logo.png';
+                            $profile_src = SITE_URL . '/assets/logo.jpeg';
                         }
 
                         $user_orders = [];

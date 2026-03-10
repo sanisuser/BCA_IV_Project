@@ -420,6 +420,7 @@ $stmt->close();
                                                     <img src="<?php echo SITE_URL . '/' . ($item['cover_image'] ?? 'assets/images/default-book.png'); ?>" 
                                                          alt="<?php echo htmlspecialchars($item['title']); ?>" 
                                                          style="width: 40px; height: 56px; object-fit: cover; border-radius: 4px; margin-right: 1rem;"
+                                                         loading="lazy"
                                                          onerror="this.src='<?php echo SITE_URL; ?>/assets/images/default-book.png'">
                                                     <div style="flex: 1;">
                                                         <div style="font-weight: 600; color: #2c3e50;"><?php echo htmlspecialchars($item['title']); ?></div>

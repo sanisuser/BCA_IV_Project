@@ -237,7 +237,7 @@ if ($result) {
 
             <div class="book-cover">
 
-                <img src="<?php echo !empty($book['cover_image']) ? htmlspecialchars($book['cover_image']) : SITE_URL . '/assets/images/default-book.png'; ?>" alt="<?php echo htmlspecialchars($book['title']); ?>">
+                <img src="<?php echo !empty($book['cover_image']) ? htmlspecialchars($book['cover_image']) : SITE_URL . '/assets/images/default-book.png'; ?>" alt="<?php echo htmlspecialchars($book['title']); ?>" loading="lazy">
 
                 <div class="book-overlay">
 
@@ -287,7 +287,7 @@ if ($result) {
 
             <div class="book-cover">
 
-                <img src="<?php echo !empty($book['cover_image']) ? htmlspecialchars($book['cover_image']) : SITE_URL . '/assets/images/default-book.png'; ?>" alt="<?php echo htmlspecialchars($book['title']); ?>">
+                <img src="<?php echo !empty($book['cover_image']) ? htmlspecialchars($book['cover_image']) : SITE_URL . '/assets/images/default-book.png'; ?>" alt="<?php echo htmlspecialchars($book['title']); ?>" loading="lazy">
 
                 <div class="book-overlay">
 
@@ -347,7 +347,7 @@ if ($result) {
 
             <div class="book-cover">
 
-                <img src="<?php echo !empty($book['cover_image']) ? htmlspecialchars($book['cover_image']) : SITE_URL . '/assets/images/default-book.png'; ?>" alt="<?php echo htmlspecialchars($book['title']); ?>">
+                <img src="<?php echo !empty($book['cover_image']) ? htmlspecialchars($book['cover_image']) : SITE_URL . '/assets/images/default-book.png'; ?>" alt="<?php echo htmlspecialchars($book['title']); ?>" loading="lazy">
 
                 <div class="book-overlay">
 

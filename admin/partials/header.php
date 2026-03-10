@@ -36,7 +36,7 @@ if (is_logged_in()) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?php echo $page_title; ?> - <?php echo SITE_NAME; ?></title>
-    <link rel="icon" type="image/png" href="<?php echo SITE_URL; ?>/assets/logo.png">
+    <link rel="icon" type="image/png" href="<?php echo SITE_URL; ?>/assets/logo.jpeg">
     <!-- Fonts loaded via local CSS -->
     <link rel="stylesheet" href="<?php echo SITE_URL; ?>/includes/css/header.css">
     <link rel="stylesheet" href="<?php echo SITE_URL; ?>/admin/css/admin.css">
@@ -52,7 +52,7 @@ if (is_logged_in()) {
             </button>
             <!-- Logo -->
             <a href="<?php echo SITE_URL; ?>/admin/index.php" class="logo">
-                <img src="<?php echo SITE_URL; ?>/assets/logo.png" alt="<?php echo SITE_NAME; ?> Logo" class="logo-img">
+                <img src="<?php echo SITE_URL; ?>/assets/logo.jpeg" alt="<?php echo SITE_NAME; ?> Logo" class="logo-img">
                 <?php echo SITE_NAME; ?> Admin
             </a>
             

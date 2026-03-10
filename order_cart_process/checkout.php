@@ -146,7 +146,7 @@ if (count($cart_items) === 0) {
                         <?php foreach ($cart_items as $item): ?>
                             <div class="summary-item"> 
                                 <div class="summary-item-image">
-                                    <img src="<?php echo SITE_URL . '/' . get_book_cover($item['cover_image']); ?>" alt="<?php echo htmlspecialchars($item['title']); ?>">
+                                    <img src="<?php echo SITE_URL . '/' . get_book_cover($item['cover_image']); ?>" alt="<?php echo htmlspecialchars($item['title']); ?>" loading="lazy">
                                 </div>
                                 <div class="summary-item-details">
                                     <div class="summary-item-title"><?php echo htmlspecialchars($item['title']); ?></div>

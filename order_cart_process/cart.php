@@ -60,7 +60,8 @@ $stmt->close();
                         <!-- Book Cover -->
                         <div class="item-cover">
                             <img src="<?php echo SITE_URL . '/' . get_book_cover($item['cover_image']); ?>" 
-                                 alt="<?php echo htmlspecialchars($item['title']); ?>">
+                                 alt="<?php echo htmlspecialchars($item['title']); ?>"
+                                 loading="lazy">
                         </div>
                         
                         <!-- Book Info -->
