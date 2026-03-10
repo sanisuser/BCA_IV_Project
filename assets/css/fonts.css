@@ -1,18 +1,3 @@
-/**
- * Typography System - BookHub
- * 
- * Font Families:
- * - Poppins: Headings (h1-h6), display text
- * - Inter: Body text, paragraphs, buttons, forms, navigation
- * 
- * OFFLINE VERSION - All fonts loaded locally
- */
-
-/* ============================================
-   GOOGLE FONTS IMPORT - Must be first
-   ============================================ */
-
-/* Inter: 300, 400, 500, 600, 700 for body text from Google CDN */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 /* ============================================
