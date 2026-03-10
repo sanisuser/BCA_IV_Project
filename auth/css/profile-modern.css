@@ -27,7 +27,7 @@
 }
 
 body {
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: var(--font-body, 'Inter', system-ui, sans-serif);
     background: var(--bg-dark);
     color: var(--text-primary);
     min-height: 100vh;
@@ -61,7 +61,7 @@ body {
 }
 
 .profile-title {
-    font-family: 'Heading Font', 'Inter', sans-serif;
+    font-family: var(--font-heading);
     font-size: 2.25rem;
     font-weight: 700;
     letter-spacing: -0.025em;
@@ -187,7 +187,7 @@ body {
 .profile-upload-btn:hover { background: var(--accent-hover); }
 
 .profile-name {
-    font-family: 'Heading Font', 'Inter', sans-serif;
+    font-family: var(--font-heading, 'Poppins', system-ui, sans-serif);
     font-size: 1.875rem;
     font-weight: 700;
     margin-bottom: 0.25rem;

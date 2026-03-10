@@ -1,64 +1,522 @@
 /**
- * Local Fonts Configuration
- * Inter: 400, 500, 600, 700
- * OFFLINE VERSION - No external dependencies
+ * Typography System - BookHub
+ * 
+ * Font Families:
+ * - Poppins: Headings (h1-h6), display text
+ * - Inter: Body text, paragraphs, buttons, forms, navigation
+ * 
+ * OFFLINE VERSION - All fonts loaded locally
  */
 
-/* Inter Regular (400) */
+/* ============================================
+   LOCAL FONT IMPORTS - POPPINS
+   ============================================ */
+
+/* Poppins Light (300) */
 @font-face {
-  font-family: 'Inter';
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url('../fonts/inter/inter-v13-latin-regular.woff2') format('woff2'),
-       url('../fonts/inter/static/Inter_28pt-Regular.ttf') format('truetype');
+    font-family: 'Poppins';
+    font-style: normal;
+    font-weight: 300;
+    font-display: swap;
+    src: url('../fonts/Poppins-Light.ttf') format('truetype');
 }
 
-/* Inter Medium (500) */
+/* Poppins Regular (400) */
 @font-face {
-  font-family: 'Inter';
-  font-style: normal;
-  font-weight: 500;
-  font-display: swap;
-  src: url('../fonts/inter/inter-v13-latin-500.woff2') format('woff2'),
-       url('../fonts/inter/static/Inter_28pt-Medium.ttf') format('truetype');
+    font-family: 'Poppins';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url('../fonts/Poppins-Regular.ttf') format('truetype');
 }
 
-/* Inter SemiBold (600) */
+/* Poppins Medium (500) */
 @font-face {
-  font-family: 'Inter';
-  font-style: normal;
-  font-weight: 600;
-  font-display: swap;
-  src: url('../fonts/inter/inter-v13-latin-600.woff2') format('woff2'),
-       url('../fonts/inter/static/Inter_28pt-SemiBold.ttf') format('truetype');
+    font-family: 'Poppins';
+    font-style: normal;
+    font-weight: 500;
+    font-display: swap;
+    src: url('../fonts/Poppins-Medium.ttf') format('truetype');
 }
 
-/* Inter Bold (700) */
+/* Poppins SemiBold (600) */
 @font-face {
-  font-family: 'Inter';
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-  src: url('../fonts/inter/inter-v13-latin-700.woff2') format('woff2'),
-       url('../fonts/inter/static/Inter_28pt-Bold.ttf') format('truetype');
+    font-family: 'Poppins';
+    font-style: normal;
+    font-weight: 600;
+    font-display: swap;
+    src: url('../fonts/Poppins-SemiBold.ttf') format('truetype');
 }
 
-/* Variable Font Fallback - includes all weights */
+/* Poppins Bold (700) */
 @font-face {
-  font-family: 'Inter';
-  font-style: normal;
-  font-weight: 100 900;
-  font-display: swap;
-  src: url('../fonts/inter/Inter-VariableFont_opsz,wght.ttf') format('truetype-variations');
+    font-family: 'Poppins';
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url('../fonts/Poppins-Bold.ttf') format('truetype');
 }
 
-/* Heading Font - Using Inter Bold instead of Playfair Display for offline compatibility */
+/* ============================================
+   LOCAL FONT IMPORTS - INTER (Fallback if needed)
+   ============================================ */
+
+/* Inter: 300, 400, 500, 600, 700 for body text - from Google CDN for caching */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* ============================================
+   CSS VARIABLES - FONT FAMILIES
+   ============================================ */
+
+:root {
+    /* Primary Font Families */
+    --font-heading: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Fira Sans', 'Droid Sans', sans-serif;
+    --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Fira Sans', 'Droid Sans', sans-serif;
+    
+    /* Font Weights */
+    --font-light: 300;
+    --font-regular: 400;
+    --font-medium: 500;
+    --font-semibold: 600;
+    --font-bold: 700;
+    
+    /* Font Sizes - Modern Scale */
+    --text-xs: 0.75rem;      /* 12px */
+    --text-sm: 0.875rem;     /* 14px */
+    --text-base: 1rem;       /* 16px */
+    --text-lg: 1.125rem;     /* 18px */
+    --text-xl: 1.25rem;      /* 20px */
+    --text-2xl: 1.5rem;      /* 24px */
+    --text-3xl: 1.875rem;    /* 30px */
+    --text-4xl: 2.25rem;     /* 36px */
+    --text-5xl: 3rem;        /* 48px */
+    
+    /* Line Heights */
+    --leading-tight: 1.25;
+    --leading-snug: 1.375;
+    --leading-normal: 1.5;
+    --leading-relaxed: 1.625;
+    --leading-loose: 2;
+    
+    /* Letter Spacing */
+    --tracking-tight: -0.025em;
+    --tracking-normal: 0;
+    --tracking-wide: 0.025em;
+    --tracking-wider: 0.05em;
+    --tracking-widest: 0.1em;
+}
+
+/* ============================================
+   GLOBAL TYPOGRAPHY
+   ============================================ */
+
+/* Base HTML Setup */
+html {
+    font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+}
+
+/* Body - Inter Font */
+body {
+    font-family: var(--font-body);
+    font-weight: var(--font-regular);
+    font-size: var(--text-base);
+    line-height: var(--leading-normal);
+    color: var(--text-primary, #fafafa);
+    letter-spacing: var(--tracking-normal);
+}
+
+/* ============================================
+   HEADINGS - Poppins Font
+   ============================================ */
+
+h1, h2, h3, h4, h5, h6,
+.h1, .h2, .h3, .h4, .h5, .h6 {
+    font-family: var(--font-heading);
+    font-weight: var(--font-semibold);
+    line-height: var(--leading-tight);
+    letter-spacing: var(--tracking-tight);
+    color: var(--text-primary, #fafafa);
+    margin-bottom: 0.5em;
+}
+
+/* Individual Heading Styles */
+h1, .h1 {
+    font-size: var(--text-4xl);
+    font-weight: var(--font-bold);
+    line-height: var(--leading-tight);
+}
+
+h2, .h2 {
+    font-size: var(--text-3xl);
+    font-weight: var(--font-semibold);
+}
+
+h3, .h3 {
+    font-size: var(--text-2xl);
+    font-weight: var(--font-semibold);
+}
+
+h4, .h4 {
+    font-size: var(--text-xl);
+    font-weight: var(--font-semibold);
+}
+
+h5, .h5 {
+    font-size: var(--text-lg);
+    font-weight: var(--font-medium);
+}
+
+h6, .h6 {
+    font-size: var(--text-base);
+    font-weight: var(--font-medium);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-wider);
+}
+
+/* ============================================
+   BODY TEXT - Inter Font
+   ============================================ */
+
+/* Paragraphs */
+p {
+    font-family: var(--font-body);
+    font-size: var(--text-base);
+    line-height: var(--leading-relaxed);
+    margin-bottom: 1rem;
+}
+
+/* Small Text */
+small, .text-sm {
+    font-size: var(--text-sm);
+    font-weight: var(--font-regular);
+}
+
+/* Extra Small Text */
+.text-xs {
+    font-size: var(--text-xs);
+}
+
+/* Large Text */
+.text-lg {
+    font-size: var(--text-lg);
+}
+
+/* ============================================
+   NAVIGATION - Inter Font
+   ============================================ */
+
+.navbar,
+.nav-links,
+.nav-links a,
+.navigation,
+.nav-container a,
+.nav-menu,
+.nav-item,
+.nav-link {
+    font-family: var(--font-body);
+    font-weight: var(--font-medium);
+    font-size: var(--text-sm);
+}
+
+/* Logo/Brand - Poppins */
+.logo,
+.brand,
+.site-name {
+    font-family: var(--font-heading);
+    font-weight: var(--font-semibold);
+}
+
+/* ============================================
+   BUTTONS - Inter Font
+   ============================================ */
+
+.btn,
+button,
+input[type="button"],
+input[type="submit"],
+input[type="reset"],
+.button {
+    font-family: var(--font-body);
+    font-weight: var(--font-medium);
+    font-size: var(--text-sm);
+    letter-spacing: var(--tracking-wide);
+    text-transform: none;
+}
+
+/* ============================================
+   FORMS - Inter Font
+   ============================================ */
+
+input,
+textarea,
+select,
+.form-input,
+.form-textarea,
+.form-select,
+.form-label,
+label {
+    font-family: var(--font-body);
+    font-size: var(--text-base);
+}
+
+.form-label,
+label {
+    font-weight: var(--font-medium);
+    font-size: var(--text-sm);
+}
+
+input::placeholder,
+textarea::placeholder {
+    font-family: var(--font-body);
+    font-weight: var(--font-regular);
+}
+
+/* ============================================
+   CARDS & COMPONENTS - Inter Font
+   ============================================ */
+
+.card,
+.card-title,
+.card-content,
+.book-card,
+.book-title,
+.book-author,
+.book-price,
+.wishlist-card,
+.wishlist-title,
+.order-card,
+.order-id {
+    font-family: var(--font-body);
+}
+
+/* Card Headings - Poppins */
+.card-title,
+.section-title,
+.page-title,
+.book-title,
+.wishlist-title,
+.order-title {
+    font-family: var(--font-heading);
+    font-weight: var(--font-semibold);
+}
+
+/* ============================================
+   TABLES - Inter Font
+   ============================================ */
+
+table,
+.table,
+th,
+td,
+tr,
+.table th,
+.table td {
+    font-family: var(--font-body);
+}
+
+.table th,
+.table-header {
+    font-weight: var(--font-semibold);
+    font-size: var(--text-xs);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-wider);
+}
+
+/* ============================================
+   FOOTER - Inter Font
+   ============================================ */
+
+footer,
+.footer,
+.footer-content,
+.footer-links,
+.footer-text,
+.copyright {
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+}
+
+/* Footer Headings - Poppins */
+.footer h3,
+.footer h4,
+.footer-title,
+.footer-heading {
+    font-family: var(--font-heading);
+    font-weight: var(--font-semibold);
+}
+
+/* ============================================
+   ADMIN PANEL - Inter Font
+   ============================================ */
+
+.admin-panel,
+.admin-sidebar,
+.admin-content,
+.admin-header,
+.admin-nav,
+.admin-table,
+.dashboard,
+.dashboard-card {
+    font-family: var(--font-body);
+}
+
+/* Admin Headings - Poppins */
+.admin-panel h1,
+.admin-panel h2,
+.admin-panel h3,
+.admin-header h1,
+.dashboard-title,
+.dashboard-card h3 {
+    font-family: var(--font-heading);
+}
+
+/* ============================================
+   SPECIAL ELEMENTS
+   ============================================ */
+
+/* Price/Numbers - Inter (tabular for alignment) */
+.price,
+.book-price,
+.order-price,
+.total-amount,
+.format-price {
+    font-family: var(--font-body);
+    font-weight: var(--font-semibold);
+    font-variant-numeric: tabular-nums;
+}
+
+/* Badges - Inter */
+.badge,
+.status-badge,
+.stock-badge {
+    font-family: var(--font-body);
+    font-weight: var(--font-medium);
+    font-size: var(--text-xs);
+    letter-spacing: var(--tracking-wide);
+}
+
+/* Alerts - Inter */
+.alert,
+.alert-message {
+    font-family: var(--font-body);
+}
+
+/* Breadcrumbs - Inter */
+.breadcrumb,
+.breadcrumb-nav,
+.breadcrumb a {
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+}
+
+/* Search - Inter */
+.search-input,
+.search-btn,
+.search-form {
+    font-family: var(--font-body);
+}
+
+/* ============================================
+   RESPONSIVE TYPOGRAPHY
+   ============================================ */
+
+@media (max-width: 768px) {
+    html {
+        font-size: 15px;
+    }
+    
+    h1, .h1 {
+        font-size: var(--text-3xl);
+    }
+    
+    h2, .h2 {
+        font-size: var(--text-2xl);
+    }
+    
+    h3, .h3 {
+        font-size: var(--text-xl);
+    }
+    
+    body {
+        line-height: var(--leading-relaxed);
+    }
+}
+
+@media (max-width: 480px) {
+    html {
+        font-size: 14px;
+    }
+    
+    h1, .h1 {
+        font-size: var(--text-2xl);
+    }
+    
+    h2, .h2 {
+        font-size: var(--text-xl);
+    }
+}
+
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
+
+/* Font Family Utilities */
+.font-heading {
+    font-family: var(--font-heading);
+}
+
+.font-body {
+    font-family: var(--font-body);
+}
+
+/* Font Weight Utilities */
+.font-light { font-weight: var(--font-light); }
+.font-normal { font-weight: var(--font-regular); }
+.font-medium { font-weight: var(--font-medium); }
+.font-semibold { font-weight: var(--font-semibold); }
+.font-bold { font-weight: var(--font-bold); }
+
+/* Text Alignment */
+.text-left { text-align: left; }
+.text-center { text-align: center; }
+.text-right { text-align: right; }
+
+/* ============================================
+   RETAIN LOCAL INTER AS FALLBACK
+   ============================================ */
+
+/* Keep local Inter as backup if CDN fails */
 @font-face {
-  font-family: 'Heading Font';
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-  src: url('../fonts/inter/inter-v13-latin-700.woff2') format('woff2'),
-       url('../fonts/inter/static/Inter_28pt-Bold.ttf') format('truetype');
+    font-family: 'Inter Local';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url('../fonts/inter/inter-v13-latin-regular.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Inter Local';
+    font-style: normal;
+    font-weight: 500;
+    font-display: swap;
+    src: url('../fonts/inter/inter-v13-latin-500.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Inter Local';
+    font-style: normal;
+    font-weight: 600;
+    font-display: swap;
+    src: url('../fonts/inter/inter-v13-latin-600.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Inter Local';
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url('../fonts/inter/inter-v13-latin-700.woff2') format('woff2');
 }

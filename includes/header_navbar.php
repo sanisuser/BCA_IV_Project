@@ -66,6 +66,9 @@ $navbar_page_class = ($is_book_view_page ? ' is-book-view' : '') . ($is_home_pag
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="<?php echo SITE_URL; ?>/assets/logo.jpeg">
     
+    <!-- Typography - Poppins + Inter -->
+    <link rel="stylesheet" href="<?php echo SITE_URL; ?>/assets/css/fonts.css">
+    
     <!-- Main stylesheet -->
     <link rel="stylesheet" href="<?php echo SITE_URL; ?>/includes/css/header.css">
     

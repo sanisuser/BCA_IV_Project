@@ -37,7 +37,9 @@ if (is_logged_in()) {
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?php echo $page_title; ?> - <?php echo SITE_NAME; ?></title>
     <link rel="icon" type="image/png" href="<?php echo SITE_URL; ?>/assets/logo.jpeg">
-    <!-- Fonts loaded via local CSS -->
+    <!-- Typography - Poppins + Inter -->
+    <link rel="stylesheet" href="<?php echo SITE_URL; ?>/assets/css/fonts.css">
+    <!-- Admin Styles -->
     <link rel="stylesheet" href="<?php echo SITE_URL; ?>/includes/css/header.css">
     <link rel="stylesheet" href="<?php echo SITE_URL; ?>/admin/css/admin.css">
     <link rel="stylesheet" href="<?php echo SITE_URL; ?>/assets/fontawesome/css/all.min.css">
