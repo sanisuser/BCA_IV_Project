@@ -9,6 +9,13 @@
  */
 
 /* ============================================
+   GOOGLE FONTS IMPORT - Must be first
+   ============================================ */
+
+/* Inter: 300, 400, 500, 600, 700 for body text from Google CDN */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* ============================================
    LOCAL FONT IMPORTS - POPPINS
    ============================================ */
 
@@ -60,9 +67,6 @@
 /* ============================================
    LOCAL FONT IMPORTS - INTER (Fallback if needed)
    ============================================ */
-
-/* Inter: 300, 400, 500, 600, 700 for body text - from Google CDN for caching */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 /* ============================================
    CSS VARIABLES - FONT FAMILIES
