@@ -364,7 +364,7 @@ if (isset($_GET['review_success']) && $_GET['review_success'] == '1') {
                         <div class="review-header">
                             <div class="reviewer-info">
                                 <?php if (!empty($review['profile_image'])): ?>
-                                    <img src="<?php echo SITE_URL . '/' . htmlspecialchars($review['profile_image']); ?>" alt="" class="reviewer-avatar" loading="lazy">
+                                    <img src="<?php echo SITE_URL . '/' . htmlspecialchars($review['profile_image']); ?>" alt="<?php echo htmlspecialchars($review['full_name'] ?? $review['username']); ?>" class="reviewer-avatar" loading="lazy">
                                 <?php else: ?>
                                     <div class="reviewer-avatar-placeholder"><i class="fas fa-user"></i></div>
                                 <?php endif; ?>

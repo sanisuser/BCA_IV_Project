@@ -561,7 +561,7 @@
         grid-template-columns: 1fr;
         gap: 1rem;
     }
-    
+
     .restock-container {
         padding: 1rem;
     }
@@ -572,68 +572,69 @@
     .restock-container {
         padding: 1rem;
     }
-    
+
     .restock-icon {
         width: 60px;
         height: 60px;
     }
-    
+
     .restock-icon i {
         font-size: 1.5rem;
     }
-    
+
     .restock-title-area h1 {
         font-size: 1.5rem;
     }
-    
+
     .restock-title-area p {
         font-size: 0.9rem;
     }
-    
+
     .restock-card {
         padding: 1.5rem;
     }
-    
+
     .form-actions {
         flex-direction: column;
     }
-    
+
     .btn-update,
     .btn-cancel {
         width: 100%;
     }
-    
+
     .quick-stats {
         grid-template-columns: 1fr;
     }
-    
+
     .stat-card {
         padding: 1rem;
     }
-    
+
     .stat-card i {
         width: 40px;
         height: 40px;
         font-size: 1rem;
     }
-    
+
     .stat-value {
         font-size: 1.25rem;
     }
-    
+
     .quantity-wrapper {
         gap: 0.5rem;
     }
-    
+
     .qty-btn {
         width: 40px;
         height: 40px;
     }
-    
+
     .search-input,
     .quantity-input {
         padding: 0.75rem;
-        font-size: 16px; /* Prevents zoom on iOS */
+        font-size: 16px;
+        /* Prevents zoom on iOS */
     }
 }
 
@@ -641,16 +642,16 @@
     .restock-container {
         padding: 0.75rem;
     }
-    
+
     .restock-card {
         padding: 1rem;
         border-radius: 8px;
     }
-    
+
     .restock-title-area h1 {
         font-size: 1.25rem;
     }
-    
+
     .stock-indicator {
         flex-direction: column;
         align-items: flex-start;

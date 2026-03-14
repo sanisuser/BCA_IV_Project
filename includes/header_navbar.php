@@ -236,7 +236,7 @@ $navbar_page_class = ($is_book_view_page ? ' is-book-view' : '') . ($is_home_pag
                         } else {
                             containerEl.innerHTML = data.map((book, index) => `
                                 <a href="<?php echo SITE_URL; ?>/page/book.php?id=${book.id}" class="search-suggestion-item" data-index="${index}">
-                                    <img src="${book.cover}" alt="${book.title}" class="search-suggestion-cover" onerror="this.src='<?php echo SITE_URL; ?>/assets/images/default-book.png'">
+                                    <img src="${book.cover}" alt="${book.title}" class="search-suggestion-cover" loading="lazy" onerror="this.src='<?php echo SITE_URL; ?>/assets/images/default-book.png'">
                                     <div class="search-suggestion-info">
                                         <div class="search-suggestion-title">${book.title}</div>
                                         <div class="search-suggestion-author">by ${book.author || 'Unknown'}</div>
