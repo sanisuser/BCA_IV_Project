@@ -288,8 +288,7 @@ $active_page = 'books';
                 
                 <!-- Re-stock button -->
                 <a href="<?php echo SITE_URL; ?>/admin/restock.php" 
-                class="btn btn-primary">
-                    <i class="fa-solid fa-boxes-stacked"></i> Re-stock
+                class="btn btn-primary"> Re-stock
                 </a>
             </div>
 
