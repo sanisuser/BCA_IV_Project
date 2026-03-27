@@ -98,7 +98,7 @@ $navbar_page_class = ($is_book_view_page ? ' is-book-view' : '') . ($is_home_pag
         
         <?php if (!$hide_search_bar): ?>
         <!-- Search Bar -->
-        <form class="search-form<?php echo $hide_search_on_mobile ? ' mobile-hide-search' : ''; ?>" action="<?php echo SITE_URL; ?>/page/booklist.php" method="GET">
+        <form class="search-form<?php echo $hide_search_on_mobile ? ' mobile-hide-search' : ''; ?>" id="mobile-search-form" action="<?php echo SITE_URL; ?>/page/booklist.php" method="GET">
             <input type="text" id="search-input" name="search" class="search-input" placeholder="Search books..." value="<?php echo isset($_GET['search']) ? htmlspecialchars($_GET['search']) : ''; ?>" autocomplete="off">
             <button type="submit" class="search-btn"><i class="fas fa-search"></i></button>
             <!-- Search Suggestions Dropdown -->
