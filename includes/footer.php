@@ -12,7 +12,6 @@
 
 <!-- Footer CSS -->
 <link rel="stylesheet" href="<?php echo SITE_URL; ?>/includes/css/footer.css">
-
 </main>
 
 <!-- Footer -->
@@ -29,8 +28,17 @@
                 <ul>
                     <li><a href="<?php echo SITE_URL; ?>/index.php">Home</a></li>
                     <li><a href="<?php echo SITE_URL; ?>/page/booklist.php">Browse Books</a></li>
-                    <li><a href="<?php echo SITE_URL; ?>/order_cart_process/cart.php">Cart</a></li>
-                    <li><a href="<?php echo SITE_URL; ?>/order_cart_process/wishlist.php">Wishlist</a></li>
+                    
+                    <?php if (is_logged_in()): ?>
+                        <!-- Show Cart & Wishlist only if logged in -->
+                        <li><a href="<?php echo SITE_URL; ?>/order_cart_process/cart.php">Cart</a></li>
+                        <li><a href="<?php echo SITE_URL; ?>/order_cart_process/wishlist.php">Wishlist</a></li>
+                    <?php else: ?>
+                        <!-- Show Login/Register for guests -->
+                        <li><a href="<?php echo SITE_URL; ?>/auth/login.php">Cart</a></li>
+                        <li><a href="<?php echo SITE_URL; ?>/auth/login.php">Wishlist</a></li>
+                    <?php endif; ?>
+
                 </ul>
             </div>
 
