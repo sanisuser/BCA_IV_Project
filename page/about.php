@@ -55,8 +55,8 @@ require_once __DIR__ . '/../includes/header_navbar.php';
             <p>Have questions? We'd love to hear from you. Reach out to us at:</p>
             <ul class="contact-list">
                 <li><i class="fas fa-envelope"></i> Email: support@<?php echo strtolower(str_replace(' ', '', SITE_NAME)); ?>.com</li>
-                <li><i class="fas fa-phone"></i> Phone: +1 (555) 123-4567</li>
-                <li><i class="fas fa-map-marker-alt"></i> Address: 123 Book Street, Reading City, RC 12345</li>
+                <li><i class="fas fa-phone"></i> Phone: +977 9812345678</li>
+                <li><i class="fas fa-map-marker-alt"></i> Address: 123test street, test city, test state, test country</li>
             </ul>
         </section>
     </div>

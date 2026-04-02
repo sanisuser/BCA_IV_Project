@@ -27,17 +27,17 @@ $success = isset($_GET['success']) ? $_GET['success'] : '';
 
 <div class="forgot-page">
     <div class="forgot-card">
-        
+
         <!-- Back Link -->
         <a href="login.php" class="back-link">
             <i class="fas fa-arrow-left"></i> Back to Login
         </a>
-        
+
         <!-- Icon -->
         <div class="forgot-icon">
             <i class="fas fa-lock-open"></i>
         </div>
-        
+
         <!-- Header -->
         <div class="forgot-header">
             <h1 class="forgot-title">Forgot Password?</h1>
@@ -66,11 +66,11 @@ $success = isset($_GET['success']) ? $_GET['success'] : '';
                 <label class="input-label" for="email">Email Address</label>
                 <div class="input-wrapper">
                     <i class="fas fa-envelope input-icon"></i>
-                    <input type="email" 
-                           id="email" 
-                           name="email" 
+                    <input type="email"
+                           id="email"
+                           name="email"
                            class="input-field"
-                           placeholder="Enter your registered email" 
+                           placeholder="Enter your registered email"
                            required
                            value="<?php echo isset($_GET['email']) ? htmlspecialchars($_GET['email']) : ''; ?>">
                 </div>
@@ -100,11 +100,11 @@ $success = isset($_GET['success']) ? $_GET['success'] : '';
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.querySelector('.forgot-form');
     const loader = document.getElementById('loader');
-    
+
     form.addEventListener('submit', function(e) {
         // Show loader
         loader.classList.add('active');
-        
+
         // Disable submit button
         const btn = form.querySelector('.submit-btn');
         btn.disabled = true;
@@ -113,4 +113,3 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
-

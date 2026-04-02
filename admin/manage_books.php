@@ -473,6 +473,5 @@ $active_page = 'books';
                 </script>
             <?php endif; ?>
 
-
 </body>
 </html>

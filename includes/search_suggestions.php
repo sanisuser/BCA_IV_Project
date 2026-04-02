@@ -21,8 +21,8 @@ $stmt = $conn->prepare('
     SELECT book_id, title, author, cover_image
     FROM books
     WHERE title LIKE ?
-    ORDER BY 
-        CASE 
+    ORDER BY
+        CASE
             WHEN title LIKE ? THEN 1
             ELSE 2
         END,
@@ -44,8 +44,6 @@ while ($row = $result->fetch_assoc()) {
         'cover' => $row['cover_image'] ? '../' . $row['cover_image'] : '../assets/images/default-book.png'
     ];
 }
-
 $stmt->close();
-
 echo json_encode($books);
 ?>
