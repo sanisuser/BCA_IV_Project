@@ -1,7 +1,5 @@
 <?php
 /**
- * page/about.php
- * 
  * About Us page - Information about the website and mission.
  */
 

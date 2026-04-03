@@ -1,12 +1,6 @@
 <?php
 /**
- * header.php
- * 
- * HTML head section + navigation bar.
- * Include this at the start of every page.
- * 
- * Usage:
- *   require_once __DIR__ . '/../includes/header.php';
+  * HTML head section + navigation bar.
  */
 
 // Ensure session and functions are available

@@ -1,8 +1,6 @@
 <?php
 /**
- * legal/terms.php
- * 
- * Terms of Service page for BookHub.
+ *Terms of Service page for BookHub.
  */
 
 $page_title = 'Terms of Service';

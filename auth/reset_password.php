@@ -1,7 +1,5 @@
 <?php
 /**
- * auth/reset_password.php
- *
  * Reset password form - enter new password with valid token.
  */
 

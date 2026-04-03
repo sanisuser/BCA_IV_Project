@@ -1,7 +1,5 @@
 <?php
 /**
- * legal/privacy.php
- * 
  * Privacy Policy page for BookHub.
  */
 

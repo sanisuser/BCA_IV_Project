@@ -1,8 +1,6 @@
 <?php
 /**
- * auth/logout.php
- * 
- * User logout - destroys session and redirects
+  * User logout - destroys session and redirects
  */
 
 require_once __DIR__ . '/../includes/functions.php';

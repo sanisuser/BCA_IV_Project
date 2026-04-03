@@ -1,7 +1,5 @@
 <?php
 /**
- * auth/forgot_password_process.php
- *
  * Process forgot password request - generate token and send reset link.
  */
 

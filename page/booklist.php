@@ -1,7 +1,5 @@
 <?php
 /**
- * pages/books.php
- * 
  * Book listing page with pagination and filtering.
  */
 

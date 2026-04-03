@@ -1,13 +1,6 @@
 <?php
 /**
- * functions.php
- * 
  * Common helper functions used across the site.
- * Include this after db.php if you need database + helpers.
- * 
- * Usage:
- *   require_once __DIR__ . '/../includes/functions.php';
- *   $clean = clean_input($_POST['name']);
  */
 
 // Define site constants if not already defined

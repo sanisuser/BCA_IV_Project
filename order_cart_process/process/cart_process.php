@@ -1,13 +1,6 @@
 <?php
 /**
- * process/cart_process.php
- * 
  * Handles cart actions: add, update, remove items.
- * 
- * Actions:
- *   ?action=add&id=123     - Add book to cart
- *   ?action=remove&id=1    - Remove cart item
- *   POST action=update     - Update quantity
  */
 
 require_once __DIR__ . '/../../includes/functions.php';

@@ -1,7 +1,5 @@
 <?php
 /**
- * pages/cart.php
- * 
  * Shopping cart page - shows items and checkout.
  */
 

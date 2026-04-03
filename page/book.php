@@ -1,7 +1,5 @@
 <?php
 /**
- * pages/book.php
- * 
  * Single book details page.
  */
 

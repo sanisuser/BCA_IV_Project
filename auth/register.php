@@ -1,7 +1,5 @@
 <?php
 /**
- * auth/register.php
- *
  * Registration form page.
  */
 
