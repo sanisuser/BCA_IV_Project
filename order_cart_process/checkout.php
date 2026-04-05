@@ -13,14 +13,20 @@ $user_id = (int)get_user_id();
 $error = $_GET['error'] ?? '';
 $success = $_GET['success'] ?? '';
 
-// Fetch user's profile shipping address
+// Fetch user's profile shipping address and coordinates
 $profile_ship_address = '';
-$ship_stmt = $conn->prepare("SELECT ship_address FROM users WHERE user_id = ?");
+$profile_ship_lat = '';
+$profile_ship_lng = '';
+$profile_ship_place_name = '';
+$ship_stmt = $conn->prepare("SELECT ship_address, ship_latitude, ship_longitude, ship_place_name FROM users WHERE user_id = ?");
 $ship_stmt->bind_param('i', $user_id);
 $ship_stmt->execute();
 $ship_result = $ship_stmt->get_result();
 if ($ship_row = $ship_result->fetch_assoc()) {
     $profile_ship_address = $ship_row['ship_address'] ?? '';
+    $profile_ship_lat = $ship_row['ship_latitude'] ?? '';
+    $profile_ship_lng = $ship_row['ship_longitude'] ?? '';
+    $profile_ship_place_name = $ship_row['ship_place_name'] ?? '';
 }
 $ship_stmt->close();
 
@@ -52,6 +58,7 @@ if (count($cart_items) === 0) {
 
 <link rel="stylesheet" href="<?php echo SITE_URL; ?>/order_cart_process/css/checkout.css">
 <link rel="stylesheet" href="<?php echo SITE_URL; ?>/order_cart_process/css/address.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
 
 <div class="checkout-container">
     <div class="checkout-header">
@@ -87,7 +94,7 @@ if (count($cart_items) === 0) {
                         <!-- User has profile shipping address - show as default option -->
                         <div class="address-selection">
                             <label class="form-label"><i class="fas fa-map-marker-alt"></i> Select Shipping Address</label>
-                            
+                           
                             <div class="address-option">
                                 <label class="address-radio-label">
                                     <input type="radio" name="selected_address" value="profile" checked
@@ -97,9 +104,29 @@ if (count($cart_items) === 0) {
                                         <div class="address-header">
                                             <span class="address-type">Profile Address</span>
                                             <span class="default-badge">Default</span>
+                                            <?php if (!empty($profile_ship_lat) && !empty($profile_ship_lng)): ?>
+                                            <span class="location-badge"><i class="fas fa-map-pin"></i> Map Selected</span>
+                                            <?php endif; ?>
                                         </div>
                                         <div class="address-details">
                                             <p><?php echo nl2br(htmlspecialchars($profile_ship_address)); ?></p>
+                                            <?php if (!empty($profile_ship_place_name)): ?>
+                                            <small style="color: #6c757d; font-style: italic;"><?php echo htmlspecialchars($profile_ship_place_name); ?></small>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                </label>
+                            </div>
+                           
+                            <div class="address-option">
+                                <label class="address-radio-label">
+                                    <input type="radio" name="selected_address" value="map" class="address-radio" onchange="toggleMapSelection(this)">
+                                    <div class="address-card map-address-card">
+                                        <div class="address-header">
+                                            <span class="address-type">Select on Map</span>
+                                        </div>
+                                        <div class="address-details">
+                                            <p><i class="fas fa-map"></i> Choose your delivery location on map</p>
                                         </div>
                                     </div>
                                 </label>
@@ -120,6 +147,22 @@ if (count($cart_items) === 0) {
                             </div>
                         </div>
                         
+                        <!-- Map Selection Form (Hidden by default) -->
+                        <div id="map-selection-form" style="display: none;" class="map-selection-section">
+                            <div class="form-group">
+                                <label class="form-label"><i class="fas fa-map"></i> Select Delivery Location</label>
+                                <div id="checkoutMap" style="height: 300px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 12px;"></div>
+                                <div id="selectedLocationInfo" style="display: none; padding: 12px; background: #e8f5e8; border-radius: 6px; margin-bottom: 12px;">
+                                    <strong><i class="fas fa-check-circle" style="color: #28a745;"></i> Selected Location:</strong>
+                                    <p id="selectedAddressText" style="margin: 8px 0 0 0;"></p>
+                                </div>
+                                <input type="hidden" name="map_address" id="mapAddressInput" value="">
+                                <input type="hidden" name="map_latitude" id="mapLatitudeInput" value="">
+                                <input type="hidden" name="map_longitude" id="mapLongitudeInput" value="">
+                                <input type="hidden" name="map_place_name" id="mapPlaceNameInput" value="">
+                            </div>
+                        </div>
+                        
                         <!-- Custom Address Form (Hidden by default) -->
                         <div id="custom-address-form" style="display: none;" class="custom-address-section">
                             <div class="form-group">
@@ -129,11 +172,62 @@ if (count($cart_items) === 0) {
                             </div>
                         </div>
                     <?php else: ?>
-                        <!-- No profile address, show custom form -->
-                        <div class="form-group">
-                            <label class="form-label"><i class="fas fa-map-marker-alt"></i> Shipping Address</label>
-                            <textarea name="ship_address" rows="4" required class="form-textarea"
-                                      placeholder="Enter your full address including street, city, and postal code..."></textarea>
+                        <!-- No profile address, show all options -->
+                        <div class="address-selection">
+                            <label class="form-label"><i class="fas fa-map-marker-alt"></i> Select Shipping Address</label>
+                            
+                            <div class="address-option">
+                                <label class="address-radio-label">
+                                    <input type="radio" name="selected_address" value="map" class="address-radio" onchange="toggleMapSelection(this)">
+                                    <div class="address-card map-address-card">
+                                        <div class="address-header">
+                                            <span class="address-type">Select on Map</span>
+                                        </div>
+                                        <div class="address-details">
+                                            <p><i class="fas fa-map"></i> Choose your delivery location on map</p>
+                                        </div>
+                                    </div>
+                                </label>
+                            </div>
+                            
+                            <div class="address-option">
+                                <label class="address-radio-label">
+                                    <input type="radio" name="selected_address" value="custom" checked class="address-radio" onchange="toggleCustomAddress(this)">
+                                    <div class="address-card custom-address-card">
+                                        <div class="address-header">
+                                            <span class="address-type">Custom Address</span>
+                                        </div>
+                                        <div class="address-details">
+                                            <p><i class="fas fa-plus"></i> Enter your shipping address</p>
+                                        </div>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <!-- Map Selection Form (Hidden by default) -->
+                        <div id="map-selection-form" style="display: none;" class="map-selection-section">
+                            <div class="form-group">
+                                <label class="form-label"><i class="fas fa-map"></i> Select Delivery Location</label>
+                                <div id="checkoutMap" style="height: 300px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 12px;"></div>
+                                <div id="selectedLocationInfo" style="display: none; padding: 12px; background: #e8f5e8; border-radius: 6px; margin-bottom: 12px;">
+                                    <strong><i class="fas fa-check-circle" style="color: #28a745;"></i> Selected Location:</strong>
+                                    <p id="selectedAddressText" style="margin: 8px 0 0 0;"></p>
+                                </div>
+                                <input type="hidden" name="map_address" id="mapAddressInput" value="">
+                                <input type="hidden" name="map_latitude" id="mapLatitudeInput" value="">
+                                <input type="hidden" name="map_longitude" id="mapLongitudeInput" value="">
+                                <input type="hidden" name="map_place_name" id="mapPlaceNameInput" value="">
+                            </div>
+                        </div>
+                        
+                        <!-- Custom Address Form (Hidden by default) -->
+                        <div id="custom-address-form" style="display: block;" class="custom-address-section">
+                            <div class="form-group">
+                                <label class="form-label"><i class="fas fa-map-marker-alt"></i> Shipping Address</label>
+                                <textarea name="ship_address" rows="4" required class="form-textarea"
+                                          placeholder="Enter your full address including street, city, and postal code..."></textarea>
+                            </div>
                         </div>
                     <?php endif; ?>
                 </div>
@@ -260,12 +354,35 @@ if (count($cart_items) === 0) {
     </div>
 </div>
 
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script>
+var checkoutMap, checkoutMarker;
+
+function toggleMapSelection(radio) {
+    const mapForm = document.getElementById('map-selection-form');
+    const customForm = document.getElementById('custom-address-form');
+    
+    if (radio.value === 'map') {
+        mapForm.style.display = 'block';
+        customForm.style.display = 'none';
+        
+        // Initialize map if not already done
+        if (!checkoutMap) {
+            initCheckoutMap();
+        }
+    } else {
+        mapForm.style.display = 'none';
+    }
+}
+
 function toggleCustomAddress(radio) {
     const customForm = document.getElementById('custom-address-form');
+    const mapForm = document.getElementById('map-selection-form');
+    
     if (radio.value === 'custom') {
         customForm.style.display = 'block';
-        // Make the textarea required when custom is selected
+        mapForm.style.display = 'none';
+        // Make textarea required when custom is selected
         const textarea = customForm.querySelector('textarea');
         if (textarea) textarea.required = true;
     } else {
@@ -276,11 +393,59 @@ function toggleCustomAddress(radio) {
     }
 }
 
+function initCheckoutMap() {
+    // Default to Kathmandu
+    checkoutMap = L.map('checkoutMap').setView([27.7172, 85.3240], 13);
+    
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: ' OpenStreetMap contributors',
+        maxZoom: 19
+    }).addTo(checkoutMap);
+    
+    // Click on map to set marker
+    checkoutMap.on('click', function(e) {
+        var lat = e.latlng.lat;
+        var lng = e.latlng.lng;
+        
+        // Reverse geocode to get place name
+        fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat=' + lat + '&lon=' + lng + '&zoom=18&addressdetails=1')
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                var placeName = data.display_name || 'Selected Location';
+                setCheckoutMarker(lat, lng, placeName);
+            })
+            .catch(function() {
+                // Fallback if reverse geocoding fails
+                setCheckoutMarker(lat, lng, 'Location at ' + lat.toFixed(4) + ', ' + lng.toFixed(4));
+            });
+    });
+}
+
+function setCheckoutMarker(lat, lng, name) {
+    if (checkoutMarker) checkoutMap.removeLayer(checkoutMarker);
+    checkoutMarker = L.marker([lat, lng]).addTo(checkoutMap);
+    checkoutMap.setView([lat, lng], 16);
+    
+    // Update hidden inputs
+    document.getElementById('mapLatitudeInput').value = lat.toFixed(6);
+    document.getElementById('mapLongitudeInput').value = lng.toFixed(6);
+    document.getElementById('mapPlaceNameInput').value = name;
+    document.getElementById('mapAddressInput').value = name;
+    
+    // Show selected location info
+    document.getElementById('selectedAddressText').textContent = name;
+    document.getElementById('selectedLocationInfo').style.display = 'block';
+}
+
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
     const checkedRadio = document.querySelector('input[name="selected_address"]:checked');
     if (checkedRadio) {
-        toggleCustomAddress(checkedRadio);
+        if (checkedRadio.value === 'map') {
+            toggleMapSelection(checkedRadio);
+        } else if (checkedRadio.value === 'custom') {
+            toggleCustomAddress(checkedRadio);
+        }
     }
 });
 </script>

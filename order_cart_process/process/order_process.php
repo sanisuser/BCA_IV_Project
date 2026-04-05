@@ -31,6 +31,12 @@ $selected_address = trim($_POST['selected_address'] ?? '');
 $ship_address = trim($_POST['ship_address'] ?? '');
 $payment_method = trim($_POST['payment_method'] ?? '');
 
+// Handle map-based address selection
+$map_address = trim($_POST['map_address'] ?? '');
+$map_latitude = trim($_POST['map_latitude'] ?? '');
+$map_longitude = trim($_POST['map_longitude'] ?? '');
+$map_place_name = trim($_POST['map_place_name'] ?? '');
+
 // Handle address selection
 if ($selected_address === 'custom') {
     // Use custom address
@@ -51,8 +57,14 @@ if ($selected_address === 'custom') {
     }
     
     $ship_address = (string)$profile['ship_address'];
+} elseif ($selected_address === 'map') {
+    // Use map-selected address
+    if ($map_address === '') {
+        redirect(SITE_URL . '/order_cart_process/checkout.php?error=' . urlencode('Please select a location on the map'));
+    }
+    $ship_address = $map_address;
 } elseif ($selected_address === 'saved' && !empty($ship_address)) {
-    // Use the saved custom address (already set from POST)
+    // Use saved custom address (already set from POST)
 } else {
     // No address selected (fallback to custom)
     if (trim($ship_address) === '') {
@@ -61,13 +73,23 @@ if ($selected_address === 'custom') {
 }
 
 // If user entered a shipping address (custom / direct entry), save it to profile for future
-// (Don't overwrite when using the existing profile address)
+// (Don't overwrite when using existing profile address)
 if ($selected_address !== 'profile' && $ship_address !== '') {
     $upd = $conn->prepare('UPDATE users SET ship_address = ? WHERE user_id = ?');
     if ($upd) {
         $upd->bind_param('si', $ship_address, $user_id);
         $upd->execute();
         $upd->close();
+    }
+}
+
+// If map was used, also save coordinates to profile
+if ($selected_address === 'map' && !empty($map_latitude) && !empty($map_longitude)) {
+    $coord_upd = $conn->prepare('UPDATE users SET ship_latitude = ?, ship_longitude = ?, ship_place_name = ? WHERE user_id = ?');
+    if ($coord_upd) {
+        $coord_upd->bind_param('ddss', $map_latitude, $map_longitude, $map_place_name, $user_id);
+        $coord_upd->execute();
+        $coord_upd->close();
     }
 }
 

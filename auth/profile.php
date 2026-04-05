@@ -5,6 +5,23 @@ require_once __DIR__ . '/../includes/db.php';
 
 $page_title = 'Profile';
 
+// Ensure users table has ship_latitude, ship_longitude, ship_place_name columns
+$columns_to_check = ['ship_latitude', 'ship_longitude', 'ship_place_name'];
+foreach ($columns_to_check as $col) {
+    $has_col = false;
+    if ($res = $conn->query("SELECT 1 FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'users' AND COLUMN_NAME = '$col' LIMIT 1")) {
+        $has_col = $res->num_rows > 0;
+        $res->free();
+    }
+    if (!$has_col) {
+        try {
+            $conn->query("ALTER TABLE users ADD COLUMN $col VARCHAR(100) NULL");
+        } catch (mysqli_sql_exception $e) {
+            error_log("Failed to add $col column: " . $e->getMessage());
+        }
+    }
+}
+
 if (!is_logged_in()) {
     redirect(SITE_URL . '/auth/login.php?error=' . urlencode('Please login to view your profile'));
 }
@@ -16,21 +33,48 @@ $success = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $full_name = trim($_POST['full_name'] ?? '');
+    $full_name = ucwords(strtolower($full_name));
     $ship_address = trim($_POST['ship_address'] ?? '');
     if ($ship_address === '') {
         $ship_address = null;
     }
     $phone = trim($_POST['phone'] ?? '');
     $bio = trim($_POST['bio'] ?? '');
-    $location = trim($_POST['location'] ?? '');
-    $set_as_location = isset($_POST['set_as_location']) && $_POST['set_as_location'] === 'on';
-    $set_shipping_as_location = isset($_POST['set_shipping_as_location']) && $_POST['set_shipping_as_location'] === 'on';
+    
+    // Map coordinates
+    $latitude = trim($_POST['latitude'] ?? '');
+    $longitude = trim($_POST['longitude'] ?? '');
+    $place_name = trim($_POST['place_name'] ?? '');
 
     $current_password = (string)($_POST['current_password'] ?? '');
     $new_password = (string)($_POST['new_password'] ?? '');
     $confirm_password = (string)($_POST['confirm_password'] ?? '');
 
-    $conn->begin_transaction();
+    // Validation for full_name and phone
+    if ($full_name !== '') {
+        if (strlen($full_name) < 3) {
+            $error = 'Full name must be at least 3 characters.';
+        } elseif (strlen($full_name) > 100) {
+            $error = 'Full name must not exceed 100 characters.';
+        } elseif (!preg_match('/^[a-zA-Z\s\'\-\.]+$/', $full_name)) {
+            $error = 'Full name can only contain letters, spaces, apostrophes, hyphens, and dots.';
+        } elseif (!preg_match('/^[a-zA-Z]/', $full_name)) {
+            $error = 'Full name must start with a letter.';
+        } elseif (preg_match('/\s{2,}/', $full_name)) {
+            $error = 'Full name must not contain multiple consecutive spaces.';
+        } elseif (str_word_count($full_name) < 2) {
+            $error = 'Please enter your full name (first and last name).';
+        }
+    }
+    
+    if ($error === '' && $phone !== '' && !preg_match('/^9[8-9][0-9]{8}$/', $phone)) {
+        $error = 'Please enter a valid 10-digit mobile number';
+    }
+
+    if ($error !== '') {
+        // Skip transaction if validation failed
+    } else {
+        $conn->begin_transaction();
     try {
         // Handle profile image upload (optional)
         $new_profile_path = null;
@@ -67,14 +111,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $new_profile_path = 'uploads/profiles/' . $filename;
         }
 
-        // Update basic fields
-        $sql = 'UPDATE users SET full_name = ?, ship_address = ?, phone = ?, bio = ?, location = ?';
-        $types = 'sssss';
-        // If set_as_location is checked, use ship_address as location
-        // If set_shipping_as_location is checked, use location as ship_address
-        $final_location = $set_as_location && $ship_address ? $ship_address : $location;
-        $final_ship_address = $set_shipping_as_location && $location ? $location : $ship_address;
-        $params = [$full_name, $final_ship_address, $phone, $bio, $final_location];
+        // Update basic fields with coordinates
+        $sql = 'UPDATE users SET full_name = ?, ship_address = ?, phone = ?, bio = ?, ship_latitude = ?, ship_longitude = ?, ship_place_name = ?';
+        $types = 'sssssss';
+        $params = [$full_name, $ship_address, $phone, $bio, $latitude, $longitude, $place_name];
 
         if ($new_profile_path !== null) {
             $sql .= ', profile_image = ?';
@@ -137,11 +177,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $conn->rollback();
         $error = $e->getMessage();
     }
+    }
 }
 
 // Fetch user data
 $user = null;
-$stmt = $conn->prepare('SELECT user_id, username, email, full_name, profile_image, location, ship_address, phone, bio FROM users WHERE user_id = ?');
+$stmt = $conn->prepare('SELECT user_id, username, email, full_name, profile_image, ship_address, ship_latitude, ship_longitude, ship_place_name, phone, bio FROM users WHERE user_id = ?');
 if ($stmt) {
     $stmt->bind_param('i', $user_id);
     $stmt->execute();
@@ -213,7 +254,6 @@ if ($display_name === '') {
     $display_name = (string)($user['username'] ?? 'User');
 }
 
-$display_location = (string)($user['location'] ?? '');
 $display_ship = (string)($user['ship_address'] ?? '');
 $display_email = (string)($user['email'] ?? '');
 $display_phone = (string)($user['phone'] ?? '');
@@ -224,7 +264,9 @@ $profile_image_url = $profile_image !== '' ? (SITE_URL . '/' . ltrim($profile_im
 require_once __DIR__ . '/../includes/header_navbar.php';
 ?>
 
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet" href="<?php echo SITE_URL; ?>/auth/css/profile-modern.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
 
 <div class="profile-container">
 
@@ -274,12 +316,6 @@ require_once __DIR__ . '/../includes/header_navbar.php';
                     <?php echo htmlspecialchars($display_phone); ?>
                 </p>
                 <?php endif; ?>
-                <?php if ($display_location !== ''): ?>
-                <p class="profile-location">
-                    <i class="fa-solid fa-location-dot"></i>
-                    <span id="displayLocation"><?php echo htmlspecialchars($display_location); ?></span>
-                </p>
-                <?php endif; ?>
                 <?php if ($display_bio !== ''): ?>
                 <p class="profile-bio" style="color: var(--text-muted); font-size: 0.875rem; margin-top: 1rem; font-style: italic;">
                     "<?php echo htmlspecialchars($display_bio); ?>"
@@ -299,31 +335,55 @@ require_once __DIR__ . '/../includes/header_navbar.php';
                                class="form-input">
                     </div>
 
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                        <div class="form-group">
-                            <label class="form-label">Location</label>
-                            <input id="locationInput" name="location" type="text" value="<?php echo htmlspecialchars($display_location); ?>"
-                                   placeholder="Enter your location (city, country)"
-                                   class="form-input">
-                            <label style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.5rem; font-size: 0.875rem; color: var(--text-secondary); cursor: pointer;">
-                                <input type="checkbox" id="setShippingAsLocation" name="set_shipping_as_location" style="cursor: pointer;">
-                                <span>Use location as shipping address</span>
-                            </label>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="form-label">Shipping Address</label>
-                            <input id="shippingInput" name="ship_address" type="text" value="<?php echo htmlspecialchars($display_ship); ?>"
-                                   placeholder="Enter shipping address"
-                                   class="form-input">
-                                                   </div>
-                    </div>
-
                     <div class="form-group">
                         <label class="form-label">Phone Number</label>
                         <input id="phoneInput" name="phone" type="tel" value="<?php echo htmlspecialchars($display_phone); ?>"
                                placeholder="Enter your phone number"
                                class="form-input">
+                    </div>
+
+                    <!-- Full Width Shipping Address with Map -->
+                    <div class="form-group" style="margin-top: 1rem;">
+                        <label class="form-label">
+
+                        Shipping Address
+                            <span style="color: #6c757d; font-size: 0.8rem; font-weight: normal;">(Click edit to select on map)</span>
+                        </label>
+                        <div style="position: relative;">
+                            <textarea id="shippingInput" name="ship_address" rows="3" readonly
+                                   placeholder="No shipping address set"
+                                   class="form-input" style="background: #1a1a1a; border: 1px solid #333; color: #fff; resize: none; min-height: 60px; cursor: default; word-wrap: break-word; overflow-wrap: break-word;"><?php echo htmlspecialchars($display_ship); ?></textarea>
+                            <button type="button" id="editLocationBtn" onclick="toggleMapSection()" style="position: absolute; top: 8px; right: 8px; background: #007bff; border: none; color: white; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.75rem;">
+                                <i class="fa-solid fa-map-pin"></i> Edit
+                            </button>
+                        </div>
+
+                        <!-- Map Location Picker (Hidden by default) -->
+                        <div id="mapSection" style="display: none; margin-top: 12px; position: relative;">
+                            <!-- Selected location badge -->
+                            <div id="selectedBadge" style="display: none; margin-bottom: 8px; padding: 10px 14px; background: #007bff; color: white; border-radius: 6px; font-size: 0.9rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+                                <span style="word-wrap: break-word; overflow-wrap: break-word;"><i class="fa-solid fa-location-dot"></i> <span id="selectedPlace"></span></span>
+                                <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                                    <button type="button" onclick="confirmLocation()" style="background: #28a745; border: none; color: white; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.75rem;">
+                                        <i class="fa-solid fa-check"></i> Confirm
+                                    </button>
+                                    <button type="button" onclick="clearLocation()" style="background: rgba(255,255,255,0.2); border: none; color: white; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.75rem;">
+                                        <i class="fa-solid fa-times"></i> Clear
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <p style="font-size: 0.8rem; color: #6c757d; margin-bottom: 8px; margin-top: 0;">
+                                <i class="fa-solid fa-hand-pointer"></i> Click anywhere on the map to set your delivery location
+                            </p>
+                            
+                            <div id="map" style="height: 350px; border-radius: 8px; border: 1px solid var(--border); width: 100%; max-width: 100%; overflow: hidden;"></div>
+
+                            <!-- Hidden fields for coordinates -->
+                            <input type="hidden" name="latitude" id="lat" value="<?php echo htmlspecialchars($user['ship_latitude'] ?? ''); ?>">
+                            <input type="hidden" name="longitude" id="lng" value="<?php echo htmlspecialchars($user['ship_longitude'] ?? ''); ?>">
+                            <input type="hidden" name="place_name" id="placeName" value="<?php echo htmlspecialchars($user['ship_place_name'] ?? ''); ?>">
+                        </div>
                     </div>
 
                     <div class="form-group">
@@ -458,8 +518,199 @@ require_once __DIR__ . '/../includes/header_navbar.php';
 </div>
 
 <script src="<?php echo SITE_URL; ?>/auth/js/profile-modern.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+<style>
+/* Mobile Responsive Styles for Map */
+@media (max-width: 768px) {
+    /* Stack the location and shipping address columns */
+    .profile-grid {
+        grid-template-columns: 1fr !important;
+    }
+    
+    /* Make form grid single column */
+    #profileForm > div[style*="grid-template-columns: 1fr 1fr"] {
+        grid-template-columns: 1fr !important;
+    }
+    
+    /* Adjust map height for mobile */
+    #map {
+        height: 250px !important;
+        max-width: 100% !important;
+        width: 100% !important;
+    }
+    
+    /* Make search input and button stack on very small screens */
+    @media (max-width: 480px) {
+        #searchInput {
+            font-size: 16px !important; /* Prevent zoom on iOS */
+        }
+        
+        #suggestions {
+            max-height: 120px !important;
+        }
+        
+        #selectedBadge {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+        }
+        
+        #selectedBadge > div {
+            width: 100% !important;
+            justify-content: flex-start !important;
+        }
+    }
+}
+
+/* Touch-friendly styles */
+@media (hover: none) and (pointer: coarse) {
+    #suggestions div {
+        padding: 12px !important;
+        min-height: 44px; /* Minimum touch target size */
+    }
+    
+    #suggestions div:active {
+        background: #e9ecef !important;
+    }
+}
+</style>
 
 <script>
+// --- LEAFLET MAP SETUP ---
+var map, marker;
+var mapInitialized = false;
+
+function toggleMapSection() {
+    const mapSection = document.getElementById('mapSection');
+    const editBtn = document.getElementById('editLocationBtn');
+    
+    if (mapSection.style.display === 'none') {
+        mapSection.style.display = 'block';
+        editBtn.innerHTML = '<i class="fa-solid fa-times"></i> Cancel';
+        
+        // Initialize map only when first opened
+        if (!mapInitialized) {
+            initMap();
+            mapInitialized = true;
+        } else {
+            // Refresh map size if already initialized
+            setTimeout(function() {
+                map.invalidateSize();
+            }, 100);
+        }
+    } else {
+        mapSection.style.display = 'none';
+        editBtn.innerHTML = '<i class="fa-solid fa-map-pin"></i> Edit';
+    }
+}
+
+function initMap() {
+    // Default to Kathmandu if no coordinates
+    var defaultLat = 27.7172;
+    var defaultLng = 85.3240;
+    
+    // Check if user has existing coordinates
+    var existingLat = document.getElementById('lat').value;
+    var existingLng = document.getElementById('lng').value;
+    
+    if (existingLat && existingLng) {
+        defaultLat = parseFloat(existingLat);
+        defaultLng = parseFloat(existingLng);
+    }
+    
+    map = L.map('map').setView([defaultLat, defaultLng], 13);
+    
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors',
+        maxZoom: 19
+    }).addTo(map);
+    
+    // If there's an existing marker, show it and the badge
+    if (existingLat && existingLng) {
+        var placeName = document.getElementById('placeName').value || 'Saved location';
+        setMarker(existingLat, existingLng, placeName);
+    } else {
+        // No saved location - field will use default styling
+    }
+    
+    // Click on map to set marker
+    map.on('click', function(e) {
+        var lat = e.latlng.lat;
+        var lng = e.latlng.lng;
+        
+        // Reverse geocode to get place name
+        fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat=' + lat + '&lon=' + lng + '&zoom=18&addressdetails=1')
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                var placeName = data.display_name || 'Selected Location';
+                setMarker(lat, lng, placeName);
+            })
+            .catch(function() {
+                // Fallback if reverse geocoding fails
+                setMarker(lat, lng, 'Location at ' + lat.toFixed(4) + ', ' + lng.toFixed(4));
+            });
+    });
+}
+
+function setMarker(lat, lng, name) {
+    if (marker) map.removeLayer(marker);
+    marker = L.marker([lat, lng]).addTo(map);
+    map.setView([lat, lng], 16);
+    
+    document.getElementById('lat').value = parseFloat(lat).toFixed(6);
+    document.getElementById('lng').value = parseFloat(lng).toFixed(6);
+    document.getElementById('placeName').value = name;
+    
+    // Show selected badge
+    document.getElementById('selectedPlace').textContent = name;
+    document.getElementById('selectedBadge').style.display = 'flex';
+    
+    // Update shipping address input with the selected place name
+    document.getElementById('shippingInput').value = name;
+    document.getElementById('shippingInput').style.background = '#1a1a1a';
+    document.getElementById('shippingInput').style.borderColor = '#28a745';
+    document.getElementById('shippingInput').style.color = '#fff';
+}
+
+function confirmLocation() {
+    // Change badge style to show confirmed
+    document.getElementById('selectedBadge').style.background = '#28a745';
+    document.getElementById('shippingInput').style.borderColor = '#28a745';
+    
+    // Hide map section after confirmation
+    setTimeout(function() {
+        document.getElementById('mapSection').style.display = 'none';
+        document.getElementById('editLocationBtn').innerHTML = '<i class="fa-solid fa-map-pin"></i> Edit';
+    }, 1000);
+    
+    // Show confirmation toast
+    showToast('Location confirmed!');
+}
+
+function clearLocation() {
+    document.getElementById('lat').value = '';
+    document.getElementById('lng').value = '';
+    document.getElementById('placeName').value = '';
+    document.getElementById('selectedPlace').textContent = '';
+    document.getElementById('selectedBadge').style.display = 'none';
+    
+    // Reset shipping address
+    document.getElementById('shippingInput').value = '';
+    document.getElementById('shippingInput').style.background = '#1a1a1a';
+    document.getElementById('shippingInput').style.borderColor = '#333';
+    document.getElementById('shippingInput').style.color = '#fff';
+    
+    if (marker) {
+        map.removeLayer(marker);
+        marker = null;
+    }
+}
+
+// Initialize map when page loads (but don't show it)
+document.addEventListener('DOMContentLoaded', function() {
+    // Map will be initialized when user clicks Edit button
+});
+
 // Handle "Set shipping address as my location" checkbox
 document.getElementById('setAsLocation').addEventListener('change', function() {
     const locationInput = document.getElementById('locationInput');

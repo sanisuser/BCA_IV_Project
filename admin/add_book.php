@@ -49,24 +49,103 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_book'])) {
     $published_year = (int)($_POST['published_year'] ?? 0);
     $condition_status = clean_input($_POST['condition_status'] ?? '');
 
-    if ($title === '' || $author === '') {
+    if ($error === '' && ($title === '' || $author === '')) {
         $error = 'Title and author are required.';
+    }
+
+    if ($error === '' && strlen($title) > 200) {
+        $error = 'Title must not exceed 200 characters.';
+    }
+
+    if ($error === '' && strlen($title) < 3) {
+        $error = 'Title must be at least 3 characters.';
+    }
+
+    if ($error === '' && !preg_match('/^[a-zA-Z0-9\s\'\-\.:,!?()&]+$/', $title)) {
+        $error = 'Title can only contain letters, numbers, spaces, and common punctuation.';
+    }
+
+    if ($error === '' && !preg_match('/^[a-zA-Z0-9]/', $title)) {
+        $error = 'Title must start with a letter or number.';
+    }
+
+    if ($error === '' && preg_match('/\s{2,}/', $title)) {
+        $error = 'Title must not contain multiple consecutive spaces.';
+    }
+
+    if ($error === '' && strlen($author) > 100) {
+        $error = 'Author name must not exceed 100 characters.';
+    }
+
+    if ($error === '' && strlen($author) < 3) {
+        $error = 'Author name must be at least 3 characters.';
+    }
+
+    if ($error === '' && !preg_match('/^[a-zA-Z\s\'\-\.]+$/', $author)) {
+        $error = 'Author name can only contain letters, spaces, apostrophes, hyphens, and dots.';
+    }
+
+    if ($error === '' && !preg_match('/^[a-zA-Z]/', $author)) {
+        $error = 'Author name must start with a letter.';
+    }
+
+    if ($error === '' && preg_match('/\s{2,}/', $author)) {
+        $error = 'Author name must not contain multiple consecutive spaces.';
     }
 
     if ($error === '' && $genre === '') {
         $error = 'Genre is required.';
     }
 
+    if ($error === '' && strlen($genre) > 50) {
+        $error = 'Genre must not exceed 50 characters.';
+    }
+
     if ($error === '' && $price_raw === '') {
         $error = 'Price is required.';
+    }
+
+    if ($error === '' && ($price <= 0 || $price > 999999.99)) {
+        $error = 'Price must be between 0.01 and 999,999.99.';
     }
 
     if ($error === '' && $stock_raw === '') {
         $error = 'Stock is required.';
     }
 
+    if ($error === '' && ($stock < 0 || $stock > 99999)) {
+        $error = 'Stock must be between 0 and 99,999.';
+    }
+
     if ($error === '' && $description === '') {
         $error = 'Description is required.';
+    }
+
+    if ($error === '' && strlen($description) > 5000) {
+        $error = 'Description must not exceed 5000 characters.';
+    }
+
+    // ISBN validation (if provided)
+    if ($error === '' && $isbn !== '') {
+        // Remove hyphens and spaces
+        $isbn_clean = preg_replace('/[\s\-]/', '', $isbn);
+        // Check ISBN-10 (10 digits, last can be X)
+        $is_isbn10 = preg_match('/^\d{9}[\dX]$/i', $isbn_clean);
+        // Check ISBN-13 (13 digits)
+        $is_isbn13 = preg_match('/^\d{13}$/', $isbn_clean);
+        
+        if (!$is_isbn10 && !$is_isbn13) {
+            $error = 'Invalid ISBN format. Please enter a valid ISBN-10 or ISBN-13.';
+        } elseif (strlen($isbn_clean) > 20) {
+            $error = 'ISBN must not exceed 20 characters.';
+        }
+    }
+
+    // Published year validation (if provided)
+    if ($error === '' && $published_year > 0) {
+        if ($published_year < 1000 || $published_year > $current_year + 1) {
+            $error = "Published year must be between 1000 and " . ($current_year + 1) . ".";
+        }
     }
 
     // Prevent duplicate books
@@ -93,33 +172,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_book'])) {
         if (($_FILES['cover_image']['error'] ?? UPLOAD_ERR_OK) !== UPLOAD_ERR_OK) {
             $error = 'Cover image upload failed.';
         } else {
-            $tmp = (string)($_FILES['cover_image']['tmp_name'] ?? '');
-            $orig = (string)($_FILES['cover_image']['name'] ?? '');
-
-            $ext = strtolower(pathinfo($orig, PATHINFO_EXTENSION));
-            $allowed_ext = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
-            if (!in_array($ext, $allowed_ext, true)) {
-                $error = 'Cover image must be jpg, jpeg, png, webp, or gif.';
+            // Check file size (max 2MB)
+            $max_size = 2 * 1024 * 1024; // 2MB
+            if ($_FILES['cover_image']['size'] > $max_size) {
+                $error = 'Cover image must be less than 2MB.';
             } else {
-                $assets_images_dir = realpath(__DIR__ . '/../assets/images');
-                if ($assets_images_dir === false) {
-                    $error = 'Upload directory not found.';
+                $tmp = (string)($_FILES['cover_image']['tmp_name'] ?? '');
+                $orig = (string)($_FILES['cover_image']['name'] ?? '');
+
+                $ext = strtolower(pathinfo($orig, PATHINFO_EXTENSION));
+                $allowed_ext = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+                if (!in_array($ext, $allowed_ext, true)) {
+                    $error = 'Cover image must be jpg, jpeg, png, webp, or gif.';
                 } else {
-                    // Create genre-specific subfolder
-                    $genre_folder = !empty($genre) ? preg_replace('/[^a-zA-Z0-9_-]/', '_', $genre) : 'Uncategorized';
-                    $upload_dir = $assets_images_dir . DIRECTORY_SEPARATOR . 'books' . DIRECTORY_SEPARATOR . $genre_folder;
-                    if (!is_dir($upload_dir)) {
-                        @mkdir($upload_dir, 0777, true);
-                    }
-                    if (!is_dir($upload_dir)) {
-                        $error = 'Failed to create upload directory.';
+                    // Verify it's a real image
+                    $image_info = getimagesize($tmp);
+                    if ($image_info === false) {
+                        $error = 'Invalid image file.';
                     } else {
-                        $filename = safe_filename(preg_replace('/[^a-zA-Z0-9_-]/', '_', $title) . '.' . $ext);
-                        $dest = $upload_dir . DIRECTORY_SEPARATOR . $filename;
-                        if (!move_uploaded_file($tmp, $dest)) {
-                            $error = 'Failed to save uploaded cover image.';
+                        $assets_images_dir = realpath(__DIR__ . '/../assets/images');
+                        if ($assets_images_dir === false) {
+                            $error = 'Upload directory not found.';
                         } else {
-                            $cover_image = 'assets/images/books/' . $genre_folder . '/' . $filename;
+                            // Create genre-specific subfolder
+                            $genre_folder = !empty($genre) ? preg_replace('/[^a-zA-Z0-9_-]/', '_', $genre) : 'Uncategorized';
+                            $upload_dir = $assets_images_dir . DIRECTORY_SEPARATOR . 'books' . DIRECTORY_SEPARATOR . $genre_folder;
+                            if (!is_dir($upload_dir)) {
+                                @mkdir($upload_dir, 0777, true);
+                            }
+                            if (!is_dir($upload_dir)) {
+                                $error = 'Failed to create upload directory.';
+                            } else {
+                                $filename = safe_filename(preg_replace('/[^a-zA-Z0-9_-]/', '_', $title) . '.' . $ext);
+                                $dest = $upload_dir . DIRECTORY_SEPARATOR . $filename;
+                                if (!move_uploaded_file($tmp, $dest)) {
+                                    $error = 'Failed to save uploaded cover image.';
+                                } else {
+                                    $cover_image = 'assets/images/books/' . $genre_folder . '/' . $filename;
+                                }
+                            }
                         }
                     }
                 }
@@ -181,6 +272,7 @@ $error = '';
 
             <div class="edit-form">
                 <form method="POST" action="" enctype="multipart/form-data">
+                    <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
                     <div class="form-group">
                         <label>Title *</label>
                         <input type="text" name="title" value="<?php echo htmlspecialchars($_POST['title'] ?? ''); ?>" required />

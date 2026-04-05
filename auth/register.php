@@ -49,9 +49,24 @@ $error = isset($_GET['error']) ? $_GET['error'] : '';
             </div>
 
             <div class="form-group">
+                <label for="full_name" class="form-label">Full Name</label>
+                <input type="text" id="full_name" name="full_name" class="form-input" required
+                       placeholder="Enter your full name" minlength="2">
+                <small class="form-help">Minimum 2 characters, letters and spaces only</small>
+            </div>
+
+            <div class="form-group">
+                <label for="phone" class="form-label">Phone Number</label>
+                <input type="text" id="phone" name="phone" class="form-input" required
+                       placeholder="Enter your 10-digit Nepali mobile number" pattern="9[8-9][0-9]{8}">
+                <small class="form-help">10-digit mobile number </small>
+            </div>
+
+            <div class="form-group">
                 <label for="email" class="form-label">Email</label>
                 <input type="email" id="email" name="email" class="form-input" required
                        placeholder="Enter your email address">
+                <span id="email-error" class="error-message" style="color: #ef4444; font-size: 0.875rem; margin-top: 0.25rem; display: block;"></span>
             </div>
 
             <div class="form-group">
@@ -119,5 +134,19 @@ function togglePassword(fieldId) {
         eyeIcon.classList.add('fa-eye');
     }
 }
+
+document.getElementById('email').addEventListener('blur', function () {
+    const val = this.value.trim();
+    const err = document.getElementById('email-error');
+    const pattern = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/;
+
+    if (!val) {
+        err.textContent = 'Email is required.';
+    } else if (!pattern.test(val)) {
+        err.textContent = 'Please enter a valid email address.';
+    } else {
+        err.textContent = '';
+    }
+});
 </script>
 

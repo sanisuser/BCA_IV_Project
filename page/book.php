@@ -211,9 +211,14 @@ if (isset($_GET['review_success']) && $_GET['review_success'] == '1') {
             </div>
 
             <!-- Stock Status -->
-            <?php if (($book['stock'] ?? 0) === 1): ?>
+            <?php $stock_qty = $book['stock'] ?? 0; ?>
+            <?php if ($stock_qty > 0): ?>
             <div class="book-stock in-stock">
-                <i class="fas fa-check-circle"></i> Only 1 left in stock!
+                <i class="fas fa-check-circle"></i> <?php echo $stock_qty; ?> in stock
+            </div>
+            <?php else: ?>
+            <div class="book-stock out-of-stock">
+                <i class="fas fa-times-circle"></i> Out of Stock
             </div>
             <?php endif; ?>
 
@@ -279,10 +284,10 @@ if (isset($_GET['review_success']) && $_GET['review_success'] == '1') {
                             <?php echo !empty($book['isbn']) ? htmlspecialchars($book['isbn']) : htmlspecialchars('N/A'); ?>
                         </td>
                     </tr>
-                    <tr>
+                    <!-- <tr>
                         <td class="label">Condition</td>
                         <td class="value"><?php echo ucfirst($book['condition_status'] ?? 'new'); ?></td>
-                    </tr>
+                    </tr> -->
                 </table>
             </div>
         </div>
