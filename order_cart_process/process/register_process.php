@@ -21,40 +21,47 @@ $phone = clean_input($_POST['phone'] ?? '');
 $password = $_POST['password'] ?? '';
 $confirm_password = $_POST['confirm_password'] ?? '';
 
+// Normalize username
+$username = strtolower(trim($username));
+
 // Validation
 $errors = [];
 
-if (empty($username) || strlen($username) < 3) {
-    $errors[] = 'Username must be at least 3 characters long';
-}
-
-if (!preg_match('/^[a-zA-Z0-9_]+$/', $username)) {
-    $errors[] = 'Username can only contain letters, numbers, and underscores';
+if (empty($username)) {
+    $errors[] = 'Username is required.';
+} elseif (strlen($username) < 3) {
+    $errors[] = 'Username must be at least 3 characters.';
+} elseif (strlen($username) > 20) {
+    $errors[] = 'Username must be at most 20 characters.';
+} elseif (!preg_match('/^[a-z0-9_]+$/', $username)) {
+    $errors[] = 'Username can only contain letters, numbers, and underscores.';
+} elseif (!preg_match('/[a-z]/', $username)) {
+    $errors[] = 'Username must contain at least one letter.';
 }
 
 if (empty($full_name)) {
     $errors[] = 'Full name is required.';
-} elseif (strlen($full_name) < 3) {
-    $errors[] = 'Full name must be at least 3 characters.';
-} elseif (strlen($full_name) > 100) {
-    $errors[] = 'Full name must not exceed 100 characters.';
-} elseif (!preg_match('/^[a-zA-Z\s\'\-\.]+$/', $full_name)) {
-    $errors[] = 'Full name can only contain letters, spaces, apostrophes, hyphens, and dots.';
-} elseif (!preg_match('/^[a-zA-Z]/', $full_name)) {
-    $errors[] = 'Full name must start with a letter.';
-} elseif (preg_match('/\s{2,}/', $full_name)) {
-    $errors[] = 'Full name must not contain multiple consecutive spaces.';
-} elseif (str_word_count($full_name) < 2) {
-    $errors[] = 'Please enter your full name (first and last name).';
+} elseif (strlen($full_name) < 5 || strlen($full_name) > 50) {
+    $errors[] = 'Full name must be between 5 and 50 characters.';
+} elseif (!preg_match('/^[a-zA-Z]+ [a-zA-Z]+$/', $full_name)) {
+    $errors[] = 'Please enter both first and last name (e.g. Sanish Shrestha).';
 }
 
-if (empty($phone) || !preg_match('/^9[8-9][0-9]{8}$/', $phone)) {
-    $errors[] = 'Please enter a valid 10-digit Nepali mobile number (starts with 98 or 99)';
+if (empty($phone) || !preg_match('/^9[7-8][0-9]{8}$/', $phone)) {
+    $errors[] = 'Please enter a valid 10-digit Nepali mobile number (starts with 97 or 98)';
 }
 
 if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
     $errors[] = 'Please enter a valid email address';
 } else {
+    // Extract local part (before @)
+    $local = explode('@', $email)[0];
+    
+    // Check email contains at least one letter
+    if (!preg_match('/[a-zA-Z]/', $local)) {
+        $errors[] = 'Email must contain at least one letter';
+    }
+    
     // Validate email domain has valid DNS records
     $domain = substr(strrchr($email, '@'), 1);
     if (!checkdnsrr($domain, 'MX') && !checkdnsrr($domain, 'A')) {
@@ -84,10 +91,32 @@ if ($password !== $confirm_password) {
     $errors[] = 'Passwords do not match';
 }
 
-// If there are errors, redirect back
+// If there are errors, redirect back with form data and error flags
 if (!empty($errors)) {
-    $error_string = implode(', ', $errors);
-    redirect(SITE_URL . '/auth/register.php?error=' . urlencode($error_string));
+    // Build query string with errors and form data
+    $params = [
+        'error' => implode(', ', $errors),
+        'username' => urlencode($_POST['username'] ?? ''),
+        'full_name' => urlencode($_POST['full_name'] ?? ''),
+        'phone' => urlencode($_POST['phone'] ?? ''),
+        'email' => urlencode($_POST['email'] ?? '')
+    ];
+    
+    // Add field-specific error flags
+    $field_errors = [];
+    foreach ($errors as $err) {
+        if (stripos($err, 'username') !== false) $field_errors[] = 'username';
+        if (stripos($err, 'full name') !== false || stripos($err, 'first and last') !== false) $field_errors[] = 'full_name';
+        if (stripos($err, 'phone') !== false || stripos($err, 'mobile') !== false) $field_errors[] = 'phone';
+        if (stripos($err, 'email') !== false) $field_errors[] = 'email';
+        if (stripos($err, 'password') !== false) $field_errors[] = 'password';
+    }
+    if (!empty($field_errors)) {
+        $params['field_errors'] = implode(',', array_unique($field_errors));
+    }
+    
+    $query = http_build_query($params);
+    redirect(SITE_URL . '/auth/register.php?' . $query);
 }
 
 // Check if username already exists
@@ -97,7 +126,15 @@ $stmt->execute();
 $stmt->store_result();
 if ($stmt->num_rows > 0) {
     $stmt->close();
-    redirect(SITE_URL . '/auth/register.php?error=' . urlencode('Username already exists'));
+    $params = [
+        'error' => 'Username already exists',
+        'username' => urlencode($_POST['username'] ?? ''),
+        'full_name' => urlencode($_POST['full_name'] ?? ''),
+        'phone' => urlencode($_POST['phone'] ?? ''),
+        'email' => urlencode($_POST['email'] ?? ''),
+        'field_errors' => 'username'
+    ];
+    redirect(SITE_URL . '/auth/register.php?' . http_build_query($params));
 }
 $stmt->close();
 
@@ -108,7 +145,15 @@ $stmt->execute();
 $stmt->store_result();
 if ($stmt->num_rows > 0) {
     $stmt->close();
-    redirect(SITE_URL . '/auth/register.php?error=' . urlencode('Email already registered'));
+    $params = [
+        'error' => 'Email already registered',
+        'username' => urlencode($_POST['username'] ?? ''),
+        'full_name' => urlencode($_POST['full_name'] ?? ''),
+        'phone' => urlencode($_POST['phone'] ?? ''),
+        'email' => urlencode($_POST['email'] ?? ''),
+        'field_errors' => 'email'
+    ];
+    redirect(SITE_URL . '/auth/register.php?' . http_build_query($params));
 }
 $stmt->close();
 

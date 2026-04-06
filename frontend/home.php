@@ -72,6 +72,29 @@ if ($result) {
     }
     $result->free();
 }
+
+// Fetch cart items for logged in user
+$cart_books = [];
+$cart_total = 0;
+if (is_logged_in()) {
+    $user_id = get_user_id();
+    $stmt = $conn->prepare("
+        SELECT c.cart_id, c.quantity, c.book_id, b.title, b.author, b.cover_image, b.price, b.stock 
+        FROM cart c 
+        JOIN books b ON c.book_id = b.book_id 
+        WHERE c.user_id = ?
+        ORDER BY c.cart_id DESC
+        LIMIT 10
+    ");
+    $stmt->bind_param('i', $user_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    while ($row = $result->fetch_assoc()) {
+        $cart_books[] = $row;
+        $cart_total += ($row['price'] * $row['quantity']);
+    }
+    $stmt->close();
+}
 ?>
 
 <!-- Homepage CSS -->
@@ -131,6 +154,55 @@ if ($result) {
         <?php endforeach; ?>
     </div>
 </section>
+
+<!-- Layer 2.5: Your Cart (Only shown if logged in and has items) -->
+<?php if (is_logged_in() && !empty($cart_books)): ?>
+<section class="section cart-section">
+    <div class="section-header">
+        <h2><i class="fas fa-shopping-cart"></i> Your Cart</h2>
+        <a href="<?php echo SITE_URL; ?>/order_cart_process/cart.php" class="view-all">View Cart <i class="fas fa-arrow-right"></i></a>
+    </div>
+    <div class="horizontal-scroll">
+        <?php foreach ($cart_books as $item): ?>
+        <div class="book-card cart-book-card">
+            <div class="book-cover">
+                <img src="<?php echo !empty($item['cover_image']) ? htmlspecialchars($item['cover_image']) : SITE_URL . '/assets/images/default-book.png'; ?>" alt="<?php echo htmlspecialchars($item['title']); ?>" loading="lazy">
+                <div class="book-overlay">
+                    <a href="<?php echo SITE_URL; ?>/page/book.php?id=<?php echo $item['book_id']; ?>" class="btn-quick">View</a>
+                </div>
+                <!-- Cart quantity badge -->
+                <div class="cart-qty-badge"><?php echo $item['quantity']; ?>x</div>
+            </div>
+            <div class="book-info">
+                <h3 class="book-title"><?php echo htmlspecialchars($item['title']); ?></h3>
+                <p class="book-author"><?php echo htmlspecialchars($item['author']); ?></p>
+                <div class="book-price"><?php echo format_price($item['price']); ?></div>
+                <!-- Stock status -->
+                <div class="cart-stock-status">
+                    <?php if ($item['stock'] > 10): ?>
+                        <span class="stock-in"><i class="fas fa-check-circle"></i> Available</span>
+                    <?php elseif ($item['stock'] > 0): ?>
+                        <span class="stock-low"><i class="fas fa-exclamation-circle"></i> Only <?php echo $item['stock']; ?> left</span>
+                    <?php else: ?>
+                        <span class="stock-out"><i class="fas fa-times-circle"></i> Out of Stock</span>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+        <?php endforeach; ?>
+    </div>
+    <!-- Cart total summary -->
+    <div class="cart-summary" style="padding: 0 20px; margin-top: 12px; display: flex; justify-content: space-between; align-items: center;">
+        <span style="color: #6c757d; font-size: 0.9rem;"><?php echo count($cart_books); ?> item(s) in cart</span>
+        <div style="display: flex; align-items: center; gap: 16px;">
+            <span style="font-weight: 600; font-size: 1.1rem;">Total: <?php echo format_price($cart_total); ?></span>
+            <a href="<?php echo SITE_URL; ?>/order_cart_process/checkout.php" class="btn-checkout" style="background: #007bff; color: white; padding: 8px 20px; border-radius: 6px; text-decoration: none; font-size: 0.9rem;">
+                <i class="fas fa-credit-card"></i> Checkout
+            </a>
+        </div>
+    </div>
+</section>
+<?php endif; ?>
 
 <!-- Layer 3: Bestsellers -->
 <section class="section top-favorites">

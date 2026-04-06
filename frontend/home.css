@@ -628,3 +628,80 @@
         padding: 8px 15px;
     }
 }
+
+/* ============================================
+   CART SECTION STYLES
+   ============================================ */
+.cart-section {
+    background: linear-gradient(135deg, rgba(0, 123, 255, 0.05) 0%, rgba(0, 123, 255, 0.1) 100%);
+    border-top: 2px solid rgba(0, 123, 255, 0.2);
+    border-bottom: 2px solid rgba(0, 123, 255, 0.2);
+}
+
+.cart-qty-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: #007bff;
+    color: white;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.cart-stock-status {
+    margin-top: 6px;
+    font-size: 0.75rem;
+}
+
+.stock-in {
+    color: #22c55e;
+}
+
+.stock-low {
+    color: #f59e0b;
+}
+
+.stock-out {
+    color: #ef4444;
+}
+
+.cart-summary {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    padding: 12px 20px;
+    margin: 12px 20px 0;
+}
+
+.btn-checkout {
+    transition: all 0.2s ease;
+}
+
+.btn-checkout:hover {
+    background: #0056b3;
+    transform: translateY(-1px);
+}
+
+.cart-book-card {
+    position: relative;
+}
+
+/* Cart section mobile adjustments */
+@media (max-width: 768px) {
+    .cart-summary {
+        flex-direction: column;
+        gap: 10px;
+        align-items: flex-start !important;
+    }
+    
+    .cart-summary > div {
+        width: 100%;
+        justify-content: space-between;
+    }
+}

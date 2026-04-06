@@ -339,7 +339,23 @@ $conditions = ['new', 'used'];
                         <!-- <?php if (!empty($book['genre'])): ?>
                             <span class="book-card-genre"><?php echo htmlspecialchars($book['genre']); ?></span>
                         <?php endif; ?> -->
-                        <div class="book-card-price"><?php echo format_price($book['price'] ?? 0); ?></div>
+
+                    
+                        <div class="book-card-price">
+                            <?php echo format_price($book['price'] ?? 0); ?>
+                            <span class="stock-qty-badge">
+
+                            <!-- bookcart qty -->
+                                <?php if (($book['stock'] ?? 0) > 0): ?>
+                                    <i class="fas fa-box" style="color: #6c757d;"></i>
+                                     <?php echo $book['stock']; ?> in stock
+                                <?php else: ?>
+                                    <i class="fas fa-box-open" style="color: #ef4444;"></i> 0 in stock
+                                <?php endif; ?>
+                            </span>
+                        </div>
+
+                        
                         <div class="book-card-actions">
                             <a href="<?php echo SITE_URL; ?>/page/book.php?id=<?php echo $book['book_id']; ?>" class="btn btn-primary btn-small">View</a>
                             <?php if (($book['stock'] ?? 0) > 0): ?>

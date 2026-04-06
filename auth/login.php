@@ -53,6 +53,7 @@ $saved_username = isset($_GET['username']) ? htmlspecialchars($_GET['username'])
                 <label for="username" class="form-label">Username or Email</label>
                 <input type="text" id="username" name="username" class="form-input" required 
                        placeholder="Enter your username or email" value="<?php echo $saved_username; ?>">
+                <span id="username-error" class="error-message" style="color: #ef4444; font-size: 0.875rem; margin-top: 0.25rem; display: block;"></span>
             </div>
             
             <div class="form-group">
@@ -67,6 +68,7 @@ $saved_username = isset($_GET['username']) ? htmlspecialchars($_GET['username'])
                         <i class="fas fa-eye" id="password-eye"></i>
                     </button>
                 </div>
+                <span id="password-error" class="error-message" style="color: #ef4444; font-size: 0.875rem; margin-top: 0.25rem; display: block;"></span>
             </div>
             
             <div class="form-group">
@@ -107,4 +109,56 @@ function togglePassword(fieldId) {
         eyeIcon.classList.add('fa-eye');
     }
 }
+
+document.addEventListener('DOMContentLoaded', function () {
+    // Username/Email validation
+    document.getElementById('username').addEventListener('blur', function () {
+        const val = this.value.trim();
+        const err = document.getElementById('username-error');
+
+        if (!val) {
+            err.textContent = 'Username or email is required.';
+        } else if (val.length < 3) {
+            err.textContent = 'Username must be at least 3 characters.';
+        } else {
+            err.textContent = '';
+        }
+    });
+
+    // Password validation
+    document.getElementById('password').addEventListener('blur', function () {
+        const val = this.value;
+        const err = document.getElementById('password-error');
+
+        if (!val) {
+            err.textContent = 'Password is required.';
+        } else if (val.length < 6) {
+            err.textContent = 'Password must be at least 6 characters.';
+        } else {
+            err.textContent = '';
+        }
+    });
+
+    // Form submission validation
+    document.querySelector('.auth-form').addEventListener('submit', function(e) {
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value;
+        
+        let hasError = false;
+        
+        if (!username || username.length < 3) {
+            document.getElementById('username-error').textContent = 'Please enter a valid username or email.';
+            hasError = true;
+        }
+        
+        if (!password || password.length < 6) {
+            document.getElementById('password-error').textContent = 'Please enter a valid password (min 6 chars).';
+            hasError = true;
+        }
+        
+        if (hasError) {
+            e.preventDefault();
+        }
+    });
+});
 </script>

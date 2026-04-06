@@ -414,6 +414,22 @@
     color: #27ae60;
     margin-bottom: 0.4rem;
     margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.stock-qty-badge {
+    font-size: 0.7rem;
+    font-weight: 500;
+    color: #6c757d;
+    display: block;
+    margin-top: 0.2rem;
+}
+
+.stock-qty-badge i {
+    font-size: 0.75rem;
+    margin-right: 0.2rem;
 }
 
 .book-card-actions {

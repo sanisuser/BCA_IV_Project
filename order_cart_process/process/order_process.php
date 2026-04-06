@@ -38,12 +38,7 @@ $map_longitude = trim($_POST['map_longitude'] ?? '');
 $map_place_name = trim($_POST['map_place_name'] ?? '');
 
 // Handle address selection
-if ($selected_address === 'custom') {
-    // Use custom address
-    if ($ship_address === '') {
-        redirect(SITE_URL . '/order_cart_process/checkout.php?error=' . urlencode('Please enter a custom shipping address'));
-    }
-} elseif ($selected_address === 'profile') {
+if ($selected_address === 'profile') {
     // Use profile shipping address
     $ship_stmt = $conn->prepare("SELECT ship_address FROM users WHERE user_id = ?");
     $ship_stmt->bind_param('i', $user_id);
@@ -63,13 +58,9 @@ if ($selected_address === 'custom') {
         redirect(SITE_URL . '/order_cart_process/checkout.php?error=' . urlencode('Please select a location on the map'));
     }
     $ship_address = $map_address;
-} elseif ($selected_address === 'saved' && !empty($ship_address)) {
-    // Use saved custom address (already set from POST)
 } else {
-    // No address selected (fallback to custom)
-    if (trim($ship_address) === '') {
-        redirect(SITE_URL . '/order_cart_process/checkout.php?error=' . urlencode('Please select or enter a shipping address'));
-    }
+    // Fallback - no valid address selected
+    redirect(SITE_URL . '/order_cart_process/checkout.php?error=' . urlencode('Please select a shipping address'));
 }
 
 // If user entered a shipping address (custom / direct entry), save it to profile for future
