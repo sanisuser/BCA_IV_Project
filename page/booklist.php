@@ -347,7 +347,7 @@ $conditions = ['new', 'used'];
 
                             <!-- bookcart qty -->
                                 <?php if (($book['stock'] ?? 0) > 0): ?>
-                                    <i class="fas fa-box" style="color: #6c757d;"></i>
+                                    <!-- <i class="fas fa-box" style="color: #6c757d;"></i> -->
                                      <?php echo $book['stock']; ?> in stock
                                 <?php else: ?>
                                     <i class="fas fa-box-open" style="color: #ef4444;"></i> 0 in stock

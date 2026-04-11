@@ -198,10 +198,14 @@ document.addEventListener('DOMContentLoaded', function () {
         const val = this.value.trim().toLowerCase();
         this.value = val;
         const err = document.getElementById('email-error');
-        const pattern = /^[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,}$/;
+        const pattern = /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/;
+        const hasLetter = /[a-z]/.test(val);
 
         if (!val) {
             err.textContent = 'Email is required.';
+            setInvalid(this);
+        } else if (!hasLetter) {
+            err.textContent = 'Email must contain at least one letter.';
             setInvalid(this);
         } else if (!pattern.test(val)) {
             err.textContent = 'Please enter a valid email address (lowercase only).';
@@ -388,7 +392,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const phone = document.getElementById('phone').value.trim();
     const password = document.getElementById('password').value;
     const confirmPassword = document.getElementById('confirm_password').value;
-    const emailPattern = /^[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,}$/;
+    const emailPattern = /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/;
     const namePattern = /^[a-zA-Z]+ [a-zA-Z]+$/;
     const usernamePattern = /^[a-z0-9_]{3,20}$/;
     const phonePattern = /^9[7-8][0-9]{8}$/;
@@ -405,8 +409,9 @@ document.addEventListener('DOMContentLoaded', function () {
         hasError = true;
     }
     
-    if (!emailPattern.test(email)) {
-        document.getElementById('email-error').textContent = 'Please enter a valid email address.';
+    const hasLetter = /[a-z]/.test(email);
+    if (!hasLetter || !emailPattern.test(email)) {
+        document.getElementById('email-error').textContent = 'Please enter a valid email address with at least one letter.';
         hasError = true;
     }
     
